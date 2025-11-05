@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Change the top loading bar color */
+#nprogress .bar {
+  background: #F57E20 !important; /* green example */
+  height: 3px; /* optional: thickness */
+}
+
+#nprogress .peg {
+  box-shadow: 0 0 10px #F57E20, 0 0 5px #F57E20 !important;
+}
