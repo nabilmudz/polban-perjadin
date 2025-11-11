@@ -3,16 +3,19 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rules\Password;
+use Inertia\Inertia;
 
 class PasswordController extends Controller
 {
-    /**
-     * Update the user's password.
-     */
+    public function edit()
+    {
+        return Inertia::render('Auth/ChangePassword');
+    }
+
     public function update(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -24,6 +27,10 @@ class PasswordController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        return back();
+        auth()->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')->with('success', 'Password changed successfully. Please log in again.');
     }
 }

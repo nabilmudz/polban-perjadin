@@ -1,7 +1,7 @@
 
 export default function getSidebarLinks(role) {
   switch (role) {
-    // case 'admin':
+    // case 'WADIR1':
     //   return [
     //     { name: "Dashboard", route: "admin.dashboard", icon: "tachometer-alt" },
     //     { name: "Users", route: "admin.users", icon: "users" },
@@ -14,12 +14,12 @@ export default function getSidebarLinks(role) {
           icon: "house",
           component: "Dashboards/PengusulDashboard"
         },
-        // {
-        //   name: "Pengajuan",
-        //   route: "pengusul.pengajuan",
-        //   icon: "file-lines",
-        //   component: "Pengusul/Pengajuan"
-        // },
+        {
+          name: "Daftar Pengajuan",
+          route: "pengusul.pengajuan",
+          icon: "file-lines",
+          component: "Pengusul/DaftarPengajuan"
+        },
       ];
 
     case 'direktur':
