@@ -33,6 +33,7 @@ Route::get('/', function () {
             'wadir1' => '/wadir1/dashboard',
             'direktur' => '/direktur/dashboard',
             'bku' => '/bku/dashboard',
+            'pelaksana' => '/pelaksana/dashboard', // ini
             default => '/login',
         });
     }
