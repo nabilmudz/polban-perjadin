@@ -13,32 +13,46 @@
             </div>
 
             <div class="p-8">
+                <div class="overflow-x-auto">
                 <DataTable
                     :columns="columns"
-                    :data="tugas?.data"
-                    :meta="tugas?.meta"
-                    :links="tugas?.links"
-                    route-name="tugas.index"
+                    :data="suratTugas.data"
+                    :meta="suratTugas.meta"
+                    :links="suratTugas.links"
+                    :filters="filters"
+                    route-name="pengusul.dashboard"
+                    @update:filters="Object.assign(filters, $event)"
+                    @changePage="(page) =>
+                    router.get(route('pengusul.dashboard'), { ...filters }, {
+                        preserveState: true,
+                        replace: true
+                    })
+                    "
                 >
-                    <!-- Slot untuk kolom aksi -->
-                    <template #aksi="{ row }">
-                        <div class="flex gap-2">
-                            <Link
-                                :href="`/surat-tugas/${row.id}`"
-                                class="px-3 py-1 bg-cyan-500 text-white rounded text-sm hover:bg-cyan-600"
-                            >
-                                Detail
-                            </Link>
-                            <a
-                                :href="`/surat-tugas/${row.id}/pdf`"
-                                target="_blank"
-                                class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-                            >
-                                PDF
-                            </a>
-                        </div>
+                    <template #status_surat="{ row }">
+                    <StatusBadges :status="row.status_surat" />
+                    </template><template #action="{ row }">
+                    <div class="flex gap-2">
+                        <button
+                        v-for="action in getRowActions(row, currentUser.role)"
+                        :key="action.type"
+                        @click="handleAction(action.type, row)"
+                        :title="action.type"
+                        class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90"
+                        :class="{
+                            'bg-blue-500 text-white': action.color === 'blue',
+                            'bg-green-500 text-white': action.color === 'green',
+                            'bg-red-500 text-white': action.color === 'red',
+                            'bg-yellow-400 text-black': action.color === 'yellow',
+                            'bg-purple-500 text-white': action.color === 'purple',
+                        }"
+                        >
+                        <font-awesome-icon :icon="['far', action.icon]" class="text-md" />
+                        </button>
+                    </div>
                     </template>
                 </DataTable>
+                </div> 
             </div>
         </div>
     </AppLayout>
@@ -49,12 +63,13 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import StatCard from '@/Components/StatCard.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
+import StatusBadges from '@/Components/Table/StatusBadges.vue'
 import { usePage } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import { Link } from '@inertiajs/vue3'
 
 const { props } = usePage()
-const tugas = props.tugas
+const suratTugas = props.suratTugas
 const filters = ref(props.filters)
 
 const columns = [
