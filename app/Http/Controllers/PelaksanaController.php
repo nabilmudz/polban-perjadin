@@ -23,7 +23,7 @@ class PelaksanaController extends Controller
 
         return Inertia::render('Dashboards/PelaksanaDashboard', [
             'auth' => ['user' => $user],
-            'tugas' => [
+            'suratTugas' => [
                 'data' => $dummyTugas,
                 'meta' => [
                     'total' => count($dummyTugas),
