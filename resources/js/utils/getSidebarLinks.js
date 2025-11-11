@@ -21,6 +21,39 @@ export default function getSidebarLinks(role) {
           component: "Pengusul/DaftarPengajuan"
         },
       ];
+
+    case 'direktur':
+      return [
+        {
+          name: "Dashboard",
+          route: "direktur.dashboard",
+          icon: "house",
+          component: "Dashboards/DirekturDashboard"
+        },
+        {
+          name: "Persetujuan",
+          route: "direktur.daftarpersetujuan",
+          icon: "square-check",
+          component: "Direktur/DaftarPersetujuan"
+        }
+      ];
+
+    case 'bku':
+      return [
+        {
+          name: "Dashboard",
+          route: "bku.dashboard",
+          icon: "house",
+          component: "Dashboards/BKUDashboard"
+        },
+        {
+          name: "Laporan & Bukti Perjalanan Dinas",
+          route: "bku.daftarlaporan&perjalanan",
+          icon: "file-lines",
+          component: "BKU/DaftarLaporan&Perjalanan"
+        }
+      ];
+
     default:
       return [];
   }
