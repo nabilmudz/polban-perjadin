@@ -37,6 +37,17 @@ export default function getSidebarLinks(role) {
           component: "Direktur/DaftarPersetujuan"
         }
       ];
+
+    case 'bku':
+      return [
+        {
+          name: "Dashboard",
+          route: "bku.dashboard",
+          icon: "house",
+          component: "Dashboards/BKUDashboard"
+        }
+      ];
+
     default:
       return [];
   }

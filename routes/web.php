@@ -17,6 +17,7 @@ Route::get('/', function () {
             'pengusul' => '/pengusul/dashboard',
             'wadir1' => '/wadir1/dashboard',
             'direktur' => '/direktur/dashboard',
+            'bku' => '/bku/dashboard',
             default => '/login',
         });
     }
@@ -55,6 +56,13 @@ Route::middleware(['auth'])->group(function () {
             ->name('daftarpersetujuan');
 
     });
+
+    // BKU routes
+    Route::prefix('bku')->name('bku.')->middleware(['auth', 'role:bku'])->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'bku'])
+            ->name('dashboard');
+    });
+
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

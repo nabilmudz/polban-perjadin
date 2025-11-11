@@ -57,6 +57,15 @@ class DashboardController extends Controller
         ]);
     }
 
+    // ==== Adding the bku dashboard method ==== //
+    public function bku()
+    {
+        return Inertia::render('Dashboards/BKUDashboard', [
+            'role' => 'bku',
+        ]);
+    }
+
+
     // public function direktur()
     // {
     //     $user = auth()->user();
