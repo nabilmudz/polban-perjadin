@@ -8,7 +8,20 @@ use Inertia\Inertia;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SuratTugasController;
 use App\Http\Controllers\Direktur\DaftarPersetujuanController;
+use App\Http\Controllers\BKU\DaftarLaporanController;
 use App\Http\Controllers\Auth\PasswordController;
+
+
+// To force logout in case of accidental role change
+// use Illuminate\Support\Facades\Auth;
+
+// Route::get('/force-logout', function () {
+//     Auth::logout();
+//     session()->invalidate();
+//     session()->regenerateToken();
+
+//     return redirect('/login')->with('status', 'You have been logged out.');
+// });
 
 // Entry
 Route::get('/', function () {
@@ -62,6 +75,10 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('bku')->name('bku.')->middleware(['auth', 'role:bku'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'bku'])
             ->name('dashboard');
+
+        // Daftar Laporan & Perjalanan
+        Route::get('/daftarlaporan&perjalanan', [DaftarLaporanController::class, 'index'])
+            ->name('daftarlaporan&perjalanan');
     });
 
 

@@ -45,6 +45,12 @@ export default function getSidebarLinks(role) {
           route: "bku.dashboard",
           icon: "house",
           component: "Dashboards/BKUDashboard"
+        },
+        {
+          name: "Laporan & Bukti Perjalanan Dinas",
+          route: "bku.daftarlaporan&perjalanan",
+          icon: "file-lines",
+          component: "BKU/DaftarLaporan&Perjalanan"
         }
       ];
 
