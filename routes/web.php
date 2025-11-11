@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SuratTugasController;
+use App\Http\Controllers\PelaksanaController;
 
 // Entry
 Route::get('/', function () {
@@ -32,6 +33,12 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('pengusul')->name('pengusul.')->middleware(['auth', 'role:pengusul'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'pengusul'])->name('dashboard');
         // Route::get('/pengajuan', fn() => Inertia::render('Pengusul/Pengajuan'))->name('pengajuan');
+    });
+
+    // Pelaksana
+    Route::prefix('pelaksana')->name('pelaksana.')->middleware(['auth', 'role:pelaksana'])->group(function () {
+        Route::get('/dashboard', [PelaksanaController::class, 'dashboard'])->name('dashboard');
+        Route::get('/daftarlaporan', [PelaksanaController::class, 'daftarLaporan'])->name('daftarlaporan');
     });
 
     // Wadir1 routes
