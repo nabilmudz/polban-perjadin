@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PengusulController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -30,9 +31,9 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Pengusul 
-    Route::prefix('pengusul')->name('pengusul.')->middleware(['auth', 'role:pengusul'])->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'pengusul'])->name('dashboard');
-        // Route::get('/pengajuan', fn() => Inertia::render('Pengusul/Pengajuan'))->name('pengajuan');
+    Route::prefix('pengusul')->middleware(['auth', 'role:pengusul'])->group(function () {
+        Route::get('/dashboard', [PengusulController::class, 'dashboard'])->name('pengusul.dashboard');
+        Route::get('/pengusulan', [PengusulController::class, 'daftarPengusulan'])->name('pengusul.pengajuan');
     });
 
     // Wadir1 routes
@@ -47,8 +48,16 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Surat Tugas
-Route::middleware(['auth'])->group(function () {
-    Route::resource('surat-tugas', SuratTugasController::class)->only(['index', 'show']);
+// Route::middleware(['auth'])->group(function () {
+//     Route::resource('surat-tugas', SuratTugasController::class)->only(['index', 'show']);
+// });
+
+Route::prefix('surat-tugas')->group(function () {
+    Route::get('/', [SuratTugasController::class, 'index']);
+    Route::get('/{id}', [SuratTugasController::class, 'show']);
+    Route::post('/', [SuratTugasController::class, 'store']);
+    Route::put('/{id}', [SuratTugasController::class, 'update']);
+    Route::delete('/{id}', [SuratTugasController::class, 'destroy']);
 });
 
 require __DIR__.'/auth.php';

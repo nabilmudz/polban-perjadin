@@ -11,3 +11,7 @@
 #nprogress .peg {
   box-shadow: 0 0 10px #F57E20, 0 0 5px #F57E20 !important;
 }
+
+::-webkit-scrollbar {
+  display: none;
+}
