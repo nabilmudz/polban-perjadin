@@ -21,6 +21,22 @@ export default function getSidebarLinks(role) {
         //   component: "Pengusul/Pengajuan"
         // },
       ];
+
+    case 'direktur':
+      return [
+        {
+          name: "Dashboard",
+          route: "direktur.dashboard",
+          icon: "house",
+          component: "Dashboards/DirekturDashboard"
+        },
+        {
+          name: "Persetujuan",
+          route: "direktur.daftarpersetujuan",
+          icon: "square-check",
+          component: "Direktur/DaftarPersetujuan"
+        }
+      ];
     default:
       return [];
   }

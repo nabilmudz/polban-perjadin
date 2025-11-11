@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SuratTugasController;
+use App\Http\Controllers\Direktur\DaftarPersetujuanController;
+
 
 // Entry
 Route::get('/', function () {
@@ -43,9 +45,16 @@ Route::middleware(['auth'])->group(function () {
 
     // Direktur routes
     Route::prefix('direktur')->name('direktur.')->middleware(['auth', 'role:direktur'])->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'direktur'])->name('dashboard');
-    });
 
+        // Dashboard Direktur
+        Route::get('/dashboard', [DashboardController::class, 'direktur'])
+            ->name('dashboard');
+
+        // Daftar Persetujuan Page
+        Route::get('/daftarpersetujuan', [DaftarPersetujuanController::class, 'index'])
+            ->name('daftarpersetujuan');
+
+    });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
