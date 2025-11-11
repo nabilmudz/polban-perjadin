@@ -16,34 +16,14 @@ class SuratTugasController extends Controller
     {
         $this->service = $service;
     }
+
+    // SuratTugasController.php
     
-
-    public function index(FilterSuratTugasRequest $request)
+    public function index(Request $request)
     {
-        $user = auth()->user();
-        $filters = $request->validated();
-
-        $query = SuratTugas::query()
-            ->where('user_id', $user->id);
-
-        if (!empty($filters['search'])) {
-            $query->where('perihal', 'like', "%{$filters['search']}%");
-        }
-
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        if (!empty($filters['from']) && !empty($filters['to'])) {
-            $query->whereBetween('tanggal_berangkat', [$filters['from'], $filters['to']]);
-        }
-
-        $suratTugas = $query->latest()->paginate(10)->withQueryString();
-
-        return inertia('Dashboards/PengusulDashboard', [
-            'suratTugas' => $suratTugas,
-            'filters' => $filters,
-        ]);
+        $filters = $request->only(['search', 'status', 'start_date', 'end_date']);
+        $data = $this->service->getAll($filters);
+        return response()->json($data);
     }
 
     /**
@@ -59,19 +39,23 @@ class SuratTugasController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'tanggal' => 'required|date',
+            'lokasi' => 'required|string',
+        ]);
+
+        $data = $this->service->create($validated);
+        return response()->json($data, 201);
     }
 
     /**
      * Display the specified resource.
      */
-
     public function show($id)
     {
-        // $suratTugas = $this->service->getDetail($id);
-        // return Inertia::render('Pengusul/DetailSuratTugas', [
-        //     'suratTugas' => $suratTugas,
-        // ]);
+        $data = $this->service->getById($id);
+        return response()->json($data);
     }
 
     /**
@@ -85,18 +69,25 @@ class SuratTugasController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, SuratTugas $suratTugas)
+    public function update(Request $request, $id)
     {
-        //
+        $validated = $request->validate([
+            'title' => 'sometimes|string|max:255',
+            'tanggal' => 'sometimes|date',
+            'lokasi' => 'sometimes|string',
+        ]);
+
+        $data = $this->service->update($id, $validated);
+        return response()->json($data);
     }
 
     /**
      * Remove the specified resource from storage.
      */
 
-    public function destroy(SuratTugas $suratTugas)
+    public function destroy($id)
     {
-        $suratTugas->delete();
-        return back()->with('success', 'Surat Tugas deleted successfully.');
+        $this->service->delete($id);
+        return response()->json(['message' => 'Deleted successfully']);
     }
 }
