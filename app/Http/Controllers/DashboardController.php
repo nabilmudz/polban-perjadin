@@ -13,33 +13,6 @@ class DashboardController extends Controller
         return Inertia::render('Dashboards/AdminDashboard');
     }
 
-    public function pengusul()
-    {
-        $user = auth()->user();
-
-        $suratTugas = SuratTugas::where('user_id', $user->id)
-            ->latest()
-            ->paginate(10)
-            ->through(fn($item) => [
-                'id' => $item->id,
-                'no_surat' => $item->no_surat,
-                'perihal' => $item->perihal,
-                'status' => $item->status,
-                'tanggal_berangkat' => $item->tanggal_berangkat,
-            ]);
-
-        return inertia('Dashboards/PengusulDashboard', [
-            'auth' => ['user' => $user],
-            'suratTugas' => $suratTugas,
-            'filters' => [
-                'status' => null,
-                'search' => null,
-                'from' => null,
-                'to' => null,
-            ],
-        ]);
-    }
-
     public function wadir1()
     {
         return Inertia::render('Dashboards/WadirDashboard', [

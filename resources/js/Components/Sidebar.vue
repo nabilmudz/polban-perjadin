@@ -1,10 +1,11 @@
 <script setup>
 import { Link, usePage, router } from '@inertiajs/vue3'
+import { computed } from 'vue'
 import getSidebarLinks from '@/utils/getSidebarLinks.js'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { route } from 'ziggy-js'
 
-const { props } = usePage()
+const { props, url } = usePage()
 const user = props.auth.user
 const Ziggy = props.ziggy
 
@@ -13,11 +14,10 @@ const links = getSidebarLinks(user.role).map(link => ({
   href: route(link.route, {}, false, Ziggy)
 }))
 
-const currentPath = window.location.pathname
+const currentPath = computed(() => new URL(url, window.location.origin).pathname)
 
 const logout = () => router.post(route('logout', {}, false, Ziggy))
-
-const isActive = (link) => link.href === currentPath
+const isActive = (link) => currentPath.value.startsWith(link.href)
 </script>
 
 <template>

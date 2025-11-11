@@ -5,9 +5,59 @@ namespace App\Services;
 use App\Models\SuratTugas;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class SuratTugasService
 {
+    public function getAll($filters = [], $user = null)
+    {
+        \Log::info('filters', $filters->all());
+        $query = SuratTugas::query();
+
+        if ($user && $user->role === 'pengusul') {
+            $query->where('user_id', $user->id);
+        }
+
+        if (!empty($filters['search'])) {
+            $query->where('title', 'like', '%' . $filters['search'] . '%');
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+            $query->whereBetween('tanggal', [$filters['start_date'], $filters['end_date']]);
+        }
+
+        return $query->orderBy('created_at', 'desc')->paginate(10);
+    }
+
+    public function getById($id)
+    {
+        $item = SuratTugas::find($id);
+        if (!$item) throw new ModelNotFoundException('Surat Tugas not found');
+        return $item;
+    }
+
+    public function create(array $data)
+    {
+        return SuratTugas::create($data);
+    }
+
+    public function update($id, array $data)
+    {
+        $item = SuratTugas::findOrFail($id);
+        $item->update($data);
+        return $item;
+    }
+
+    public function delete($id)
+    {
+        $item = SuratTugas::findOrFail($id);
+        $item->delete();
+    }
+
     public function getForUser(User $user, array $filters = [])
     {
         $query = SuratTugas::query();
