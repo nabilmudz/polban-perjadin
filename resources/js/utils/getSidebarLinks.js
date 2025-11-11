@@ -15,6 +15,12 @@ export default function getSidebarLinks(role) {
           component: "Dashboards/PengusulDashboard"
         },
         {
+          name: "Tambah Pengajuan",
+          route: "pengusul.form",
+          icon: "file-lines",
+          component: "Pengusul/FormPengusulan"
+        },
+        {
           name: "Daftar Pengajuan",
           route: "pengusul.pengajuan",
           icon: "file-lines",
