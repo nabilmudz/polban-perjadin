@@ -22,6 +22,23 @@ export default function getSidebarLinks(role) {
         },
       ];
 
+      case 'pelaksana':
+      return [
+        {
+          name: "Dashboard",
+          route: "pelaksana.dashboard",
+          icon: "house",
+          component: "Dashboards/PelaksanaDashboard"
+        },
+        {
+          name: "Daftar Laporan",
+          route: "pelaksana.daftarlaporan",
+          icon: "clipboard",
+          component: "Pelaksana/DaftarLaporan"
+        },
+
+      ];
+      
     case 'direktur':
       return [
         {
