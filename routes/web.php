@@ -34,6 +34,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('pengusul')->middleware(['auth', 'role:pengusul'])->group(function () {
         Route::get('/dashboard', [PengusulController::class, 'dashboard'])->name('pengusul.dashboard');
         Route::get('/pengusulan', [PengusulController::class, 'daftarPengusulan'])->name('pengusul.pengajuan');
+        Route::get('/tambah-pengusulan', [PengusulController::class, 'formPengusulan'])->name('pengusul.form');
     });
 
     // Wadir1 routes

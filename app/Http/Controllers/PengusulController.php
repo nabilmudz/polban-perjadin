@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\SuratTugas;
 use Inertia\Inertia;
+use App\Models\User;
 
 class PengusulController extends Controller
 {
@@ -88,12 +89,14 @@ class PengusulController extends Controller
         ->through(function($item) {
             return [
                 ...$item->toArray(),
+                'no_usulan_surat' => "$item->nomor_urutan_surat/$item->kode_perihal/$item->tahun_nomor_surat",
+                'surat_undangan' => $item->surat_undangan ?: "-",
                 'created_at' => $item->created_at->format('Y-m-d'),
             ];
         })
         ->withQueryString();
 
-        return inertia('Pengusul/PengusulDashboard', [
+        return inertia('Pengusul/DaftarPengusulan', [
             'suratTugas' => [
                 'data' => $suratTugas->items(),
                 'meta' => [
@@ -111,5 +114,9 @@ class PengusulController extends Controller
             ],
             'filters' => $request->only(['search','status','from','to','page']),
         ]);
+    }
+
+    public function formPengusulan(Request $request){
+        return inertia('Pengusul/FormPengusulan');
     }
 }
