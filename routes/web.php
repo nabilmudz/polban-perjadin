@@ -14,6 +14,7 @@ Route::get('/', function () {
             'admin' => '/admin/dashboard',
             'pengusul' => '/pengusul/dashboard',
             'wadir1' => '/wadir1/dashboard',
+            'direktur' => '/direktur/dashboard',
             default => '/login',
         });
     }
@@ -39,6 +40,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'wadir1'])
             ->name('wadir1.dashboard');
     });
+
+    // Direktur routes
+    Route::prefix('direktur')->name('direktur.')->middleware(['auth', 'role:direktur'])->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'direktur'])->name('dashboard');
+    });
+
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
