@@ -5,19 +5,23 @@ import getSidebarLinks from '@/utils/getSidebarLinks.js'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { route } from 'ziggy-js'
 
-const { props, url } = usePage()
-const user = props.auth.user
-const Ziggy = props.ziggy
+const page = usePage()
+const user = page.props.auth.user
+const Ziggy = page.props.ziggy
 
-const links = getSidebarLinks(user.role).map(link => ({
-  ...link,
-  href: route(link.route, {}, false, Ziggy)
-}))
+const links = getSidebarLinks(user.role).map(link => {
+  const href = route(link.route, {}, false, Ziggy)
+  return {
+    ...link,
+    href,
+    pathname: new URL(href, window.location.origin).pathname,
+  }
+})
 
-const currentPath = computed(() => new URL(url, window.location.origin).pathname)
+const currentPath = computed(() => new URL(page.url, window.location.origin).pathname)
 
+const isActive = (link) => currentPath.value === link.pathname || currentPath.value.startsWith(link.pathname + '/')
 const logout = () => router.post(route('logout', {}, false, Ziggy))
-const isActive = (link) => currentPath.value.startsWith(link.href)
 </script>
 
 <template>
@@ -31,7 +35,6 @@ const isActive = (link) => currentPath.value.startsWith(link.href)
         </div>
       </div>
 
-      <!-- Navigation -->
       <nav class="space-y-2">
         <Link
           v-for="link in links"
@@ -50,7 +53,6 @@ const isActive = (link) => currentPath.value.startsWith(link.href)
       </nav>
     </div>
 
-    <!-- Logout -->
     <div>
       <form @submit.prevent="logout">
         <button

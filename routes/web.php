@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SuratTugasController;
+use App\Http\Controllers\PelaksanaController;
 use App\Http\Controllers\Direktur\DaftarPersetujuanController;
 use App\Http\Controllers\BKU\DaftarLaporanController;
 use App\Http\Controllers\Auth\PasswordController;
@@ -50,6 +51,13 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('pengusul')->middleware(['auth', 'role:pengusul'])->group(function () {
         Route::get('/dashboard', [PengusulController::class, 'dashboard'])->name('pengusul.dashboard');
         Route::get('/pengusulan', [PengusulController::class, 'daftarPengusulan'])->name('pengusul.pengajuan');
+        Route::get('/tambah-pengusulan', [PengusulController::class, 'formPengusulan'])->name('pengusul.form');
+    });
+
+    // Pelaksana
+    Route::prefix('pelaksana')->name('pelaksana.')->middleware(['auth', 'role:pelaksana'])->group(function () {
+        Route::get('/dashboard', [PelaksanaController::class, 'dashboard'])->name('dashboard');
+        Route::get('/daftarlaporan', [PelaksanaController::class, 'daftarLaporan'])->name('daftarlaporan');
     });
 
     // Wadir1 routes

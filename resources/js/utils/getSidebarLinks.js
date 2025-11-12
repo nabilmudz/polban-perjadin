@@ -15,6 +15,12 @@ export default function getSidebarLinks(role) {
           component: "Dashboards/PengusulDashboard"
         },
         {
+          name: "Tambah Pengajuan",
+          route: "pengusul.form",
+          icon: "file-lines",
+          component: "Pengusul/FormPengusulan"
+        },
+        {
           name: "Daftar Pengajuan",
           route: "pengusul.pengajuan",
           icon: "file-lines",
@@ -22,6 +28,23 @@ export default function getSidebarLinks(role) {
         },
       ];
 
+      case 'pelaksana':
+      return [
+        {
+          name: "Dashboard",
+          route: "pelaksana.dashboard",
+          icon: "house",
+          component: "Dashboards/PelaksanaDashboard"
+        },
+        {
+          name: "Daftar Laporan",
+          route: "pelaksana.daftarlaporan",
+          icon: "clipboard",
+          component: "Pelaksana/DaftarLaporan"
+        },
+
+      ];
+      
     case 'direktur':
       return [
         {
