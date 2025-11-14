@@ -47,6 +47,8 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->intended('/direktur/dashboard');
             case 'bku':
                 return redirect()->intended('/bku/dashboard');
+            case 'sekdir':
+                return redirect()->route('sekdir.dashboard');
             default:
                 Auth::logout();
                 return redirect()->route('login')->withErrors(['role' => 'Invalid role']);
