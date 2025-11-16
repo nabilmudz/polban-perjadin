@@ -13,6 +13,7 @@ use App\Http\Controllers\Direktur\DaftarPersetujuanController;
 use App\Http\Controllers\BKU\DaftarLaporanController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\SekdirController;
 
 // Entry
 Route::get('/', function () {
@@ -24,6 +25,7 @@ Route::get('/', function () {
             'direktur' => '/direktur/dashboard',
             'bku' => '/bku/dashboard',
             'pelaksana' => '/pelaksana/dashboard',
+            'sekdir'=>'/sekdir/dashboard',
             default => '/login',
         });
     }
@@ -81,6 +83,13 @@ Route::middleware(['auth'])->group(function () {
             ->name('daftarlaporan&perjalanan');
     });
 
+    // SEKDIR
+    Route::prefix('sekdir')->name('sekdir.')->middleware(['auth', 'role:sekdir'])->group(function () {
+        Route::get('/dashboard', [SekdirController::class, 'dashboard'])->name('dashboard');
+        Route::get('/nomor-surat', [SekdirController::class, 'nomorSurat'])->name('nomorsurat');
+        Route::get('/nomor-surat/{id}/review', [SekdirController::class, 'review'])->name('review');
+        Route::post('/nomor-surat/{id}/apply', [SekdirController::class, 'applyNomor'])->name('apply');
+    });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
