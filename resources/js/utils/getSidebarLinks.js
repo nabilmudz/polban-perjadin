@@ -91,6 +91,12 @@ export default function getSidebarLinks(role) {
           icon: "file-lines",
           component: "Sekdir/NomorSurat",
         },
+        {
+          name: "History",
+          route: "sekdir.history",
+          icon: "clock",
+          component: "Sekdir/HistoryPersetujuan",
+        }
       ];
 
     default:
