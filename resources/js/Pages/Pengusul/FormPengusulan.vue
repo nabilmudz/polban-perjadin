@@ -1,4 +1,5 @@
 <template>
+  <Head title="Form Pengusulan" />
   <div class="bg-white w-full h-auto rounded-md">
     <HeaderPage />
     <div class="p-8">
@@ -78,10 +79,16 @@
                 <input v-model="lokasi.tempat" type="text" placeholder="Tempat" class="border-r px-3 py-2 w-full" />
                 <input v-model="lokasi.alamat" type="text" placeholder="Alamat" class="px-3 py-2 w-full" />
             </div>
-
-            <button type="button" @click="addLokasi" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded">
-                Tambah Lokasi
+            <button
+              type="button"
+              @click="addLokasi"
+              class="mt-2 px-2 py-1 border-2 border-green-600 text-green-600 rounded flex items-center gap-2 
+                    hover:bg-green-600 hover:text-white transition-colors duration-200"
+            >
+              <font-awesome-icon :icon="['far', 'square-plus']" />
+              Tambah Lokasi
             </button>
+
             </div>
 
             <div>
@@ -103,8 +110,13 @@
                 <span>/</span>
                 <input type="text" placeholder="Tahun" class="border rounded px-2 py-1 w-20 text-center" />
                 </div>
-                <button type="button" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded">
-                Lihat Nomor Terpakai 30 Hari Terakhir
+                <button
+                  type="button"
+                  class="mt-2 px-2 py-1 border-2 border-gray-500 text-gray-600 rounded 
+                        hover:border-primary-default hover:text-primary-default hover:bg-primary-light/10 
+                        active:bg-primary-light/30 transition-all duration-200"
+                >
+                  Lihat Nomor Terpakai 30 Hari Terakhir
                 </button>
                 <textarea class="w-full border rounded px-3 py-2 mt-1" rows="3" disabled placeholder="Nomor terpakai akan muncul disini"></textarea>
             </div>
@@ -112,7 +124,7 @@
         <div class="col-span-1 md:col-span-2 flex justify-end">
         <button 
             type="submit" 
-            class="px-6 py-2 bg-green-500 text-white font-semibold rounded hover:bg-green-600"
+            class="px-6 py-2 bg-primary-default text-white font-semibold rounded hover:bg-primary-dark"
         >
             Selanjutnya
         </button>
@@ -124,6 +136,7 @@
 </template>
 
 <script setup>
+import { Head } from '@inertiajs/vue3'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import { reactive, ref } from 'vue'
 import provinsiList from '@/utils/provinsi.js'

@@ -73,6 +73,7 @@
                     </a>
 
                     <button
+                      @click="openUploadModal(row)"
                       v-else-if="row.status === 'Proses'"
                       class="px-3 py-1 bg-amber-500 text-white rounded text-sm"
                     >
@@ -89,7 +90,6 @@
                   </div>
                 </td>
               </tr>
-
               <tr v-if="filteredLaporan.length === 0">
                 <td colspan="9" class="px-4 py-6 text-center text-gray-500">Tidak ada laporan ditemukan.</td>
               </tr>
@@ -97,6 +97,10 @@
           </table>
         </div>
       </div>
+      <Modal
+        :show="isUploadModalOpen"
+        @close="isUploadModalOpen = false"
+      />
     </div>
   </AppLayout>
 </template>
@@ -107,6 +111,14 @@ import HeaderPage from '@/Components/HeaderPage.vue'
 import StatCard from '@/Components/StatCard.vue'
 import { usePage } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
+import Modal from './Partials/Modal.vue'
+
+const isUploadModalOpen = ref(false)
+
+const openUploadModal = (row) => {
+  console.log('Open modal for row:', row)
+  isUploadModalOpen.value = true
+}
 
 const { props } = usePage()
 const laporan = ref(props.laporan ?? [])

@@ -1,11 +1,6 @@
 
 export default function getSidebarLinks(role) {
   switch (role) {
-    // case 'WADIR1':
-    //   return [
-    //     { name: "Dashboard", route: "admin.dashboard", icon: "tachometer-alt" },
-    //     { name: "Users", route: "admin.users", icon: "users" },
-    //   ];
     case 'pengusul':
       return [
         {
@@ -15,16 +10,22 @@ export default function getSidebarLinks(role) {
           component: "Dashboards/PengusulDashboard"
         },
         {
-          name: "Tambah Pengajuan",
+          name: "Tambah Pengusulan",
           route: "pengusul.form",
           icon: "file-lines",
           component: "Pengusul/FormPengusulan"
         },
         {
-          name: "Daftar Pengajuan",
+          name: "Daftar Pengusulan",
           route: "pengusul.pengajuan",
           icon: "file-lines",
           component: "Pengusul/DaftarPengajuan"
+        },
+        {
+          name: "Draft",
+          route: "pengusul.draft",
+          icon: "file",
+          component: "Pengusul/DraftPengajuan"
         },
       ];
 
@@ -42,7 +43,6 @@ export default function getSidebarLinks(role) {
           icon: "clipboard",
           component: "Pelaksana/DaftarLaporan"
         },
-
       ];
       
     case 'direktur':
@@ -75,6 +75,22 @@ export default function getSidebarLinks(role) {
           icon: "file-lines",
           component: "BKU/DaftarLaporan&Perjalanan"
         }
+      ];
+
+    case 'admin':
+      return [
+        {
+          name: "Daftar Pegawai",
+          route: "admin.pegawai",
+          icon: "user",
+          component: "Admin/DaftarPegawai"
+        },
+        // {
+        //   name: "Laporan & Bukti Perjalanan Dinas",
+        //   route: "bku.daftarlaporan&perjalanan",
+        //   icon: "file-lines",
+        //   component: "BKU/DaftarLaporan&Perjalanan"
+        // }
       ];
 
     default:
