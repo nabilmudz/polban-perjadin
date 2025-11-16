@@ -90,12 +90,13 @@ Route::middleware(['auth'])->group(function () {
             ->name('daftarlaporan&perjalanan');
     });
 
-    // Sekdir
+    // SEKDIR
     Route::prefix('sekdir')->name('sekdir.')->middleware(['auth', 'role:sekdir'])->group(function () {
         Route::get('/dashboard', [SekdirController::class, 'dashboard'])->name('dashboard');
         Route::get('/nomor-surat', [SekdirController::class, 'nomorSurat'])->name('nomorsurat');
+        Route::get('/nomor-surat/{id}/review', [SekdirController::class, 'review'])->name('review');
+        Route::post('/nomor-surat/{id}/apply', [SekdirController::class, 'applyNomor'])->name('apply');
     });
-
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

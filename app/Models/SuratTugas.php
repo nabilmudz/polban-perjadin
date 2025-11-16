@@ -55,11 +55,13 @@ class SuratTugas extends Model
         'template_tembusan' => 'array',
         'wadir_signature_position' => 'array',
         'direktur_signature_position' => 'array',
-        // 'tanggal_berangkat' => 'datetime',
-        // 'tanggal_pulang' => 'datetime',
-        // 'tanggal_paraf_wadir' => 'datetime',
-        // 'tanggal_persetujuan_direktur' => 'datetime',
-        // 'tanggal_penomoran_sekdir' => 'datetime',
+        'tanggal_berangkat' => 'datetime',
+        'tanggal_pulang' => 'datetime',
+        'tanggal_paraf_wadir' => 'datetime',
+        'tanggal_persetujuan_direktur' => 'datetime',
+        'tanggal_penomoran_sekdir' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
     public function user()
     {
