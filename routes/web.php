@@ -111,6 +111,7 @@ Route::prefix('pegawai')->name('pegawai.')->group(function () {
     Route::put('/{id}', [PegawaiController::class, 'update'])->name('update');
     Route::delete('/{id}', [PegawaiController::class, 'destroy'])->name('destroy');
     Route::patch('/toggle-status/{id}', [PegawaiController::class, 'toggleStatus'])->name('toggleStatus');
+    Route::post('/upload-excel', [PegawaiController::class, 'uploadExcel'])->name('uploadExcel');
 });
 
 

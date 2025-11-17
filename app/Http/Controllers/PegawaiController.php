@@ -5,6 +5,8 @@ use Illuminate\Http\Request;
 use App\Services\PegawaiService;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use App\Imports\PegawaiImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PegawaiController extends Controller
 {
@@ -67,6 +69,22 @@ class PegawaiController extends Controller
     {
         $this->service->toggleStatus($id);
         return redirect()->back();
+    }
+
+    public function uploadExcel(Request $request)
+    {
+        $request->validate(['file' => 'required|mimes:xlsx,xls']);
+
+        $import = new PegawaiImport();
+        Excel::import($import, $request->file('file'));
+
+        if (!empty($import->duplicates)) {
+            return response()->json([
+                'duplicates' => $import->duplicates
+            ]);
+        }
+
+        return response()->json(['success' => 'Berhasil mengimpor pegawai']);
     }
 
 }

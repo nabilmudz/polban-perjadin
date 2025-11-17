@@ -45,7 +45,7 @@
           <font-awesome-icon :icon="['far', 'file-lines']" class="text-md" />
           Tambah Pegawai
         </button>
-        <button class="bg-green-600 text-white px-3 py-2 rounded" @click="exportExcel">
+        <button class="bg-green-600 text-white px-3 py-2 rounded" @click="showUploadModal = true">
           <font-awesome-icon :icon="['far', 'file-lines']" class="text-md" />
           Upload Excel
         </button>
@@ -59,22 +59,42 @@
       @close="showAddModal = false"
       @submit="submitPegawai"
     />
+
+    <FormExcelPegawai 
+      v-if="showUploadModal" 
+      @close="showUploadModal=false" 
+      @success="showUploadModal=false; reloadPage()"
+      @dupes="excelErrors = $event; showUploadModal = false"
+    />
+
+    <ExcelErrorModal
+      :show="excelErrors.length > 0"
+      :errors="excelErrors"
+      @close="excelErrors = []"
+    />
+
   </div>
 </template>
 
 <script setup>
+import { ref, reactive, computed, watch } from 'vue'
+import { usePage, router, Head } from '@inertiajs/vue3'
+import debounce from 'lodash.debounce'
+
 import HeaderPage from '@/Components/HeaderPage.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import FormPegawai from '@/Pages/Admin/Partials/FormPegawai.vue'
-import { usePage, router, Head } from '@inertiajs/vue3'
-import { reactive, ref, watch, computed } from 'vue'
-import debounce from 'lodash.debounce'
+import FormExcelPegawai from '@/Pages/Admin/Partials/FormExcelPegawai.vue'
+import ExcelErrorModal from '@/Pages/Admin/Partials/ExcelErrorModal.vue'
 import { statusToggle } from '@/utils/statusToggle'
 
 const page = usePage()
-const pegawai = computed(() => page.props.pegawai)
+const pegawai = computed(() => page.props.pegawai)  
+const excelErrors = ref(page.props.excelDuplicates || [])
 
 const showAddModal = ref(false)
+const showUploadModal = ref(false)
+
 const form = reactive({
   nama: '',
   nip: '',
@@ -122,31 +142,33 @@ const toggleStatus = async (row) => {
     await router.patch(route('pegawai.toggleStatus', row.id), {}, { 
       preserveState: true, 
       only: ['pegawai']
-    });
+    })
   } catch (e) {
-    console.error(e);
-    alert('Failed to update status');
+    console.error(e)
+    alert('Failed to update status')
   }
-};
+}
 
 const submitPegawai = async () => {
   try {
     await router.post(route('pegawai.store'), { ...form }, { 
       preserveScroll: true,
       preserveState: true,
-    });
-
-    showAddModal.value = false;
-
-    Object.keys(form).forEach(key => form[key] = key === 'status' ? 1 : '');
-
-    router.reload({ only: ['pegawai'] })
-
+    })
+    showAddModal.value = false
+    Object.keys(form).forEach(key => form[key] = key === 'status' ? 1 : '')
+    reloadPage()
   } catch (err) {
-    console.error(err);
-    alert('Failed to add pegawai');
+    console.error(err)
+    alert('Failed to add pegawai')
   }
-};
+}
+
+const closeModal = () => {
+  excelErrors.value = []
+}
+
+const reloadPage = () => router.reload({ only: ['pegawai', 'excelDuplicates'] })
 </script>
 
 <script>

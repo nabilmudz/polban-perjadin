@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Pegawai;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\PegawaiImport;
 
 class PegawaiService
 {
@@ -83,4 +85,16 @@ class PegawaiService
 
         return $pegawai;
     }
+
+    public function importExcel($file)
+    {
+        try {
+            Excel::import(new PegawaiImport, $file);
+        } catch (\Exception $e) {
+            throw new \Exception("Gagal mengimpor file: " . $e->getMessage());
+        }
+
+        return true;
+    }
+
 }
