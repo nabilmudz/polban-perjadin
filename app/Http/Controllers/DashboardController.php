@@ -13,12 +13,12 @@ class DashboardController extends Controller
         return Inertia::render('Dashboards/AdminDashboard');
     }
 
-    public function wadir1()
-    {
-        return Inertia::render('Dashboards/WadirDashboard', [
-            'role' => 'wadir1',
-        ]);
-    }
+    // public function wadir1()
+    // {
+    //     return Inertia::render('Dashboards/WadirDashboard', [
+    //         'role' => 'wadir1',
+    //     ]);
+    // }
 
 
     // ==== Adding the direktur dashboard method ==== //

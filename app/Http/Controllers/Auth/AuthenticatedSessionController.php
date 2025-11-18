@@ -41,6 +41,12 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->route('admin.dashboard');
             case 'wadir1':
                 return redirect()->route('wadir1.dashboard');
+            case 'wadir2':
+                return redirect()->intended('wadir2/dashboard');
+            case 'wadir3':
+                return redirect()->route('wadir3.dashboard');
+            case 'wadir4':
+                return redirect()->route('wadir4.dashboard');
             case 'pelaksana':
                 return redirect()->route('pelaksana.dashboard');
             case 'direktur':

@@ -1,11 +1,24 @@
-
 export default function getSidebarLinks(role) {
   switch (role) {
-    // case 'WADIR1':
-    //   return [
-    //     { name: "Dashboard", route: "admin.dashboard", icon: "tachometer-alt" },
-    //     { name: "Users", route: "admin.users", icon: "users" },
-    //   ];
+    case 'wadir1':
+    case 'wadir2':
+    case 'wadir3':
+    case 'wadir4':
+      return [
+        {
+          name: "Dashboard",
+          route: `${role}.dashboard`,
+          icon: "tachometer-alt",
+          component: "Wadir/WadirDashboard"
+        },
+        {
+          name: "Persetujuan",
+          route: `${role}.persetujuan`,
+          icon: "check",
+          component: "Wadir/Persetujuan"
+        },
+      ];
+
     case 'pengusul':
       return [
         {
@@ -28,7 +41,7 @@ export default function getSidebarLinks(role) {
         },
       ];
 
-      case 'pelaksana':
+    case 'pelaksana':
       return [
         {
           name: "Dashboard",
@@ -41,10 +54,9 @@ export default function getSidebarLinks(role) {
           route: "pelaksana.daftarlaporan",
           icon: "clipboard",
           component: "Pelaksana/DaftarLaporan"
-        },
-
+        }
       ];
-      
+
     case 'direktur':
       return [
         {
