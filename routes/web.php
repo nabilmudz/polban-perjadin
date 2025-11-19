@@ -11,6 +11,7 @@ use App\Http\Controllers\PelaksanaController;
 use App\Http\Controllers\Direktur\DaftarPersetujuanController;
 use App\Http\Controllers\BKU\DaftarLaporanController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\BKU\HistoryPerjalananDinasController;
 
 
 // To force logout in case of accidental role change
@@ -87,6 +88,10 @@ Route::middleware(['auth'])->group(function () {
         // Daftar Laporan & Perjalanan
         Route::get('/daftarlaporan&perjalanan', [DaftarLaporanController::class, 'index'])
             ->name('daftarlaporan&perjalanan');
+
+        // History Perjalanan Dinas
+        Route::get('/historyperjalanandinas', [HistoryPerjalananDinasController::class, 'index'])
+            ->name('historyperjalanandinas');
     });
 
 

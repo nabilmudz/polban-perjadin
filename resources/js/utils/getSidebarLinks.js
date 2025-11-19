@@ -74,6 +74,12 @@ export default function getSidebarLinks(role) {
           route: "bku.daftarlaporan&perjalanan",
           icon: "file-lines",
           component: "BKU/DaftarLaporan&Perjalanan"
+        },
+        {
+          name: "History",
+          route: "bku.historyperjalanandinas",
+          icon: "clock-rotate-left",
+          component: "BKU/HistoryPerjalananDinas"
         }
       ];
 
