@@ -122,6 +122,7 @@ class PengusulController extends Controller
                 return [
                     ...$item->toArray(),
                     'created_at' => $item->created_at->format('Y-m-d'),
+                    'tanggal_berangkat' => $item->created_at->format('Y-m-d'),
                     'no_usulan_surat' => "$item->nomor_urutan_surat/$item->kode_perihal/$item->tahun_nomor_surat",
                 ];
             }),

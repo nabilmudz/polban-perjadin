@@ -123,16 +123,22 @@
         </div>
         <div class="col-span-1 md:col-span-2 flex justify-end">
         <button 
-            type="submit" 
-            class="px-6 py-2 bg-primary-default text-white font-semibold rounded hover:bg-primary-dark"
+          type="button"
+          @click="handleNext"
+          class="px-6 py-2 bg-primary-default text-white font-semibold rounded hover:bg-primary-dark"
         >
-            Selanjutnya
+          Selanjutnya
         </button>
         </div>
 
       </form>
     </div>
   </div>
+  <FormPersonel
+    :show="showDataPersonel"
+    @close="showDataPersonel = false"
+  />
+
 </template>
 
 <script setup>
@@ -140,12 +146,18 @@ import { Head } from '@inertiajs/vue3'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import { reactive, ref } from 'vue'
 import provinsiList from '@/utils/provinsi.js'
+import FormPersonel from './FormPersonel.vue'
 
 const lokasiList = reactive([
   { tempat: '', alamat: '' }
 ])
 const addLokasi = () => {
   lokasiList.push({ tempat: '', alamat: '' })
+}
+const showDataPersonel = ref(false)
+
+const handleNext = () => {
+  showDataPersonel.value = true
 }
 
 const hasPagu = ref(false)
