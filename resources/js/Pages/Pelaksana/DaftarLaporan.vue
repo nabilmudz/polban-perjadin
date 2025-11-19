@@ -31,12 +31,12 @@
         </div>
       </div>
 
-      <div class="p-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <!-- <div class="p-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard title="Total Laporan" icon="file" :count="laporan.length" />
         <StatCard title="Selesai" icon="check-circle" :count="laporan.filter(l => l.status === 'Selesai').length" />
         <StatCard title="Proses" icon="clock" :count="laporan.filter(l => l.status === 'Proses').length" />
         <StatCard title="Ditolak" icon="times-circle" :count="laporan.filter(l => l.status === 'Ditolak').length" />
-      </div>
+      </div> -->
 
       <div class="p-8">
         <div class="overflow-x-auto">

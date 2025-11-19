@@ -31,25 +31,26 @@
                 >
                     <template #status_surat="{ row }">
                     <StatusBadges :status="row.status_surat" />
-                    </template><template #action="{ row }">
-                    <div class="flex gap-2">
-                        <button
-                        v-for="action in getRowActions(row, currentUser.role)"
-                        :key="action.type"
-                        @click="handleAction(action.type, row)"
-                        :title="action.type"
-                        class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90"
-                        :class="{
-                            'bg-blue-500 text-white': action.color === 'blue',
-                            'bg-green-500 text-white': action.color === 'green',
-                            'bg-red-500 text-white': action.color === 'red',
-                            'bg-yellow-400 text-black': action.color === 'yellow',
-                            'bg-purple-500 text-white': action.color === 'purple',
-                        }"
-                        >
-                        <font-awesome-icon :icon="['far', action.icon]" class="text-md" />
-                        </button>
-                    </div>
+                    </template>
+                    <template #action="{ row }">
+                        <div class="flex gap-2">
+                            <button
+                            v-for="action in getRowActions(row, currentUser.role)"
+                            :key="action.type"
+                            @click="handleAction(action.type, row)"
+                            :title="action.type"
+                            class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90"
+                            :class="{
+                                'bg-blue-500 text-white': action.color === 'blue',
+                                'bg-green-500 text-white': action.color === 'green',
+                                'bg-red-500 text-white': action.color === 'red',
+                                'bg-yellow-400 text-black': action.color === 'yellow',
+                                'bg-purple-500 text-white': action.color === 'purple',
+                            }"
+                            >
+                            <font-awesome-icon :icon="['far', action.icon]" class="text-md" />
+                            </button>
+                        </div>
                     </template>
                 </DataTable>
                 </div> 
