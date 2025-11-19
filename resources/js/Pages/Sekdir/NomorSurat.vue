@@ -39,7 +39,6 @@
   </AppLayout>
 </template>
 
-
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
@@ -71,7 +70,6 @@ const gotoReview = (id) => {
 }
 
 const columns = [
-  { key: 'no', label: 'No' },
   { key: 'tanggal_pengajuan', label: 'Tanggal Pengusulan' },
   { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
   { key: 'nomor_surat_pengusulan', label: 'Nomor Surat Pengusulan' },
