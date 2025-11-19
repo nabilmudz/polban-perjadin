@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\PengusulController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -13,26 +14,14 @@ use App\Http\Controllers\BKU\DaftarLaporanController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Wadir\WadirController;
 use App\Http\Controllers\BKU\HistoryPerjalananDinasController;
-
-
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SekdirController;
-
-// To force logout in case of accidental role change
-// use Illuminate\Support\Facades\Auth;
-
-// Route::get('/force-logout', function () {
-//     Auth::logout();
-//     session()->invalidate();
-//     session()->regenerateToken();
-
-//     return redirect('/login')->with('status', 'You have been logged out.');
-// });
 
 // Entry
 Route::get('/', function () {
     if (Auth::check()) {
         return redirect()->intended(match (Auth::user()->role) {
-            'admin' => '/admin/dashboard',
+            'admin' => '/admin/pegawai',
             'pengusul' => '/pengusul/dashboard',
             'wadir1' => '/wadir1/dashboard',
             'wadir2' => '/wadir2/dashboard',
@@ -51,16 +40,19 @@ Route::get('/', function () {
 
 Route::middleware(['auth'])->group(function () {
     // Admin
-    Route::prefix('admin')->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'admin'])
-            ->name('admin.dashboard');
+    Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
+        Route::get('/pegawai', [AdminController::class, 'pegawai'])
+            ->name('admin.pegawai');
     });
 
     // Pengusul 
-    Route::prefix('pengusul')->middleware(['auth', 'role:pengusul'])->group(function () {
-        Route::get('/dashboard', [PengusulController::class, 'dashboard'])->name('pengusul.dashboard');
-        Route::get('/pengusulan', [PengusulController::class, 'daftarPengusulan'])->name('pengusul.pengajuan');
-        Route::get('/tambah-pengusulan', [PengusulController::class, 'formPengusulan'])->name('pengusul.form');
+    Route::prefix('pengusul')
+        ->middleware(['auth', 'role:pengusul|wadir1|wadir2|wadir3|wadir4|sekdir'])
+        ->group(function () {
+            Route::get('/dashboard', [PengusulController::class, 'dashboardPengusulan'])->name('pengusul.dashboard');
+            Route::get('/pengusulan', [PengusulController::class, 'daftarPengusulan'])->name('pengusul.pengajuan');
+            Route::get('/tambah-pengusulan', [PengusulController::class, 'formPengusulan'])->name('pengusul.form');
+            Route::get('/draft', [PengusulController::class, 'draftPengusulan'])->name('pengusul.draft');
     });
 
     // Pelaksana
@@ -145,11 +137,6 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Surat Tugas
-// Route::middleware(['auth'])->group(function () {
-//     Route::resource('surat-tugas', SuratTugasController::class)->only(['index', 'show']);
-// });
-
 Route::prefix('surat-tugas')->group(function () {
     Route::get('/', [SuratTugasController::class, 'index']);
     Route::get('/{id}', [SuratTugasController::class, 'show']);
@@ -157,5 +144,16 @@ Route::prefix('surat-tugas')->group(function () {
     Route::put('/{id}', [SuratTugasController::class, 'update']);
     Route::delete('/{id}', [SuratTugasController::class, 'destroy']);
 });
+
+Route::prefix('pegawai')->name('pegawai.')->group(function () {
+    Route::get('/', [PegawaiController::class, 'index']);
+    Route::get('/{id}', [PegawaiController::class, 'show']);
+    Route::post('/', [PegawaiController::class, 'store'])->name('store');
+    Route::put('/{id}', [PegawaiController::class, 'update'])->name('update');
+    Route::delete('/{id}', [PegawaiController::class, 'destroy'])->name('destroy');
+    Route::patch('/toggle-status/{id}', [PegawaiController::class, 'toggleStatus'])->name('toggleStatus');
+    Route::post('/upload-excel', [PegawaiController::class, 'uploadExcel'])->name('uploadExcel');
+});
+
 
 require __DIR__.'/auth.php';

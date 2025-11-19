@@ -17,6 +17,12 @@ export default function getSidebarLinks(role) {
           icon: "check",
           component: "Wadir/Persetujuan"
         },
+        {
+          name: "Tambah Pengusulan",
+          route: "pengusul.form",
+          icon: "file-lines",
+          component: "Pengusul/FormPengusulan"
+        },
       ];
 
     case 'pengusul':
@@ -28,16 +34,22 @@ export default function getSidebarLinks(role) {
           component: "Dashboards/PengusulDashboard"
         },
         {
-          name: "Tambah Pengajuan",
+          name: "Tambah Pengusulan",
           route: "pengusul.form",
           icon: "file-lines",
           component: "Pengusul/FormPengusulan"
         },
         {
-          name: "Daftar Pengajuan",
+          name: "Daftar Pengusulan",
           route: "pengusul.pengajuan",
           icon: "file-lines",
           component: "Pengusul/DaftarPengajuan"
+        },
+        {
+          name: "Draft",
+          route: "pengusul.draft",
+          icon: "file",
+          component: "Pengusul/DraftPengajuan"
         },
       ];
 
@@ -114,7 +126,29 @@ export default function getSidebarLinks(role) {
           route: "sekdir.history",
           icon: "clock",
           component: "Sekdir/HistoryPersetujuan",
-        }
+        },
+        {
+          name: "Tambah Pengusulan",
+          route: "pengusul.form",
+          icon: "file-lines",
+          component: "Pengusul/FormPengusulan"
+        },
+      ];
+
+    case 'admin':
+      return [
+        {
+          name: "Daftar Pegawai",
+          route: "admin.pegawai",
+          icon: "user",
+          component: "Admin/DaftarPegawai"
+        },
+        // {
+        //   name: "Laporan & Bukti Perjalanan Dinas",
+        //   route: "bku.daftarlaporan&perjalanan",
+        //   icon: "file-lines",
+        //   component: "BKU/DaftarLaporan&Perjalanan"
+        // }
       ];
 
     default:

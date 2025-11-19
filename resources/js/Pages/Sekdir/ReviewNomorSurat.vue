@@ -36,6 +36,7 @@
 
 <script setup>
 import { usePage, router } from '@inertiajs/vue3'
+import { reactive } from 'vue'
 const { props } = usePage()
 
 const form = reactive({

@@ -33,7 +33,7 @@ const label = computed(() => {
     case 'under_bku_review':
       return 'Sedang Direview BKU'
     case 'returned_for_correction':
-      return 'Dikembalikan untuk Koreksi'
+      return 'Dikembalikan untuk Koreksi Pagu'
     case 'completed':
       return 'Selesai'
     default:

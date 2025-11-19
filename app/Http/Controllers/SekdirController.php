@@ -16,7 +16,8 @@ class SekdirController extends Controller
     public function dashboard(Request $request)
     {
         $query = SuratTugas::query()
-            ->where('status_surat', 'disetujui_wadir');
+            ->where('status_surat', 'submitted_wadir_review')
+            ->where('diusulkan_kepada', 'Wadir I');
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -31,14 +32,15 @@ class SekdirController extends Controller
         }
 
         if ($request->filled('from') && $request->filled('to')) {
-            $query->whereBetween('tanggal_pengajuan', [$request->from, $request->to]);
+            $query->whereBetween('created_at', [$request->from, $request->to]);
         }
 
         $suratTugas = $query->latest()->paginate(10)
             ->through(fn($item) => [
                 ...$item->toArray(),
-                'tanggal_pengajuan' => $this->formatDate($item->tanggal_pengajuan, 'Y-m-d'),
+                'created_at' => $this->formatDate($item->created_at, 'Y-m-d'),
                 'tanggal_berangkat' => $this->formatDate($item->tanggal_berangkat, 'Y-m-d'),
+                'nomor_surat' => "$item->nomor_urutan_surat/$item->kode_perihal/$item->tahun_nomor_surat"
             ])
             ->withQueryString();
 
@@ -72,17 +74,19 @@ class SekdirController extends Controller
 
     public function nomorSurat(Request $request)
     {
-        $query = SuratTugas::where('status_surat', 'disetujui_wadir');
+        $query = SuratTugas::query()
+            ->where('status_surat', 'submitted_wadir_review')
+            ->where('diusulkan_kepada', 'Wadir I');
 
         if ($request->filled('search')) {
             $query->where('perihal_tugas', 'like', "%{$request->search}%");
         }
 
-        $surat = $query->orderBy('tanggal_pengajuan', 'asc')
+        $surat = $query->orderBy('created_at', 'asc')
             ->paginate(10)
             ->through(fn($item) => [
                 'id'                     => $item->surat_tugas_id,
-                'tanggal_pengajuan'      => $this->formatDate($item->tanggal_pengajuan),
+                'created_at'             => $this->formatDate($item->created_at),
                 'tanggal_berangkat'      => $this->formatDate($item->tanggal_berangkat),
                 'nomor_surat_pengusulan' => $item->nomor_surat_usulan_jurusan ?? '-',
                 'sumber_dana'            => $item->sumber_dana ?? '-',
@@ -111,7 +115,8 @@ class SekdirController extends Controller
 
     public function history(Request $request)
     {
-        $query = SuratTugas::query();
+        $query = SuratTugas::query()
+            ->where('diusulkan_kepada', 'Wadir I');
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -128,7 +133,7 @@ class SekdirController extends Controller
         $surat = $query->latest()->paginate(10)
             ->through(fn($item) => [
                 'id'                     => $item->surat_tugas_id,
-                'tanggal_pengajuan'      => $this->formatDate($item->tanggal_pengajuan),
+                'created_at'             => $this->formatDate($item->created_at),
                 'tanggal_berangkat'      => $this->formatDate($item->tanggal_berangkat),
                 'nomor_surat_pengantar'  => $item->nomor_surat_usulan_jurusan ?? '-',
                 'nomor_surat_tugas'      => $item->nomor_surat_tugas_resmi ?? '-',
@@ -163,7 +168,7 @@ class SekdirController extends Controller
     {
         $surat = SuratTugas::findOrFail($id);
 
-        $lastSurat = SuratTugas::whereYear('tanggal_pengajuan', now()->year)
+        $lastSurat = SuratTugas::whereYear('created_at', now()->year)
             ->whereNotNull('nomor_urutan_surat')
             ->orderBy('nomor_urutan_surat', 'desc')
             ->first();

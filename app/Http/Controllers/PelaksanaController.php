@@ -13,12 +13,12 @@ class PelaksanaController extends Controller
 
         // Dummy data untuk testing
         $dummyTugas = [
-            ['id' => 1, 'nomor' => 1, 'nama_kegiatan' => 'osfd', 'tanggal_pelaksanaan' => '30 Oct 2025', 'status' => 'Belum Upload'],
-            ['id' => 2, 'nomor' => 2, 'nama_kegiatan' => 'fa', 'tanggal_pelaksanaan' => '29 Oct 2025', 'status' => 'Belum Upload'],
-            ['id' => 3, 'nomor' => 3, 'nama_kegiatan' => 'Dinas Luar Monev Anggaran', 'tanggal_pelaksanaan' => '29 Oct 2025 → 31 Oct 2025', 'status' => 'Belum Upload'],
-            ['id' => 4, 'nomor' => 4, 'nama_kegiatan' => 'Kegiatan 1', 'tanggal_pelaksanaan' => '28 Oct 2025', 'status' => 'Diterima BKU'],
-            ['id' => 5, 'nomor' => 5, 'nama_kegiatan' => 'asf', 'tanggal_pelaksanaan' => '27 Oct 2025', 'status' => 'Diterima BKU'],
-            ['id' => 6, 'nomor' => 6, 'nama_kegiatan' => 'osdfasf', 'tanggal_pelaksanaan' => '27 Oct 2025', 'status' => 'Belum Upload'],
+            ['id' => 1, 'nomor' => 1, 'nama_kegiatan' => 'osfd', 'tanggal_pelaksanaan' => '30 Oct 2025', 'status_surat' => 'awaiting_proof_upload'],
+            ['id' => 2, 'nomor' => 2, 'nama_kegiatan' => 'fa', 'tanggal_pelaksanaan' => '29 Oct 2025', 'status_surat' => 'awaiting_proof_upload'],
+            ['id' => 3, 'nomor' => 3, 'nama_kegiatan' => 'Dinas Luar Monev Anggaran', 'tanggal_pelaksanaan' => '29 Oct 2025 → 31 Oct 2025', 'status_surat' => 'awaiting_proof_upload'],
+            ['id' => 4, 'nomor' => 4, 'nama_kegiatan' => 'Kegiatan 1', 'tanggal_pelaksanaan' => '28 Oct 2025', 'status_surat' => 'completed'],
+            ['id' => 5, 'nomor' => 5, 'nama_kegiatan' => 'asf', 'tanggal_pelaksanaan' => '27 Oct 2025', 'status_surat' => 'completed'],
+            ['id' => 6, 'nomor' => 6, 'nama_kegiatan' => 'osdfasf', 'tanggal_pelaksanaan' => '27 Oct 2025', 'status_surat' => 'awaiting_proof_upload'],
         ];
 
         return Inertia::render('Dashboards/PelaksanaDashboard', [

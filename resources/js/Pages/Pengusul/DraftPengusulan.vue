@@ -3,7 +3,7 @@
   <div class=" bg-white w-full h-full rounded-md">
     <HeaderPage/>
     <div class="p-8">
-      <h1 class="text-3xl font-bold">Daftar Pengajuan</h1>
+      <h1 class="text-3xl font-bold">Draft Pengusulan</h1>
     </div>
     
     <DataTable
@@ -13,10 +13,12 @@
       :links="suratTugas.links"
       :filters="filters"
       :status-options="statusOptions"
-      route-name="pengusul.pengajuan"
+      :enable-status="false"
+      :enable-date="false"
+      route-name="pengusul.draft"
       @update:filters="Object.assign(filters, $event)"
       @changePage="(page) =>
-        router.get(route('pengusul.pengajuan'), { ...filters }, {
+        router.get(route('pengusul.draft'), { ...filters }, {
           preserveState: true,
           replace: true
         })
@@ -75,7 +77,7 @@ const filters = reactive({
 watch(
   filters,
   debounce(() => {
-    router.get(route('pengusul.pengajuan'), { ...filters }, {
+    router.get(route('pengusul.draft'), { ...filters }, {
       preserveState: true,
       replace: true,
     })
@@ -84,12 +86,12 @@ watch(
 )
 
 const columns = [
+  { key: 'perihal_tugas', label: 'Nama Kegiatan' },
   { key: 'created_at', label: 'Tanggal Pengusulan' },
   { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
   { key: 'no_usulan_surat', label: 'Nomor Surat Usulan' },
   { key: 'sumber_dana', label: 'Sumber Dana' },
   // { key: 'surat_undangan', label: 'Surat Undangan' },
-  { key: 'status_surat', label: 'Status' },
   { key: 'action', label: 'Aksi', fixedWidth: '180px' }
 ]
 

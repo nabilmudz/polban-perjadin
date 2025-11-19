@@ -9,9 +9,8 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class SuratTugasService
 {
-    public function getAll($filters = [], $user = null)
+    public function getAll(array $filters = [], $user = null)
     {
-        \Log::info('filters', $filters->all());
         $query = SuratTugas::query();
 
         if ($user && $user->role === 'pengusul') {
@@ -19,19 +18,23 @@ class SuratTugasService
         }
 
         if (!empty($filters['search'])) {
-            $query->where('title', 'like', '%' . $filters['search'] . '%');
+            $query->where(function ($q) use ($filters) {
+                $q->where('perihal_tugas', 'like', "%{$filters['search']}%")
+                ->orWhere('status_surat', 'like', "%{$filters['search']}%");
+            });
         }
 
         if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+            $query->where('status_surat', $filters['status']);
         }
 
-        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
-            $query->whereBetween('tanggal', [$filters['start_date'], $filters['end_date']]);
+        if (!empty($filters['from']) && !empty($filters['to'])) {
+            $query->whereBetween('created_at', [$filters['from'], $filters['to']]);
         }
 
-        return $query->orderBy('created_at', 'desc')->paginate(10);
+        return $query->latest()->paginate(10)->withQueryString();
     }
+
 
     public function getById($id)
     {

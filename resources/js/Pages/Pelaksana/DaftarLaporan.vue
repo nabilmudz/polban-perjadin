@@ -31,12 +31,12 @@
         </div>
       </div>
 
-      <div class="p-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <!-- <div class="p-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard title="Total Laporan" icon="file" :count="laporan.length" />
         <StatCard title="Selesai" icon="check-circle" :count="laporan.filter(l => l.status === 'Selesai').length" />
         <StatCard title="Proses" icon="clock" :count="laporan.filter(l => l.status === 'Proses').length" />
         <StatCard title="Ditolak" icon="times-circle" :count="laporan.filter(l => l.status === 'Ditolak').length" />
-      </div>
+      </div> -->
 
       <div class="p-8">
         <div class="overflow-x-auto">
@@ -73,6 +73,7 @@
                     </a>
 
                     <button
+                      @click="openUploadModal(row)"
                       v-else-if="row.status === 'Proses'"
                       class="px-3 py-1 bg-amber-500 text-white rounded text-sm"
                     >
@@ -89,7 +90,6 @@
                   </div>
                 </td>
               </tr>
-
               <tr v-if="filteredLaporan.length === 0">
                 <td colspan="9" class="px-4 py-6 text-center text-gray-500">Tidak ada laporan ditemukan.</td>
               </tr>
@@ -97,6 +97,10 @@
           </table>
         </div>
       </div>
+      <Modal
+        :show="isUploadModalOpen"
+        @close="isUploadModalOpen = false"
+      />
     </div>
   </AppLayout>
 </template>
@@ -107,6 +111,14 @@ import HeaderPage from '@/Components/HeaderPage.vue'
 import StatCard from '@/Components/StatCard.vue'
 import { usePage } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
+import Modal from './Partials/Modal.vue'
+
+const isUploadModalOpen = ref(false)
+
+const openUploadModal = (row) => {
+  console.log('Open modal for row:', row)
+  isUploadModalOpen.value = true
+}
 
 const { props } = usePage()
 const laporan = ref(props.laporan ?? [])

@@ -84,7 +84,7 @@ const openFile = (path) => {
 }
 
 const columns = [
-  { key: 'tanggal_pengajuan', label: 'Tanggal Pengusulan' },
+  { key: 'created_at', label: 'Tanggal Pengusulan' },
   { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
   { key: 'nomor_surat_pengantar', label: 'Nomor Surat Pengantar' },
   { key: 'nomor_surat_tugas', label: 'Nomor Surat Tugas' },

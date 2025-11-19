@@ -29,7 +29,18 @@
             :filters="filters"
             route-name="sekdir.dashboard"
             @update:filters="Object.assign(filters, $event)"
-          />
+            @changePage="(page) =>
+              router.get(route('sekdir.dashboard'), { ...filters, page }, {
+                preserveState: true,
+                replace: true
+              })
+            "
+          >
+            <template #status="{ row }">
+              <StatusBadges :status="row.status_surat" />
+            </template>
+          </DataTable>
+
         </div>
 
       </div>
@@ -42,25 +53,28 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import StatCard from '@/Components/StatCard.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
+import StatusBadges from '@/Components/Table/StatusBadges.vue'
 
 import { usePage, router } from '@inertiajs/vue3'
-import { reactive, watch } from 'vue'
+import { reactive, watch, computed } from 'vue'
 import debounce from 'lodash.debounce'
 
-const { props } = usePage()
-const summary = props.summary
-const suratTugas = props.suratTugas
+const page = usePage()
+const summary = page.props.summary
+
+const suratTugas = computed(() => page.props.suratTugas)
 
 const filters = reactive({
-  search: props.filters?.search || "",
-  status: props.filters?.status || "",
-  from: props.filters?.from || "",
-  to: props.filters?.to || "",
+  search: page.props.filters?.search || "",
+  status: page.props.filters?.status || "",
+  from: page.props.filters?.from || "",
+  to: page.props.filters?.to || "",
 })
 
-watch(filters,
+watch(
+  filters,
   debounce(() => {
-    router.get(route('sekdir.dashboard'), filters, {
+    router.get(route('sekdir.dashboard'), { ...filters }, {
       preserveState: true,
       replace: true,
     })
@@ -69,10 +83,10 @@ watch(filters,
 )
 
 const columns = [
-  { key: 'tanggal_pengajuan', label: 'Tanggal Pengajuan' },
+  { key: 'created_at', label: 'Tanggal Pengajuan' },
   { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
   { key: 'nomor_surat', label: 'Nomor Surat' },
   { key: 'sumber_dana', label: 'Sumber Dana' },
-  { key: 'status', label: 'status'},
+  { key: 'status', label: 'Status' },
 ]
 </script>
