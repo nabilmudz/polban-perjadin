@@ -73,7 +73,6 @@ const suratTugas = props.suratTugas
 const filters = ref(props.filters)
 
 const columns = [
-    { key: 'nomor', label: 'No', sortable: false },
     { key: 'nama_kegiatan', label: 'Nama Kegiatan' },
     { key: 'tanggal_pelaksanaan', label: 'Tanggal Pelaksanaan' },
     { key: 'status', label: 'Status' },

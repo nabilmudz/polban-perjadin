@@ -46,6 +46,12 @@ class DashboardController extends Controller
             'role' => 'wadir1',
         ]);
     }
+    // public function wadir1()
+    // {
+    //     return Inertia::render('Dashboards/WadirDashboard', [
+    //         'role' => 'wadir1',
+    //     ]);
+    // }
 
 
     // ==== Adding the direktur dashboard method ==== //
@@ -66,6 +72,9 @@ class DashboardController extends Controller
     }
 
 
+    // public function direktur()
+    // {
+    //     $user = auth()->user();
 
     public function direktur(Request $request)
     {
