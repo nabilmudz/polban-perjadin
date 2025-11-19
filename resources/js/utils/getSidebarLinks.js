@@ -54,7 +54,7 @@ export default function getSidebarLinks(role) {
           component: "Dashboards/DirekturDashboard"
         },
         {
-          name: "Persetujuan",
+          name: "Daftar Persetujuan",
           route: "direktur.daftarpersetujuan",
           icon: "square-check",
           component: "Direktur/DaftarPersetujuan"
