@@ -11,6 +11,9 @@ use App\Http\Controllers\PelaksanaController;
 use App\Http\Controllers\Direktur\DaftarPersetujuanController;
 use App\Http\Controllers\BKU\DaftarLaporanController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Wadir\WadirController;
+
+
 use App\Http\Controllers\SekdirController;
 
 // To force logout in case of accidental role change
@@ -31,7 +34,11 @@ Route::get('/', function () {
             'admin' => '/admin/dashboard',
             'pengusul' => '/pengusul/dashboard',
             'wadir1' => '/wadir1/dashboard',
+            'wadir2' => '/wadir2/dashboard',
+            'wadir3' => '/wadir3/dashboard',
+            'wadir4' => '/wadir4/dashboard',
             'direktur' => '/direktur/dashboard',
+            'pelaksana' => '/pelaksana/dashboard',
             'bku' => '/bku/dashboard',
             'sekdir'=>'/sekdir/dashboard',
             default => '/login',
@@ -61,11 +68,40 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/daftarlaporan', [PelaksanaController::class, 'daftarLaporan'])->name('daftarlaporan');
     });
 
-    // Wadir1 routes
-    Route::prefix('wadir1')->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'wadir1'])
-            ->name('wadir1.dashboard');
+    Route::middleware(['auth'])->group(function () {
+
+        $wadirList = ['wadir1', 'wadir2', 'wadir3', 'wadir4'];
+
+        foreach ($wadirList as $wadir) {
+
+            Route::prefix($wadir)
+                ->name($wadir . '.')
+                ->middleware(['role:' . $wadir])
+                ->group(function () {
+
+                    // Dashboard
+                    Route::get('/dashboard', [WadirController::class, 'index'])
+                        ->name('dashboard');
+
+                    // Halaman daftar persetujuan
+                    Route::get('/persetujuan', [WadirController::class, 'persetujuan'])
+                        ->name('persetujuan');
+
+                    // Lihat surat untuk disetujui
+                    Route::get('/persetujuan/{id}', [WadirController::class, 'show'])
+                        ->name('persetujuan.show');
+
+                    // Aksi approve
+                    Route::post('/persetujuan/{id}/approve', [WadirController::class, 'approve'])
+                        ->name('persetujuan.approve');
+
+                    // Aksi reject
+                    Route::post('/persetujuan/{id}/reject', [WadirController::class, 'reject'])
+                        ->name('persetujuan.reject');
+                });
+        }
     });
+
 
     // Direktur routes
     Route::prefix('direktur')->name('direktur.')->middleware(['auth', 'role:direktur'])->group(function () {
