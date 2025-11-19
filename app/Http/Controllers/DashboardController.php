@@ -38,7 +38,6 @@ class DashboardController extends Controller
         ]);
     }
 
-
     // public function direktur()
     // {
     //     $user = auth()->user();

@@ -89,6 +89,28 @@ export default function getSidebarLinks(role) {
         }
       ];
 
+    case 'sekdir':
+      return [
+        {
+          name: "Dashboard",
+          route: "sekdir.dashboard",
+          icon: "house",
+          component: "Sekdir/SekdirDashboard",
+        },
+        {
+          name: "Nomor Surat",
+          route: "sekdir.nomorsurat",
+          icon: "file-lines",
+          component: "Sekdir/NomorSurat",
+        },
+        {
+          name: "History",
+          route: "sekdir.history",
+          icon: "clock",
+          component: "Sekdir/HistoryPersetujuan",
+        }
+      ];
+
     default:
       return [];
   }
