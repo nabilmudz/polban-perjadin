@@ -10,6 +10,5 @@ export function getRowActions(row, userRole) {
     actions.push({ type: 'delete', icon: 'trash-can', color: 'red' })
   }
 
-
   return actions
 }

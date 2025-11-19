@@ -17,6 +17,12 @@ export default function getSidebarLinks(role) {
           icon: "check",
           component: "Wadir/Persetujuan"
         },
+        {
+          name: "Tambah Pengusulan",
+          route: "pengusul.form",
+          icon: "file-lines",
+          component: "Pengusul/FormPengusulan"
+        },
       ];
 
     case 'pengusul':
@@ -114,7 +120,13 @@ export default function getSidebarLinks(role) {
           route: "sekdir.history",
           icon: "clock",
           component: "Sekdir/HistoryPersetujuan",
-        }
+        },
+        {
+          name: "Tambah Pengusulan",
+          route: "pengusul.form",
+          icon: "file-lines",
+          component: "Pengusul/FormPengusulan"
+        },
       ];
 
     case 'admin':

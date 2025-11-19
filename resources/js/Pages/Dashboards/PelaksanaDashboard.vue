@@ -1,6 +1,6 @@
 <template>
     <AppLayout>
-        <div class="bg-white w-full h-full rounded-md shadow">
+        <div class="bg-white w-full rounded-md shadow">
             <HeaderPage />
             <div class="p-8">
                 <h1 class="text-3xl font-bold mb-4">Dashboard Pelaksana</h1>
@@ -64,18 +64,20 @@ import HeaderPage from '@/Components/HeaderPage.vue'
 import StatCard from '@/Components/StatCard.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
+import { getRowActions } from '@/utils/rowAction'
 import { usePage } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import { Link } from '@inertiajs/vue3'
 
 const { props } = usePage()
+const currentUser = props.auth.user
 const suratTugas = props.suratTugas
 const filters = ref(props.filters)
 
 const columns = [
     { key: 'nama_kegiatan', label: 'Nama Kegiatan' },
     { key: 'tanggal_pelaksanaan', label: 'Tanggal Pelaksanaan' },
-    { key: 'status', label: 'Status' },
-    { key: 'aksi', label: 'Aksi', sortable: false },
+    { key: 'status_surat', label: 'Status' },
+    { key: 'action', label: 'Aksi', sortable: false },
 ]
 </script>

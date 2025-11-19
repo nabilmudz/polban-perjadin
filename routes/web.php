@@ -31,7 +31,6 @@ Route::get('/', function () {
             'direktur' => '/direktur/dashboard',
             'pelaksana' => '/pelaksana/dashboard',
             'bku' => '/bku/dashboard',
-            'pelaksana' => '/pelaksana/dashboard',
             'sekdir'=>'/sekdir/dashboard',
             default => '/login',
         });
@@ -48,11 +47,13 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Pengusul 
-    Route::prefix('pengusul')->middleware(['auth', 'role:pengusul'])->group(function () {
-        Route::get('/dashboard', [PengusulController::class, 'dashboardPengusulan'])->name('pengusul.dashboard');
-        Route::get('/pengusulan', [PengusulController::class, 'daftarPengusulan'])->name('pengusul.pengajuan');
-        Route::get('/tambah-pengusulan', [PengusulController::class, 'formPengusulan'])->name('pengusul.form');
-        Route::get('/draft', [PengusulController::class, 'draftPengusulan'])->name('pengusul.draft');
+    Route::prefix('pengusul')
+        ->middleware(['auth', 'role:pengusul|wadir1|wadir2|wadir3|wadir4|sekdir'])
+        ->group(function () {
+            Route::get('/dashboard', [PengusulController::class, 'dashboardPengusulan'])->name('pengusul.dashboard');
+            Route::get('/pengusulan', [PengusulController::class, 'daftarPengusulan'])->name('pengusul.pengajuan');
+            Route::get('/tambah-pengusulan', [PengusulController::class, 'formPengusulan'])->name('pengusul.form');
+            Route::get('/draft', [PengusulController::class, 'draftPengusulan'])->name('pengusul.draft');
     });
 
     // Pelaksana

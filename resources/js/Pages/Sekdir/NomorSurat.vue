@@ -66,11 +66,11 @@ watch(filters,
 )
 
 const gotoReview = (id) => {
-  router.get(route('sekdir.review', id))
+  router.get(route('sekdir.nomorsurat.review', id))
 }
 
 const columns = [
-  { key: 'tanggal_pengajuan', label: 'Tanggal Pengusulan' },
+  { key: 'created_at', label: 'Tanggal Pengusulan' },
   { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
   { key: 'nomor_surat_pengusulan', label: 'Nomor Surat Pengusulan' },
   { key: 'sumber_dana', label: 'Sumber Dana' },

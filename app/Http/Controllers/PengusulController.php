@@ -84,6 +84,7 @@ class PengusulController extends Controller
             'data' => $surat->getCollection()->transform(function ($item) {
                 return [
                     ...$item->toArray(),
+                    'tanggal_berangkat' => $item->created_at->format('Y-m-d'),
                     'created_at' => $item->created_at->format('Y-m-d'),
                     'no_usulan_surat' => "$item->nomor_urutan_surat/$item->kode_perihal/$item->tahun_nomor_surat",
                 ];
