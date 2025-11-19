@@ -78,7 +78,7 @@ export default function getSidebarLinks(role) {
           component: "Dashboards/DirekturDashboard"
         },
         {
-          name: "Persetujuan",
+          name: "Daftar Persetujuan",
           route: "direktur.daftarpersetujuan",
           icon: "square-check",
           component: "Direktur/DaftarPersetujuan"
@@ -98,6 +98,12 @@ export default function getSidebarLinks(role) {
           route: "bku.daftarlaporan&perjalanan",
           icon: "file-lines",
           component: "BKU/DaftarLaporan&Perjalanan"
+        },
+        {
+          name: "History",
+          route: "bku.historyperjalanandinas",
+          icon: "clock-rotate-left",
+          component: "BKU/HistoryPerjalananDinas"
         }
       ];
 

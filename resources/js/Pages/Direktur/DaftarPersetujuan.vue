@@ -2,7 +2,7 @@
   <AppLayout>
     <div class="p-6">
 
-      <h1 class="text-3xl font-bold mb-6">Persetujuan</h1>
+      <h1 class="text-3xl font-bold mb-6">Daftar Persetujuan</h1>
 
       <!-- Search Form -->
       <form @submit.prevent="search" class="flex gap-3 mb-5">
