@@ -114,6 +114,18 @@ Route::middleware(['auth'])->group(function () {
         // Daftar Persetujuan Page
         Route::get('/daftarpersetujuan', [DaftarPersetujuanController::class, 'index'])
             ->name('daftarpersetujuan');
+        
+        Route::get('/persetujuan/{id}', [DaftarPersetujuanController::class, 'show'])
+            ->name('persetujuan.show');
+
+        Route::post('/persetujuan/{id}/approve', [DaftarPersetujuanController::class, 'approve'])
+        ->name('persetujuan.approve');
+
+        Route::post('/persetujuan/{id}/reject', [DaftarPersetujuanController::class, 'reject'])
+            ->name('persetujuan.reject');
+
+        Route::post('/persetujuan/{id}/revise', [DaftarPersetujuanController::class, 'revise'])
+            ->name('persetujuan.revise');
 
     });
 
