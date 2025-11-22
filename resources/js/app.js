@@ -9,8 +9,8 @@ import { Ziggy } from './ziggy';
 
 import { library } from '@fortawesome/fontawesome-svg-core';
     import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-    import {faHome, faFile, faShareFromSquare, faSquareCheck, faFileLines, faFolderClosed, faUser, faCircleXmark, faCircleLeft, faEye, faPenToSquare, faTrashCan, faCircleDown, faClock, faSquarePlus} from '@fortawesome/free-regular-svg-icons';
-    library.add(faHome, faFile, faShareFromSquare, faSquareCheck, faFileLines, faFolderClosed, faUser, faCircleXmark, faCircleLeft, faEye, faPenToSquare, faTrashCan, faCircleDown, faClock, faSquarePlus);
+    import {faHome, faFile, faShareFromSquare, faSquareCheck, faFileLines, faFolderClosed, faUser, faCircleXmark, faCircleLeft, faEye, faPenToSquare, faTrashCan, faCircleDown, faClock, faSquarePlus, faClipboard} from '@fortawesome/free-regular-svg-icons';
+    library.add(faHome, faFile, faShareFromSquare, faSquareCheck, faFileLines, faFolderClosed, faUser, faCircleXmark, faCircleLeft, faEye, faPenToSquare, faTrashCan, faCircleDown, faClock, faSquarePlus, faClipboard);
 
     const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 

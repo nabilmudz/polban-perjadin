@@ -8,14 +8,20 @@ export default function getSidebarLinks(role) {
         {
           name: "Dashboard",
           route: `${role}.dashboard`,
-          icon: "tachometer-alt",
+          icon: "house",
           component: "Wadir/WadirDashboard"
         },
         {
           name: "Persetujuan",
           route: `${role}.persetujuan`,
-          icon: "check",
+          icon: "square-check",
           component: "Wadir/Persetujuan"
+        },
+        {
+          name: "History",
+          route: `${role}.history`,
+          icon: "clock",
+          component: "Wadir/HistoryWadir"
         },
         {
           name: "Tambah Pengusulan",
@@ -66,6 +72,12 @@ export default function getSidebarLinks(role) {
           route: "pelaksana.daftarlaporan",
           icon: "clipboard",
           component: "Pelaksana/DaftarLaporan"
+        },
+        {
+          name: "History",
+          route: "pelaksana.historypelaksana",
+          icon: "clock",
+          component: "Pelaksana/HistoryPelaksana"
         }
       ];
 
@@ -102,7 +114,6 @@ export default function getSidebarLinks(role) {
         {
           name: "History",
           route: "bku.historyperjalanandinas",
-          icon: "clock-rotate-left",
           component: "BKU/HistoryPerjalananDinas"
         }
       ];

@@ -20,7 +20,7 @@
                     :meta="suratTugas.meta"
                     :links="suratTugas.links"
                     :filters="filters"
-                    route-name="pengusul.dashboard"
+                    route-name="pelaksana.dashboard"
                     @update:filters="Object.assign(filters, $event)"
                     @changePage="(page) =>
                     router.get(route('pengusul.dashboard'), { ...filters }, {
@@ -76,8 +76,8 @@ const suratTugas = props.suratTugas
 const filters = ref(props.filters)
 
 const columns = [
-    { key: 'nama_kegiatan', label: 'Nama Kegiatan' },
-    { key: 'tanggal_pelaksanaan', label: 'Tanggal Pelaksanaan' },
+    { key: 'perihal_tugas', label: 'Nama Kegiatan' },
+    { key: 'tanggal_berangkat', label: 'Tanggal Pelaksanaan' },
     { key: 'status_surat', label: 'Status' },
     { key: 'action', label: 'Aksi', sortable: false },
 ]
