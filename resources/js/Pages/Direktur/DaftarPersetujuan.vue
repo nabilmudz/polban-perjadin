@@ -138,14 +138,12 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
-// Import the new letter component
 import DetailSurat from '@/Components/Surat/DetailSurat.vue'
 import { reactive, computed, ref } from 'vue'
 import { router, usePage, useForm } from '@inertiajs/vue3'
 
 const page = usePage()
 
-// --- EXISTING TABLE LOGIC ---
 const suratTugas = computed(() => {
   const raw = page.props.suratTugas || {};
   return {
@@ -173,54 +171,44 @@ const columns = [
   { key: 'actions', label: 'Aksi', slot: 'actions' }
 ]
 
-// --- NEW MODAL & FORM LOGIC ---
-
 const showModal = ref(false);
 const selectedSurat = ref(null);
 
-// Initialize Inertia Form controller
 const form = useForm({
     catatan: '',
 });
 
 // Function triggered when "Review" button in table is clicked
 const openReviewModal = (row) => {
-    selectedSurat.value = row; // Store the data of the clicked row
-    form.reset(); // Clear previous form data/errors
+    selectedSurat.value = row; 
+    form.reset(); 
     form.clearErrors();
-    showModal.value = true; // Show dialog
-    // Prevent background scrolling when modal is open
+    showModal.value = true; 
     document.body.style.overflow = 'hidden';
 };
 
 const closeModal = () => {
     showModal.value = false;
     selectedSurat.value = null;
-    // Restore background scrolling
     document.body.style.overflow = '';
 };
 
-// Function to handle the three different submit buttons
 const submitDecision = (action) => {
     if (!selectedSurat.value) return;
 
     let routeName = '';
-    // Map action string to route name
     switch(action) {
         case 'approve': routeName = 'direktur.persetujuan.approve'; break;
         case 'reject': routeName = 'direktur.persetujuan.reject'; break;
         case 'revise': routeName = 'direktur.persetujuan.revise'; break;
     }
     
-    // Submit form to the determined route using the selected surat ID
     form.post(route(routeName, selectedSurat.value.id), {
         preserveScroll: true,
         onSuccess: () => {
             closeModal();
-            // Optional: Show a toast notification here if you have one globally configured
         },
         onError: () => {
-            // If validation fails (e.g. missing catatan for rejection), modal stays open showing errors
         }
     });
 };

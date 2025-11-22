@@ -1,76 +1,126 @@
 <template>
-  <div class="bg-white p-8 shadow-sm border border-gray-200 text-gray-800 font-serif text-sm leading-relaxed">
-    <div class="text-center mb-8 pb-4 border-b-2 border-gray-800">
-        <h2 class="font-bold text-xl uppercase mb-1">KEMENTERIAN PENDIDIKAN, KEBUDAYAAN, RISET, DAN TEKNOLOGI</h2>
-        <h3 class="font-bold text-lg uppercase">POLITEKNIK NEGERI BANDUNG</h3>
-        <p class="text-xs">Jalan Gegerkalong Hilir, Ds. Ciwaruga Kotak Pos 1234 Bandung 40012</p>
-        <p class="text-xs">Telepon (022) 2013789, Fax. (022) 2013889 Laman: www.polban.ac.id Email: polban@polban.ac.id</p>
+  <div class="bg-white p-10 shadow-md border border-gray-300 text-black font-serif text-[12pt] leading-relaxed max-w-[210mm] mx-auto h-auto min-h-[297mm]">
+    
+    <div class="flex items-center border-b-4 border-double border-black pb-4 mb-6">
+        <div class="w-1/6 flex justify-center">
+             <div class="h-20 w-20 bg-gray-200 rounded-full flex items-center justify-center text-xs text-center">Logo</div>
+        </div>
+        <div class="w-5/6 text-center">
+            <h2 class="text-[14pt] font-bold uppercase">KEMENTERIAN PENDIDIKAN, KEBUDAYAAN, RISET, DAN TEKNOLOGI</h2>
+            <h1 class="text-[16pt] font-bold uppercase tracking-wider">POLITEKNIK NEGERI BANDUNG</h1>
+            <p class="text-[10pt]">Jalan Gegerkalong Hilir, Ds. Ciwaruga Kotak Pos 1234 Bandung 40012</p>
+            <p class="text-[10pt]">Telepon (022) 2013789, Fax. (022) 2013889 | Laman: www.polban.ac.id</p>
+        </div>
     </div>
 
-    <div class="text-center mb-6">
-        <h4 class="font-bold underline uppercase text-base">SURAT TUGAS</h4>
-        <p v-if="surat.nomor_surat_resmi">Nomor: {{ surat.nomor_surat_resmi }}</p>
-        <p v-else class="text-gray-400 italic">[Nomor Surat Belum Terbit]</p>
+    <div class="text-center mb-8">
+        <h3 class="font-bold underline uppercase text-[14pt]">SURAT TUGAS</h3>
+        <p class="font-medium">Nomor: {{ surat.nomor_surat_resmi || '......./PL1.R1/......./20...' }}</p>
     </div>
 
-    <div class="mb-6">
+    <div class="mb-6 text-justify">
         <p>Direktur Politeknik Negeri Bandung dengan ini menugaskan kepada:</p>
     </div>
 
-    <div class="mb-6 ml-4">
+    <div class="ml-8 mb-6">
         <table class="w-full">
             <tr>
-                <td class="align-top py-1" width="150px">Nama</td>
-                <td class="align-top py-1" width="20px">:</td>
-                <td class="align-top py-1 font-semibold">{{ surat.pengusul?.name }}</td>
+                <td class="align-top w-[150px]">Nama</td>
+                <td class="align-top w-[20px]">:</td>
+                <td class="align-top font-bold">{{ surat.pengusul?.name || 'Nama Tidak Ditemukan' }}</td>
             </tr>
             <tr>
-                 <td class="align-top py-1">Unit Kerja</td>
-                 <td class="align-top py-1">:</td>
-                 <td class="align-top py-1">Politeknik Negeri Bandung</td>
+                <td class="align-top">NIP / NIM</td>
+                <td class="align-top">:</td>
+                <td class="align-top">{{ surat.pengusul?.nip || surat.pengusul?.nim || '-' }}</td>
+            </tr>
+            <tr>
+                <td class="align-top">Jabatan / Unit</td>
+                <td class="align-top">:</td>
+                <td class="align-top">{{ surat.pengusul?.unit_kerja || 'Politeknik Negeri Bandung' }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="mb-6 text-justify">
+        <p class="mb-2">
+            Untuk melaksanakan tugas sebagai peserta/pemateri dalam kegiatan:
+        </p>
+        <div class="ml-4 border-l-2 border-gray-200 pl-4 italic bg-gray-50 p-2 rounded">
+            <strong>"{{ surat.nama_kegiatan }}"</strong>
+        </div>
+        
+        <p class="mt-4">Yang akan diselenggarakan oleh <strong>{{ surat.nama_penyelenggara || 'Panitia Kegiatan' }}</strong> pada:</p>
+
+        <table class="w-full mt-2 ml-4">
+            <tr>
+                <td class="align-top w-[150px]">Hari, Tanggal</td>
+                <td class="align-top w-[20px]">:</td>
+                <td class="align-top">{{ formatTanggal(surat.tanggal_pelaksanaan) }}</td>
+            </tr>
+            <tr>
+                <td class="align-top">Lokasi</td>
+                <td class="align-top">:</td>
+                <td class="align-top">
+                    <div v-if="parsedLokasi.length > 0">
+                        <ul class="list-disc ml-4">
+                            <li v-for="(loc, index) in parsedLokasi" :key="index">
+                                {{ loc.tempat }} <span v-if="loc.alamat">({{ loc.alamat }})</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <span v-else>{{ surat.tempat_pelaksanaan || 'Tempat Belum Diatur' }}</span>
+                    <div class="mt-1 font-semibold text-sm text-gray-600">Provinsi: {{ surat.provinsi || '-' }}</div>
+                </td>
             </tr>
         </table>
     </div>
 
     <div class="mb-6 text-justify">
         <p>
-            Untuk melaksanakan kegiatan <strong>"{{ surat.nama_kegiatan }}"</strong> 
-            yang akan dilaksanakan pada tanggal {{ formatDate(surat.tanggal_pelaksanaan) }}
-            bertempat di {{ surat.tempat_pelaksanaan ?? '[Tempat Belum Diisi]' }}.
-        </p>
-        <p class="mt-2">
-            Segala biaya yang timbul akibat diterbitkannya surat tugas ini dibebankan pada anggaran
-            {{ surat.sumber_dana }}.
-        </p>
-        <p class="mt-4">
-            Demikian surat tugas ini dibuat untuk dilaksanakan dengan penuh tanggung jawab.
+            Segala biaya yang timbul akibat diterbitkannya surat tugas ini dibebankan pada anggaran: 
+            <strong>{{ surat.sumber_dana || 'DIPA Politeknik Negeri Bandung' }}</strong>
+            <span v-if="surat.nominal_pagu"> sebesar Rp {{ formatCurrency(surat.nominal_pagu) }}</span>.
         </p>
     </div>
 
-    <div class="flex justify-end mt-16">
-        <div class="text-left" style="min-width: 250px;">
-            <p>Bandung, {{ formatDate(new Date()) }}</p>
+    <div class="mb-12 text-justify">
+        <p>
+            Demikian surat tugas ini dibuat untuk dilaksanakan dengan penuh tanggung jawab dan 
+            setelah selesai harap segera melaporkan hasilnya.
+        </p>
+    </div>
+
+    <div class="flex justify-end">
+        <div class="w-[300px]">
+            <p>Bandung, {{ formatTanggal(new Date()) }}</p>
             <p>Direktur,</p>
-            <br><br><br><br>
-            <p class="font-bold underline">[Nama Direktur]</p>
-            <p>NIP. [NIP Direktur]</p>
+            
+            <div class="h-24 flex items-end">
+                <span v-if="surat.status_surat === 'approved'" class="text-green-600 font-bold border-2 border-green-600 px-2 py-1 transform -rotate-12 opacity-70">
+                    SIGNED DIGITALLY
+                </span>
+            </div>
+
+            <p class="font-bold underline mt-2">Marwansyah, S.E., M.Si., Ph.D.</p>
+            <p>NIP. 19781021 200501 1 001</p>
         </div>
     </div>
-    
-     <div class="mt-12 pt-4 border-t border-gray-200 text-xs">
-        <p class="font-bold">Tembusan:</p>
-        <ol class="list-decimal ml-4 mt-1">
+
+    <div class="mt-12 text-[10pt]">
+        <p class="font-bold underline">Tembusan:</p>
+        <ol class="list-decimal ml-5">
             <li>Para Wakil Direktur</li>
-            <li>Ketua Jurusan terkait</li>
-            <li>Arsip</li>
+            <li>Ka. Bagian Administrasi Umum dan Keuangan</li>
+            <li>Ketua Jurusan/Unit Terkait</li>
         </ol>
-     </div>
+    </div>
 
   </div>
 </template>
 
 <script setup>
-import { defineProps } from 'vue';
+import { defineProps, computed } from 'vue';
 
 const props = defineProps({
     surat: {
@@ -79,9 +129,36 @@ const props = defineProps({
     }
 });
 
-const formatDate = (dateString) => {
+const formatTanggal = (dateString) => {
     if (!dateString) return '-';
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('id-ID', options);
 };
+
+const formatCurrency = (value) => {
+    if (!value) return '0';
+    return new Intl.NumberFormat('id-ID').format(value);
+};
+
+const parsedLokasi = computed(() => {
+    if (!props.surat.lokasi_kegiatan) return [];
+    
+    if (Array.isArray(props.surat.lokasi_kegiatan)) {
+        return props.surat.lokasi_kegiatan;
+    }
+
+    try {
+        return JSON.parse(props.surat.lokasi_kegiatan);
+    } catch (e) {
+        return [{ tempat: props.surat.lokasi_kegiatan, alamat: '' }];
+    }
+});
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Times+New+Roman&display=swap');
+
+.font-serif {
+    font-family: 'Times New Roman', Times, serif;
+}
+</style>
