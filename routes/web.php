@@ -16,6 +16,7 @@ use App\Http\Controllers\Wadir\WadirController;
 use App\Http\Controllers\BKU\HistoryPerjalananDinasController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SekdirController;
+use App\Http\Controllers\Admin\TemplateSuratController;
 
 // Entry
 Route::get('/', function () {
@@ -43,6 +44,11 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/pegawai', [AdminController::class, 'pegawai'])
             ->name('admin.pegawai');
+        
+        Route::get('/template-surat', [TemplateSuratController::class, 'edit'])
+            ->name('admin.template');
+        Route::put('/template-surat', [TemplateSuratController::class, 'update'])
+            ->name('admin.template.update');
     });
 
     // Pengusul 
@@ -154,6 +160,5 @@ Route::prefix('pegawai')->name('pegawai.')->group(function () {
     Route::patch('/toggle-status/{id}', [PegawaiController::class, 'toggleStatus'])->name('toggleStatus');
     Route::post('/upload-excel', [PegawaiController::class, 'uploadExcel'])->name('uploadExcel');
 });
-
 
 require __DIR__.'/auth.php';

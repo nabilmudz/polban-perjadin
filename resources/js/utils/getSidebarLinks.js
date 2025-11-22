@@ -143,6 +143,12 @@ export default function getSidebarLinks(role) {
           icon: "user",
           component: "Admin/DaftarPegawai"
         },
+        {
+          name: "Template Surat",
+          route: "admin.template",  
+          icon: "file-lines",
+          component: "Admin/TemplateSurat"
+        }
         // {
         //   name: "Laporan & Bukti Perjalanan Dinas",
         //   route: "bku.daftarlaporan&perjalanan",
