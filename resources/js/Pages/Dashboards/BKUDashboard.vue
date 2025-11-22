@@ -1,124 +1,65 @@
 <template>
   <AppLayout>
-    <div class="bg-white w-full h-full rounded-md shadow">
-      <!-- HEADER -->
+    <div class="bg-white w-full h-full rounded-md shadow overflow-hidden">
       <HeaderPage />
 
-      <!-- PAGE TITLE -->
       <div class="p-8">
-        <h1 class="text-3xl font-bold mb-4">Dashboard BKU</h1>
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">Dashboard BKU</h1>
 
-        <!-- STAT CARDS -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="bg-white border shadow rounded-xl p-6 flex items-center justify-between">
-            <div>
-              <p class="text-gray-600">Total Pengusulan</p>
-              <p class="text-4xl font-bold mt-2">{{ totalPengusulan }}</p>
-            </div>
-            <i class="fas fa-file text-4xl text-blue-500"></i>
-          </div>
-
-          <div class="bg-white border shadow rounded-xl p-6 flex items-center justify-between">
-            <div>
-              <p class="text-gray-600">Surat Tugas Baru</p>
-              <p class="text-4xl font-bold mt-2 text-green-600">{{ suratBaru }}</p>
-            </div>
-            <i class="fas fa-envelope-open text-4xl text-green-500"></i>
-          </div>
-
-          <div class="bg-white border shadow rounded-xl p-6 flex items-center justify-between">
-            <div>
-              <p class="text-gray-600">Bertugas</p>
-              <p class="text-4xl font-bold mt-2 text-blue-600">{{ bertugas }}</p>
-            </div>
-            <i class="fas fa-users text-4xl text-blue-500"></i>
-          </div>
-
-          <div class="bg-white border shadow rounded-xl p-6 flex items-center justify-between">
-            <div>
-              <p class="text-gray-600">Laporan Belum Selesai</p>
-              <p class="text-4xl font-bold mt-2 text-red-600">{{ belumSelesai }}</p>
-            </div>
-            <i class="fas fa-exclamation-circle text-4xl text-red-500"></i>
-          </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+          <StatCard title="Total Pengusulan" icon="file" :count="stats.total_pengusulan" color="blue" />
+          <StatCard title="Surat Tugas Baru" icon="plus" :count="stats.surat_tugas_baru" color="green" />
+          <StatCard title="Bertugas" icon="user" :count="stats.bertugas" color="blue" />
+          <StatCard title="Laporan Belum Selesai" icon="folder-closed" :count="stats.laporan_belum_selesai" color="red" />
         </div>
-      </div>
 
-      <!-- MAIN CONTENT -->
-      <div class="px-6 py-8 space-y-10">
-        <!-- TABLE CARD -->
-        <div class="bg-white border shadow rounded-xl p-6 space-y-4">
-          <h3 class="text-lg font-semibold">Detail Penugasan</h3>
-
-          <!-- Search input -->
-          <div class="flex justify-end">
-            <div class="flex items-center gap-2">
-              <input
-                type="text"
-                v-model="search"
-                placeholder="Cari Tugas..."
-                class="border rounded px-3 py-2 w-64 text-sm"
-              />
-              <button
-                class="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                <i class="fas fa-search"></i>
-              </button>
-            </div>
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          <div class="flex justify-between items-end mb-4">
+             <div>
+                 <h3 class="text-lg font-bold text-gray-800">Detail Penugasan</h3>
+             </div>
           </div>
-
-          <!-- TABLE -->
-          <div class="overflow-auto">
-            <table class="min-w-full border-collapse">
-              <thead>
-                <tr class="bg-gray-100 text-sm">
-                  <th class="p-3 border">No</th>
-                  <th class="p-3 border">Tanggal Pengusulan</th>
-                  <th class="p-3 border">Tanggal Berangkat</th>
-                  <th class="p-3 border">Nomor Surat</th>
-                  <th class="p-3 border">Sumber Dana</th>
-                  <th class="p-3 border">Status Laporan</th>
-                  <th class="p-3 border">Tanggungan Biaya</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr
-                  v-for="(item, index) in filteredList"
-                  :key="index"
-                  class="text-center text-sm"
-                >
-                  <td class="border p-3">{{ index + 1 }}</td>
-                  <td class="border p-3">{{ item.tanggal_pengusulan }}</td>
-                  <td class="border p-3">{{ item.tanggal_berangkat }}</td>
-                  <td class="border p-3">{{ item.nomor_surat || '-' }}</td>
-                  <td class="border p-3">{{ item.sumber_dana }}</td>
-                  <td class="border p-3">
-                    <span :class="statusClass(item.status)">
-                      {{ item.status }}
-                    </span>
-                  </td>
-                  <td class="border p-3">{{ item.tanggungan_biaya || '-' }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- FOOTER -->
-          <div
-            class="flex items-center justify-between pt-2 text-sm text-gray-600"
+          
+          <DataTable
+            :columns="columns"
+            :data="suratData.data"
+            :meta="suratData.meta"
+            :links="suratData.links"
+            :filters="filters"
+            route-name="bku.dashboard"
+            @update:filters="Object.assign(filters, $event)"
+            @changePage="(page) => router.get(route('bku.dashboard'), { ...filters, page }, { preserveState: true, replace: true })"
           >
-            <div class="flex items-center gap-2">
-              <span>Rows per page:</span>
-              <select class="border rounded px-2 py-1 pr-10">
-                <option>10</option>
-                <option>25</option>
-                <option>50</option>
-              </select>
-            </div>
+            <template #no="{ index }">
+                {{ (suratData.meta.from || 1) + index }}
+            </template>
 
-            <span>Showing 1 - {{ filteredList.length }} of {{ tugasList.length }}</span>
-          </div>
+            <template #created_at="{ row }">
+                {{ formatDate(row.created_at) }}
+            </template>
+
+            <template #tanggal_berangkat="{ row }">
+                {{ formatDate(row.tanggal_berangkat) }}
+            </template>
+
+            <template #status_laporan="{ row }">
+               <span 
+                  class="px-3 py-1 rounded-md text-xs font-bold text-white"
+                  :class="{
+                      'bg-yellow-500': row.badge_color === 'yellow',
+                      'bg-green-600': row.badge_color === 'green',
+                      'bg-blue-500': row.badge_color === 'blue',
+                      'bg-gray-400': row.badge_color === 'gray',
+                  }"
+               >
+                  {{ row.display_status_laporan }}
+               </span>
+            </template>
+
+            <template #tanggungan_biaya="{ row }">
+                {{ row.tanggungan_biaya || '-' }}
+            </template>
+          </DataTable>
         </div>
       </div>
     </div>
@@ -128,36 +69,55 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
-import { ref, computed } from 'vue'
+import StatCard from '@/Components/StatCard.vue' 
+import DataTable from '@/Components/Table/DataTable.vue'
+import { reactive, computed } from 'vue'
+import { router } from '@inertiajs/vue3'
 
-// --- State ---
-const search = ref('')
-const tugasList = ref([
-  { tanggal_pengusulan: '30 Oct 2025', tanggal_berangkat: '30 Oct 2025', nomor_surat: '-', sumber_dana: 'Polban', status: 'Belum Upload', tanggungan_biaya: '-' },
-  { tanggal_pengusulan: '29 Oct 2025', tanggal_berangkat: '29 Oct 2025', nomor_surat: '-', sumber_dana: 'Polban', status: 'Sedang Bertugas', tanggungan_biaya: '-' },
-  { tanggal_pengusulan: '28 Oct 2025', tanggal_berangkat: '28 Oct 2025', nomor_surat: '-', sumber_dana: 'RM', status: 'Selesai', tanggungan_biaya: '-' },
-])
-
-// --- Computed Filters ---
-const filteredList = computed(() => {
-  const term = search.value.toLowerCase()
-  return tugasList.value.filter(item =>
-    Object.values(item).some(v => String(v).toLowerCase().includes(term))
-  )
+const props = defineProps({
+  stats: Object,
+  latestSurat: Object, 
+  filters: Object
 })
 
-// --- Counts ---
-const totalPengusulan = tugasList.value.length
-const suratBaru = tugasList.value.filter(i => i.status === 'Belum Upload').length
-const bertugas = tugasList.value.filter(i => i.status === 'Sedang Bertugas').length
-const belumSelesai = tugasList.value.filter(i => i.status !== 'Selesai').length
+const suratData = computed(() => {
+    const raw = props.latestSurat || {};
+    return {
+        data: raw.data || [],
+        meta: {
+            current_page: raw.current_page || 1,
+            last_page: raw.last_page || 1,
+            per_page: raw.per_page || 5,
+            total: raw.total || 0,
+            from: raw.from || 0, 
+            to: raw.to || 0
+        },
+        links: raw.links || []
+    }
+})
 
-// --- Helpers ---
-const statusClass = (status) => {
-  return {
-    'bg-yellow-400 text-white px-2 py-1 rounded': status === 'Belum Upload',
-    'bg-blue-400 text-white px-2 py-1 rounded': status === 'Sedang Bertugas',
-    'bg-green-500 text-white px-2 py-1 rounded': status === 'Selesai',
-  }
+const filters = reactive({
+  search: props.filters?.search || ''
+})
+
+const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString; 
+    
+    return new Intl.DateTimeFormat('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    }).format(date);
 }
+
+const columns = [
+  { key: 'created_at', label: 'Tanggal Pengusulan', slot: 'tanggal_pengusulan' }, 
+  { key: 'tanggal_berangkat', label: 'Tanggal Berangkat', slot: 'tanggal_berangkat' }, 
+  { key: 'nomor_surat_resmi', label: 'Nomor Surat Tugas' },
+  { key: 'sumber_dana', label: 'Sumber Dana' },
+  { key: 'status_laporan', label: 'Status Laporan', slot: 'status_laporan' },
+  { key: 'tanggungan_biaya', label: 'Tanggungan Biaya', slot: 'tanggungan_biaya' },
+]
 </script>

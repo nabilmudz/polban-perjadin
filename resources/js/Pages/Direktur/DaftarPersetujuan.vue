@@ -4,7 +4,7 @@
       
       <HeaderPage title="Daftar Persetujuan Direktur" />
 
-      <div class="p-8" :class="{ 'blur-sm': showModal }"> <h1 class="text-2xl font-bold mb-6 text-gray-800">Menunggu Tanda Tangan</h1>
+      <div class="p-8" :class="{ 'blur-sm': showModal }"> <h1 class="text-3xl font-bold mb-6 text-gray-800">Menunggu Tanda Tangan</h1>
 
         <DataTable
           :columns="columns"

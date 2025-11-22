@@ -89,4 +89,9 @@ class SuratTugas extends Model
     {
         return $this->belongsTo(User::class, 'sekdir_processor_id');
     }
+
+    public function laporan()
+    {
+        return $this->hasOne(Laporan::class, 'surat_tugas_id', 'surat_tugas_id');
+    }
 }

@@ -83,14 +83,14 @@ export default function getSidebarLinks(role) {
         },
         {
           name: "Laporan & Bukti Perjalanan Dinas",
-          route: "bku.daftarlaporan&perjalanan",
+          route: "bku.daftarlaporanperjalanan",
           icon: "file-lines",
-          component: "BKU/DaftarLaporan&Perjalanan"
+          component: "BKU/DaftarLaporanPerjalanan"
         },
         {
           name: "History",
           route: "bku.historyperjalanandinas",
-          icon: "clock-rotate-left",
+          icon: "history",
           component: "BKU/HistoryPerjalananDinas"
         }
       ];
