@@ -8,24 +8,24 @@ import { ZiggyVue } from 'ziggy-js';
 import { Ziggy } from './ziggy';
 
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import {faHome, faFile, faShareFromSquare, faSquareCheck, faFileLines, faFolderClosed, faUser, faCircleXmark, faCircleLeft, faEye, faPenToSquare, faTrashCan, faCircleDown, faClock} from '@fortawesome/free-regular-svg-icons';
-library.add(faHome, faFile, faShareFromSquare, faSquareCheck, faFileLines, faFolderClosed, faUser, faCircleXmark, faCircleLeft, faEye, faPenToSquare, faTrashCan, faCircleDown, faClock);
+    import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+    import {faHome, faFile, faShareFromSquare, faSquareCheck, faFileLines, faFolderClosed, faUser, faCircleXmark, faCircleLeft, faEye, faPenToSquare, faTrashCan, faCircleDown, faClock, faSquarePlus} from '@fortawesome/free-regular-svg-icons';
+    library.add(faHome, faFile, faShareFromSquare, faSquareCheck, faFileLines, faFolderClosed, faUser, faCircleXmark, faCircleLeft, faEye, faPenToSquare, faTrashCan, faCircleDown, faClock, faSquarePlus);
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+    const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
-createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
-    resolve: (name) =>
-        resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
-    setup({ el, App, props, plugin }) {
-        return createApp({ render: () => h(App, props) })
-            .use(plugin)
-            .use(ZiggyVue, Ziggy)
-            .component('font-awesome-icon', FontAwesomeIcon) // ← register globally
-            .mount(el);
-    },
-    progress: {
-        color: '#4B5563',
-    },
-});
+    createInertiaApp({
+        title: (title) => `${title} - ${appName}`,
+        resolve: (name) =>
+            resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
+        setup({ el, App, props, plugin }) {
+            return createApp({ render: () => h(App, props) })
+                .use(plugin)
+                .use(ZiggyVue, Ziggy)
+                .component('font-awesome-icon', FontAwesomeIcon)
+                .mount(el);
+        },
+        progress: {
+            color: '#4B5563',
+        },
+    });

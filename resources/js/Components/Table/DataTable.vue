@@ -1,19 +1,26 @@
 <template>
   <div class="bg-white shadow rounded-md p-6">
     <!-- Filters -->
-    <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
-      <div class="flex items-center gap-3 flex-wrap">
+    <div v-if="showFilters" class="mb-4">
+
+      <!-- Row 1 -->
+      <div class="flex flex-wrap items-center gap-3">
+
+        <!-- Search -->
         <input
+          v-if="enableSearch && filters.search !== undefined"
           v-model="filters.search"
           type="text"
           placeholder="Search..."
-          class="border rounded-md px-3 py-2 text-sm"
+          class="border rounded-md px-3 py-2 text-sm min-w-[200px]"
           @input="onFilterChange"
         />
 
+        <!-- Status -->
         <select
+          v-if="enableStatus && statusOptions.length && filters.status !== undefined"
           v-model="filters.status"
-          class="border rounded-md px-3 py-2 text-sm"
+          class="border rounded-md px-3 py-2 text-sm min-w-[180px]"
           @change="onFilterChange"
         >
           <option value="">Semua Status</option>
@@ -22,21 +29,29 @@
           </option>
         </select>
 
+        <!-- From Date -->
         <input
+          v-if="enableDate && filters.from !== undefined"
           type="date"
           v-model="filters.from"
-          class="border rounded-md px-3 py-2 text-sm"
+          class="border rounded-md px-3 py-2 text-sm min-w-[150px]"
           @change="onFilterChange"
         />
 
+        <!-- To Date -->
         <input
+          v-if="enableDate && filters.to !== undefined"
           type="date"
           v-model="filters.to"
-          class="border rounded-md px-3 py-2 text-sm"
+          class="border rounded-md px-3 py-2 text-sm min-w-[150px]"
           @change="onFilterChange"
         />
+
+        <slot name="filters-extra" />
       </div>
+
     </div>
+
 
     <!-- Table -->
     <div class="overflow-x-auto">
@@ -117,19 +132,22 @@
 </template>
 
 <script setup>
-import { statusOptions } from '@/utils/statusOptions'
 import { defineEmits } from 'vue'
 import { router } from '@inertiajs/vue3'
-
 const props = defineProps({
-  columns: { type: Array, default: () => [] },
-  data: { type: Array, default: () => [] },
-  meta: { type: Object, default: () => ({}) },
-  links: { type: Object, default: () => ({}) },
-  filters: { type: Object, required: true },
+  columns: Array,
+  data: Array,
+  meta: Object,
+  links: Object,
+  filters: Object,
+  routeName: String,
   statusOptions: { type: Array, default: () => [] },
-  routeName: { type: String, required: true },
+  showFilters: { type: Boolean, default: true },
+  enableSearch: { type: Boolean, default: true },
+  enableStatus: { type: Boolean, default: true },
+  enableDate: { type: Boolean, default: true },
 })
+
 
 const filters = props.filters
 const emit = defineEmits(['update:filters', 'changePage'])

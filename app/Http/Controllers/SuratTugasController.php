@@ -17,8 +17,6 @@ class SuratTugasController extends Controller
         $this->service = $service;
     }
 
-    // SuratTugasController.php
-    
     public function index(Request $request)
     {
         $filters = $request->only(['search', 'status', 'start_date', 'end_date']);
@@ -26,17 +24,6 @@ class SuratTugasController extends Controller
         return response()->json($data);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -48,27 +35,12 @@ class SuratTugasController extends Controller
         $data = $this->service->create($validated);
         return response()->json($data, 201);
     }
-
-    /**
-     * Display the specified resource.
-     */
     public function show($id)
     {
         $data = $this->service->getById($id);
         return response()->json($data);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(SuratTugas $suratTugas)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
@@ -80,10 +52,6 @@ class SuratTugasController extends Controller
         $data = $this->service->update($id, $validated);
         return response()->json($data);
     }
-
-    /**
-     * Remove the specified resource from storage.
-     */
 
     public function destroy($id)
     {

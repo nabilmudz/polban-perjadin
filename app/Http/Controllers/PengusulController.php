@@ -2,117 +2,147 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\SuratTugasService;
 use Illuminate\Http\Request;
 use App\Models\SuratTugas;
 use Inertia\Inertia;
 use App\Models\User;
+use Carbon\Carbon;
 
 class PengusulController extends Controller
 {
-    public function dashboard(Request $request)
+    protected $suratTugasService;
+
+    public function __construct(SuratTugasService $suratTugasService)
     {
-        $user = auth()->user();
+        $this->suratTugasService = $suratTugasService;
+    }
+    
+    public function dashboardPengusulan(Request $request)
+    {
+        $user = $request->user();
 
-        $query = SuratTugas::where('user_id', $user->id);
+        $filters = $request->only(['search', 'status', 'from', 'to', 'page']);
+        $filters['from'] = $filters['from'] ?? null;
+        $filters['to'] = $filters['to'] ?? null;
 
-        if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('perihal_tugas', 'like', "%{$request->search}%")
-                ->orWhere('status_surat', 'like', "%{$request->search}%");
-            });
-        }
+        $surat = $this->suratTugasService->getAll($filters, $user);
 
-        if ($request->filled('status')) {
-            $query->where('status_surat', $request->status);
-        }
+        $mapped = [
+            'data' => $surat->getCollection()->transform(function ($item) {
+                return [
+                    ...$item->toArray(),
+                    'created_at' => $item->created_at->format('Y-m-d'),
+                ];
+            }),
+            'meta' => [
+                'current_page' => $surat->currentPage(),
+                'last_page' => $surat->lastPage(),
+                'per_page' => $surat->perPage(),
+                'from' => $surat->firstItem(),
+                'to' => $surat->lastItem(),
+                'total' => $surat->total(),
+            ],
+            'links' => [
+                'prev' => $surat->previousPageUrl(),
+                'next' => $surat->nextPageUrl(),
+            ],
+        ];
 
-        if ($request->filled('from') && $request->filled('to')) {
-            $query->whereBetween('created_at', [$request->from, $request->to]);
-        }
+        $statusCounts = SuratTugas::where('user_id', $user->id)
+            ->selectRaw('status_surat, COUNT(*) as count')
+            ->groupBy('status_surat')
+            ->pluck('count', 'status_surat')
+            ->toArray();
 
-        $suratTugas = $query->latest()->paginate(10)
-        ->through(function($item) {
-            return [
-                ...$item->toArray(),
-                'created_at' => $item->created_at->format('Y-m-d'),
-            ];
-        })
-        ->withQueryString();
+        $today = now()->toDateString();
+
+        $onDuty = SuratTugas::where('user_id', $user->id)
+            ->where('status_surat', 'published')
+            ->whereDate('tanggal_berangkat', '<=', $today)
+            ->whereDate('tanggal_kembali', '>=', $today)
+            ->count();
 
         return inertia('Pengusul/PengusulDashboard', [
-            'suratTugas' => [
-                'data' => $suratTugas->items(),
-                'meta' => [
-                    'current_page' => $suratTugas->currentPage(),
-                    'last_page' => $suratTugas->lastPage(),
-                    'per_page' => $suratTugas->perPage(),
-                    'from' => $suratTugas->firstItem(),
-                    'to' => $suratTugas->lastItem(),
-                    'total' => $suratTugas->total(),
-                ],
-                'links' => [
-                    'prev' => $suratTugas->previousPageUrl(),
-                    'next' => $suratTugas->nextPageUrl(),
-                ],
-            ],
-            'filters' => [
-                'status' => $request->status,
-                'search' => $request->search,
-                'from' => $request->from,
-                'to' => $request->to ?: now()->toDateString(),
-            ],
+            'suratTugas' => $mapped,
+            'filters' => $filters,
+            'statusCounts' => array_merge($statusCounts, ['on_duty' => $onDuty]),
         ]);
     }
 
     public function daftarPengusulan(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
 
-        $query = SuratTugas::where('user_id', $user->id);
+        $filters = $request->only(['search', 'status', 'from', 'to', 'page']);
+        $filters['from'] = $filters['from'] ?? null;
+        $filters['to'] = $filters['to'] ?? null;
 
-        if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('perihal_tugas', 'like', "%{$request->search}%")
-                ->orWhere('status_surat', 'like', "%{$request->search}%");
-            });
-        }
+        $surat = $this->suratTugasService->getAll($filters, $user);
 
-        if ($request->filled('status')) {
-            $query->where('status_surat', $request->status);
-        }
-
-        if ($request->filled('from') && $request->filled('to')) {
-            $query->whereBetween('created_at', [$request->from, $request->to]);
-        }
-
-        $suratTugas = $query->latest()->paginate(10)
-        ->through(function($item) {
-            return [
-                ...$item->toArray(),
-                'no_usulan_surat' => "$item->nomor_urutan_surat/$item->kode_perihal/$item->tahun_nomor_surat",
-                'surat_undangan' => $item->surat_undangan ?: "-",
-                'created_at' => $item->created_at->format('Y-m-d'),
-            ];
-        })
-        ->withQueryString();
+        $mapped = [
+            'data' => $surat->getCollection()->transform(function ($item) {
+                return [
+                    ...$item->toArray(),
+                    'tanggal_berangkat' => $item->created_at->format('Y-m-d'),
+                    'created_at' => $item->created_at->format('Y-m-d'),
+                    'no_usulan_surat' => "$item->nomor_urutan_surat/$item->kode_perihal/$item->tahun_nomor_surat",
+                ];
+            }),
+            'meta' => [
+                'current_page' => $surat->currentPage(),
+                'last_page' => $surat->lastPage(),
+                'per_page' => $surat->perPage(),
+                'from' => $surat->firstItem(),
+                'to' => $surat->lastItem(),
+                'total' => $surat->total(),
+            ],
+            'links' => [
+                'prev' => $surat->previousPageUrl(),
+                'next' => $surat->nextPageUrl(),
+            ],
+        ];
 
         return inertia('Pengusul/DaftarPengusulan', [
-            'suratTugas' => [
-                'data' => $suratTugas->items(),
-                'meta' => [
-                    'current_page' => $suratTugas->currentPage(),
-                    'last_page' => $suratTugas->lastPage(),
-                    'per_page' => $suratTugas->perPage(),
-                    'from' => $suratTugas->firstItem(),
-                    'to' => $suratTugas->lastItem(),
-                    'total' => $suratTugas->total(),
-                ],
-                'links' => [
-                    'prev' => $suratTugas->previousPageUrl(),
-                    'next' => $suratTugas->nextPageUrl(),
-                ],
+            'suratTugas' => $mapped,
+            'filters' => $filters
+        ]);
+    }
+
+    public function draftPengusulan(Request $request)
+    {
+        $user = $request->user();
+        $filters = $request->only(['search', 'from', 'to', 'page']);
+        $filters['status'] = 'draft';
+
+        $surat = $this->suratTugasService->getAll($filters, $user);
+
+        $mapped = [
+            'data' => $surat->getCollection()->transform(function ($item) {
+                return [
+                    ...$item->toArray(),
+                    'created_at' => $item->created_at->format('Y-m-d'),
+                    'tanggal_berangkat' => $item->created_at->format('Y-m-d'),
+                    'no_usulan_surat' => "$item->nomor_urutan_surat/$item->kode_perihal/$item->tahun_nomor_surat",
+                ];
+            }),
+            'meta' => [
+                'current_page' => $surat->currentPage(),
+                'last_page' => $surat->lastPage(),
+                'per_page' => $surat->perPage(),
+                'from' => $surat->firstItem(),
+                'to' => $surat->lastItem(),
+                'total' => $surat->total(),
             ],
-            'filters' => $request->only(['search','status','from','to','page']),
+            'links' => [
+                'prev' => $surat->previousPageUrl(),
+                'next' => $surat->nextPageUrl(),
+            ],
+        ];
+
+        return inertia('Pengusul/DraftPengusulan', [
+            'suratTugas' => $mapped,
+            'filters' => $filters,
         ]);
     }
 

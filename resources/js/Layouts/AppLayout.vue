@@ -7,7 +7,6 @@ const user = props.auth.user
 </script>
 
 <template>
-  <Head :title="user.role" />  
   <div class="flex h-screen overflow-hidden">
     <Sidebar />
     <main class="flex-1 overflow-y-auto bg-gray-100 p-6">

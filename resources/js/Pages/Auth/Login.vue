@@ -27,7 +27,7 @@
 
     <template>
     <GuestLayout>
-        <Head title="Log in" />
+        <Head title="Login" />
         <header class="text-center">
         <img
             src="/images/polban.png"
