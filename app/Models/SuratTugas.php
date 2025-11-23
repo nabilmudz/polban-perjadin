@@ -69,4 +69,37 @@ class SuratTugas extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function pengusul()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function wadir()
+    {
+        return $this->belongsTo(User::class, 'wadir_approver_id');
+    }
+
+    public function direktur()
+    {
+        return $this->belongsTo(User::class, 'direktur_approver_id');
+    }
+
+    public function sekdir()
+    {
+        return $this->belongsTo(User::class, 'sekdir_processor_id');
+    }
+
+    public function laporan()
+    {
+        return $this->hasOne(Laporan::class, 'surat_tugas_id', 'surat_tugas_id');
+    
+    public function detailPelaksanaTugas()
+    {
+        return $this->hasMany(
+            DetailPelaksanaTugas::class,
+            'surat_tugas_id',
+            'surat_tugas_id'
+        );
+    }
 }

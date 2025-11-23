@@ -3,23 +3,29 @@
 namespace App\Http\Controllers\BKU;
 
 use App\Http\Controllers\Controller;
-use Inertia\Inertia;
+use App\Models\SuratTugas;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class DaftarLaporanController extends Controller
 {
     public function index(Request $request)
     {
-        // Example of static data — might replace later with the actual data model 
-        $laporan = [
-            ['id' => 1, 'nama_perjalanan' => 'Perjalanan Dinas Bandung', 'status' => 'Selesai'],
-            ['id' => 2, 'nama_perjalanan' => 'Audit Keuangan Jakarta', 'status' => 'Proses'],
-            ['id' => 3, 'nama_perjalanan' => 'Kunjungan Kerja Bali', 'status' => 'Menunggu Persetujuan'],
-        ];
+        $query = SuratTugas::with(['pengusul', 'laporan'])
+            ->where('status_surat', 'approved');
 
-        return Inertia::render('BKU/DaftarLaporan&Perjalanan', [
-            'role' => 'bku',
-            'laporan' => $laporan,
+        if ($request->search) {
+            $query->where('nama_kegiatan', 'like', "%{$request->search}%")
+                  ->orWhere('nomor_surat_resmi', 'like', "%{$request->search}%");
+        }
+
+        $data = $query->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        return Inertia::render('BKU/DaftarLaporanPerjalanan', [ 
+            'laporanBukti' => $data,
+            'filters' => $request->only(['search']),
         ]);
     }
 }

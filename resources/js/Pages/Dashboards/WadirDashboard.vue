@@ -67,6 +67,26 @@ const columns = [
 ]
 
 const handleView = (row) => {
-    router.get(route(`${user.role}.surat.show`, row.id))
+    router.get(route(`${user.role}.persetujuan.show`, row.id))
+}
+
+const handleAction = (type, row) => {
+  switch(type) {
+    case 'view':
+      selectedData.value = row
+      showViewModal.value = true
+      break
+    case 'edit':
+      router.get(route('pengusul.edit', row.id))
+      break
+    case 'delete':
+      if (confirm('Are you sure?')) {
+        router.delete(route('pengusul.destroy', row.id))
+      }
+      break
+    case 'download':
+      router.get(route('pengusul.download', row.id))
+      break
+  }
 }
 </script>

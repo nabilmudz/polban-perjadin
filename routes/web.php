@@ -59,14 +59,17 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/pengusulan', [PengusulController::class, 'daftarPengusulan'])->name('pengusul.pengajuan');
             Route::get('/tambah-pengusulan', [PengusulController::class, 'formPengusulan'])->name('pengusul.form');
             Route::get('/draft', [PengusulController::class, 'draftPengusulan'])->name('pengusul.draft');
+            Route::get('/personel', [PengusulController::class, 'personel'])->name('pengusul.personel');
     });
 
     // Pelaksana
     Route::prefix('pelaksana')->name('pelaksana.')->middleware(['auth', 'role:pelaksana'])->group(function () {
         Route::get('/dashboard', [PelaksanaController::class, 'dashboard'])->name('dashboard');
         Route::get('/daftarlaporan', [PelaksanaController::class, 'daftarLaporan'])->name('daftarlaporan');
+        Route::get('/historypelaksana', [PelaksanaController::class, 'historypelaksana'])->name('historypelaksana');
     });
 
+    // Wadir 1-4
     Route::middleware(['auth'])->group(function () {
 
         $wadirList = ['wadir1', 'wadir2', 'wadir3', 'wadir4'];
@@ -85,6 +88,10 @@ Route::middleware(['auth'])->group(function () {
                     // Halaman daftar persetujuan
                     Route::get('/persetujuan', [WadirController::class, 'persetujuan'])
                         ->name('persetujuan');
+
+                    // History Wadir
+                    Route::get('/history', [WadirController::class, 'history'])
+                        ->name('history');
 
                     // Lihat surat untuk disetujui
                     Route::get('/persetujuan/{id}', [WadirController::class, 'show'])
@@ -112,6 +119,18 @@ Route::middleware(['auth'])->group(function () {
         // Daftar Persetujuan Page
         Route::get('/daftarpersetujuan', [DaftarPersetujuanController::class, 'index'])
             ->name('daftarpersetujuan');
+        
+        Route::get('/persetujuan/{id}', [DaftarPersetujuanController::class, 'show'])
+            ->name('persetujuan.show');
+
+        Route::post('/persetujuan/{id}/approve', [DaftarPersetujuanController::class, 'approve'])
+        ->name('persetujuan.approve');
+
+        Route::post('/persetujuan/{id}/reject', [DaftarPersetujuanController::class, 'reject'])
+            ->name('persetujuan.reject');
+
+        Route::post('/persetujuan/{id}/revise', [DaftarPersetujuanController::class, 'revise'])
+            ->name('persetujuan.revise');
 
     });
 
@@ -121,8 +140,8 @@ Route::middleware(['auth'])->group(function () {
             ->name('dashboard');
 
         // Daftar Laporan & Perjalanan
-        Route::get('/daftarlaporan&perjalanan', [DaftarLaporanController::class, 'index'])
-            ->name('daftarlaporan&perjalanan');
+        Route::get('/daftarlaporanperjalanan', [DaftarLaporanController::class, 'index'])
+            ->name('daftarlaporanperjalanan');
 
         // History Perjalanan Dinas
         Route::get('/historyperjalanandinas', [HistoryPerjalananDinasController::class, 'index'])

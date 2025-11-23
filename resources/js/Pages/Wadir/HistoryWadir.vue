@@ -4,7 +4,7 @@
             <HeaderPage />
 
             <div class="p-8">
-                <h1 class="text-3xl font-bold mb-4">Persetujuan</h1>
+                <h1 class="text-3xl font-bold mb-4">History Surat Tugas</h1>
             </div>
 
             <div class="p-8">
@@ -14,11 +14,10 @@
                     :meta="suratTugas.meta"
                     :links="suratTugas.links"
                     :filters="filters"
-                    :status-options="statusOptions"
-                    route-name="persetujuanRoute"
+                    route-name="historyWadirRoute"
                     @update:filters="Object.assign(filters, $event)"
                 >
-                    
+                    <!-- Status badge -->
                     <template #status_surat="{ row }">
                         <StatusBadges :status="row.status_surat" />
                     </template>
@@ -53,72 +52,50 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
-import { usePage, router } from '@inertiajs/vue3'
 import { getRowActions } from '@/utils/rowAction'
+import { usePage, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
-const goToReview = () => {
-  router.visit('/wadir/review')
-}
 const { props } = usePage()
-const suratTugas = {
-    data: props.list?.data ?? [],
-    meta: props.list?.meta ?? {
-        current_page: 1,
-        last_page: 1,
-        from: 1,
-        to: props.list?.data?.length ?? 1,
-        total: props.list?.data?.length ?? 1,
-        per_page: props.list?.data?.length ?? 10, // default fallback
-    },
-    links: props.list?.links ?? [],
-}
-
-const stats = props.stats ?? {}
-
-const filters = ref({
-    ...props.filters,
-    status: props.filters?.status ?? ''
-})
+const suratTugas = props.suratTugas
+const filters = ref(props.filters)
+filters.value.status = filters.value.status ?? ''
 
 const page = usePage()
 const user = page.props.auth?.user ?? {}
-const dashboardRoute = `${user.role}.persetujuan`
 
 const columns = [
-  { key: 'user_id', label: 'Pengusul' },
-  { key: 'perihal_tugas', label: 'Nama Kegiatan' },
+  { key: 'created_at', label: 'Tanggal Pengusulan' },
   { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
-  { key: 'tanggal_kembali', label: 'Tanggal Kembali' },
-  { key: 'sumber_dana', label: 'Pembiayaan' },
-  { key: 'path_file_surat_usulan', label: 'Surat Undangan' },
+  { key: 'nomor_surat_usulan_jurusan', label: 'Nomor Surat Pengantar' },
+  { key: 'nomor_surat_tugas_resmi', label: 'Nomor Surat Tugas' },
+  { key: 'tanggal_penomoran_sekdir', label: 'Tanggal Diterbitkan' },
+  { key: 'diusulkan_kepada', label: 'Diajukan Kepada' },
   { key: 'status_surat', label: 'Status' },
-  { key: 'action', label: 'Aksi' },
+  { key: 'action', label: 'Aksi', sortable: false },
 ]
-
 
 const statusOptions = [
-    { label: "Menunggu Review", value: "pending" },
-    { label: "Disetujui", value: "approved" },
-    { label: "Ditolak", value: "rejected" },
+    { label: "Pending Wadir Review", value: "pending" },
+    { label: "Diterbitkan", value: "Diterbitkan" },
+    { label: "Draft", value: "Draft" },
 ]
 
-const handleView = (row) => {
-    router.get(route(`${user.role}.persetujuan.show`, row.surat_tugas_id))
-}
-
 const handleAction = (type, row) => {
-    switch (type) {
-        case 'download':
-            router.visit(`/surat/download/${row.id}`)
-            break
-        case 'view':
-            router.get(route(`${user.role}.persetujuan.show`, row.surat_tugas_id))
-            break
+    if (type === 'view') {
+        router.get(route(`${user.role}.persetujuan.show`, row.id))
+    }
 
-        case 'review':
-            router.get(route(`${user.role}.persetujuan.show`, row.surat_tugas_id))
-            break
+    if (type === 'review') {
+        router.get(route(`${user.role}.persetujuan.show`, row.id))
     }
 }
 </script>
+
+<style scoped>
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
