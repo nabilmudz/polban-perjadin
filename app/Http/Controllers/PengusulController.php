@@ -3,20 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Services\SuratTugasService;
+use App\Services\PegawaiService;
+use App\Services\MahasiswaService;
 use Illuminate\Http\Request;
 use App\Models\SuratTugas;
 use Inertia\Inertia;
 use App\Models\User;
 use Carbon\Carbon;
+use App\Models\Mahasiswa;
+use App\Models\Pegawai;
 
 class PengusulController extends Controller
 {
     protected $suratTugasService;
+    protected $pegawaiService;
+    protected $mahasiswaService;
 
-    public function __construct(SuratTugasService $suratTugasService)
-    {
-        $this->suratTugasService = $suratTugasService;
-    }
+    public function __construct(
+        SuratTugasService $suratTugasService,
+        PegawaiService $pegawaiService,
+        MahasiswaService $mahasiswaService
+        )
+        {
+            $this->suratTugasService = $suratTugasService;
+            $this->pegawaiService = $pegawaiService;
+            $this->mahasiswaService = $mahasiswaService;
+        }
     
     public function dashboardPengusulan(Request $request)
     {
@@ -146,7 +158,102 @@ class PengusulController extends Controller
         ]);
     }
 
-    public function formPengusulan(Request $request){
-        return inertia('Pengusul/FormPengusulan');
+    public function formPengusulan(Request $request)
+    {
+        $filters = $request->only(['search', 'status', 'from', 'to', 'page', 'tab']);
+        $tab = $filters['tab'] ?? 'pegawai';
+
+        $data = $tab === 'pegawai'
+            ? $this->getPegawai($filters)
+            : $this->getMahasiswa($filters);
+
+        return Inertia::render('Pengusul/PengusulanWizard', [
+            'personel' => $data,
+            'filters'  => $filters,
+            'tab'      => $tab,
+        ]);
     }
+    
+    public function personel(Request $request)
+    {
+        $filters = $request->only(['search', 'status', 'from', 'to', 'page', 'tab']);
+        $tab = $request->get('tab', 'pegawai');
+
+        $data = $tab === 'pegawai'
+            ? $this->getPegawai($filters)
+            : $this->getMahasiswa($filters);
+
+        return Inertia::render('Pengusul/FormPersonel', [
+            'personel' => $data,
+            'filters'  => $filters,
+            'tab'      => $tab,
+        ]);
+    }
+
+    private function getMahasiswa(array $filters = [])
+    {
+        $query = Mahasiswa::query();
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                    ->orWhere('nim', 'like', "%{$search}%")
+                    ->orWhere('jurusan', 'like', "%{$search}%")
+                    ->orWhere('prodi', 'like', "%{$search}%");
+            });
+        }
+
+        $paginate = $query->latest()->paginate(10)->withQueryString();
+
+        return $this->formatPagination($paginate);
+    }
+
+    private function getPegawai(array $filters = [])
+    {
+        $query = Pegawai::query();
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                    ->orWhere('nip', 'like', "%{$search}%")
+                    ->orWhere('pangkat', 'like', "%{$search}%")
+                    ->orWhere('golongan', 'like', "%{$search}%")
+                    ->orWhere('jabatan', 'like', "%{$search}%");
+            });
+        }
+
+        if (isset($filters['status']) && $filters['status'] !== '') {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['from']) && !empty($filters['to'])) {
+            $query->whereBetween('created_at', [$filters['from'], $filters['to']]);
+        }
+
+        $paginate = $query->latest()->paginate(10)->withQueryString();
+
+        return $this->formatPagination($paginate);
+    }
+
+    private function formatPagination($paginate)
+    {
+        return [
+            'data' => $paginate->items(),
+            'meta' => [
+                'current_page' => $paginate->currentPage(),
+                'last_page' => $paginate->lastPage(),
+                'per_page' => $paginate->perPage(),
+                'from' => $paginate->firstItem(),
+                'to' => $paginate->lastItem(),
+                'total' => $paginate->total(),
+            ],
+            'links' => [
+                'prev' => $paginate->previousPageUrl(),
+                'next' => $paginate->nextPageUrl(),
+            ],
+        ];
+    }
+
 }
