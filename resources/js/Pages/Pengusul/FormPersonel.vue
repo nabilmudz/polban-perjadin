@@ -1,151 +1,328 @@
 <template>
-  <Transition name="fade">
-    <div
-      v-if="show"
-      class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]"
-    >
-      <div class="bg-white rounded-md w-[90%] md:w-[70%] lg:w-[60%] p-6 max-h-[90vh] overflow-y-auto">
+  <div class="p-2">
+    <h1 class="text-2xl font-semibold mb-4 mt-4">Data Personel</h1>
 
-        <h2 class="text-2xl font-bold mb-4">Data Personel</h2>
-
-        <!-- Tabs -->
-        <div class="flex gap-3 border-b mb-4">
-          <button
-            v-for="option in ['mahasiswa', 'pegawai']"
-            :key="option"
-            @click="tab = option"
-            class="px-4 py-2 font-semibold"
-            :class="tab === option
-              ? 'border-b-2 border-primary-default text-primary-default'
-              : 'text-gray-500 hover:text-gray-700'"
-          >
-            {{ option === 'mahasiswa' ? 'Mahasiswa' : 'Pegawai' }}
-          </button>
-        </div>
-
-        <!-- Search -->
-        <input
-          v-model="search"
-          type="text"
-          placeholder="Cari nama atau NIM/NIP..."
-          class="w-full border rounded px-3 py-2 mb-4"
-        />
-
-        <DataTable
-            :columns="columns"
-            :data="filteredRows"
-
-            :meta="{
-                from: 1,
-                to: filteredRows.length,
-                total: filteredRows.length,
-                per_page: filteredRows.length || 1
-            }"
-
-            :links="{
-                prev: null,
-                next: null
-            }"
-
-            :filters="filters"
-            route-name=""
-            :enable-search="false"
-            :enable-status="false"
-            :enable-date="false"
-            @update:filters="Object.assign(filters, $event)"
-            >
-            <template #status="{ row }">
-                <span
-                class="px-2 py-1 rounded text-sm"
-                :class="row.status === 'aktif'
-                    ? 'bg-green-200 text-green-800'
-                    : 'bg-red-200 text-red-800'"
-                >
-                {{ row.status }}
-                </span>
-            </template>
-            </DataTable>
-
-        <!-- Actions -->
-        <div class="flex justify-end gap-3 mt-6">
-          <button
-            class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100"
-            @click="$emit('close')"
-          >
-            Tutup
-          </button>
-
-          <button
-            class="px-4 py-2 bg-primary-default text-white rounded hover:bg-primary-dark"
-            @click="confirm"
-          >
-            Konfirmasi
-          </button>
-        </div>
-
-      </div>
+    <div class="flex gap-3 border-b mb-6">
+      <button
+        v-for="option in ['mahasiswa', 'pegawai']"
+        :key="option"
+        @click="changeTab(option)"
+        class="px-4 py-2 font-semibold capitalize"
+        :class="tab === option
+          ? 'border-b-2 border-primary-default text-primary-default'
+          : 'text-gray-500 hover:text-gray-700'"
+      >
+        {{ option }}
+      </button>
     </div>
-  </Transition>
+
+    <input
+      v-model="filters.search"
+      type="text"
+      placeholder="Cari nama atau NIM/NIP..."
+      class="w-full border rounded px-3 py-2 mb-4"
+    />
+
+    <div class="overflow-x-auto">
+      <DataTable
+        :columns="columns"
+        :data="persons.data"
+        :meta="persons.meta"
+        :links="persons.links"
+        :filters="filters"
+        :show-filters="false"
+        :enable-search="false"
+        :enable-status="false"
+        :enable-date="false"
+        route-name="pengusul.form"
+        @update:filters="Object.assign(filters, $event)"
+      >
+        <template #nama="{ row }">
+          <span
+            class="cursor-pointer"
+            @click="toggleSelect(row)"
+            :class="isSelected(row)
+              ? 'font-semibold text-primary-default'
+              : 'hover:underline'"
+          >
+            {{ row.nama }}
+          </span>
+        </template>
+
+        <template #identity="{ row }">
+          <span
+            class="cursor-pointer"
+            @click="toggleSelect(row)"
+            :class="isSelected(row)
+              ? 'font-semibold text-primary-default'
+              : 'hover:underline'"
+          >
+            {{ row.identity ?? row.nim ?? row.nip }}
+          </span>
+        </template>
+
+        <template #jabatan_jurusan="{ row }">
+          <span
+            class="text-sm cursor-pointer"
+            @click="toggleSelect(row)"
+            :class="isSelected(row)
+              ? 'text-orange-500 font-semibold'
+              : 'text-gray-700 hover:underline'
+            "
+          >
+            <template v-if="tab === 'pegawai'">
+              {{ row.jabatan || '-' }}
+              <span v-if="row.jabatan && row.golongan"> / </span>
+              <span v-if="row.golongan">{{ row.golongan }}</span>
+            </template>
+
+            <template v-else>
+              {{ row.jurusan || '-' }}
+              <span v-if="row.jurusan && row.prodi"> / </span>
+              <span v-if="row.prodi">{{ row.prodi }}</span>
+            </template>
+          </span>
+        </template>
+
+        <template #select="{ row }">
+          <input
+            type="checkbox"
+            :checked="isSelected(row)"
+            @change="toggleSelect(row)"
+          />
+        </template>
+      </DataTable>
+    </div>
+
+    <div class="mt-6 p-5">
+      <h2 class="text-lg font-semibold mb-2">Personel yang dipilih</h2>
+
+      <div v-if="selectedPersons.length" class="overflow-x-auto">
+        <table class="min-w-full text-sm border rounded-md bg-white">
+          <thead class="bg-gray-100 border-b text-gray-600 uppercase text-xs">
+            <tr>
+              <th class="px-4 py-2 w-12 text-left">No</th>
+              <th class="px-4 py-2 text-left">Nama</th>
+              <th class="px-4 py-2 text-left">NIM / NIP</th>
+              <th class="px-4 py-2 text-left">Jabatan / Jurusan</th>
+              <th class="px-4 py-2 w-24 text-left">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(p, index) in selectedPersons" :key="p.type + '-' + p.id" class="border-b">
+              <td class="px-4 py-2 text-center">{{ index + 1 }}</td>
+              <td class="px-4 py-2">{{ p.nama }}</td>
+              <td class="px-4 py-2">
+                <span v-if="p.type === 'pegawai'">
+                  {{ p.nip || '-' }}
+                </span>
+                <span v-else>
+                  {{ p.nim || '-' }}
+                </span>
+              </td>
+              <td class="px-4 py-2">
+                <span v-if="p.type === 'pegawai'">
+                  {{ p.jabatan || '-' }}<span v-if="p.golongan"> / {{ p.golongan }}</span>
+                </span>
+                <span v-else>
+                  {{ p.jurusan || '-' }}<span v-if="p.prodi"> / {{ p.prodi }}</span>
+                </span>
+              </td>
+              <td class="px-4 py-2 text-center">
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center px-3 py-2 rounded bg-red-500 hover:bg-red-600"
+                  @click="removeSelected(p.id, p.type)"
+                >
+                  <font-awesome-icon :icon="['far', 'trash-can']" class="text-white" />
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p v-else class="text-sm text-gray-500">
+        Belum ada personel yang dipilih.
+      </p>
+    </div>
+
+    <div class="mt-6 flex justify-end gap-3">
+      <button
+        @click="emit('prev')"
+        class="px-4 py-2 bg-gray-200 rounded"
+      >
+        Kembali
+      </button>
+
+      <button
+        :disabled="!selectedPersons.length"
+        @click="emit('next', selectedPersons)"
+        class="px-4 py-2 bg-primary-default text-white rounded disabled:opacity-40"
+      >
+        Lanjut
+      </button>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import DataTable from '@/Components/Table/DataTable.vue'
-import { ref, computed } from 'vue'
+import { reactive, ref, watch, computed } from 'vue'
+import { router, usePage } from '@inertiajs/vue3'
+import debounce from 'lodash.debounce'
 
-defineProps({
-  show: Boolean
-})
-defineEmits(['close', 'confirm'])
-
-const tab = ref('mahasiswa')
-const search = ref('')
-const filters = ref({
-  search: '',
-  status: '',
-  from: '',
-  to: '',
-  page: 1,
+const props = defineProps({
+  value: {
+    type: Array,
+    default: () => []
+  }
 })
 
-const mahasiswa = [
-  { id: 1, nama: 'Budi', identity: '2101001', status: 'aktif' },
-  { id: 2, nama: 'Rika', identity: '2101045', status: 'cuti' }
-]
+const emit = defineEmits(['next', 'prev'])
+const page = usePage()
 
-const pegawai = [
-  { id: 1, nama: 'Pak Joko', identity: '198800123', status: 'aktif' },
-  { id: 2, nama: 'Bu Sinta', identity: '198900891', status: 'aktif' }
-]
+const normalizeFromWizard = (p) => {
+  if (p.type) return p
+
+  if (p.nim) {
+    return {
+      id: p.id,
+      type: 'mahasiswa',
+      nama: p.nama,
+      nim: p.nim,
+      jurusan: p.jurusan ?? '',
+      prodi: p.prodi ?? ''
+    }
+  }
+
+  return {
+    id: p.id,
+    type: 'pegawai',
+    nama: p.nama,
+    nip: p.nip ?? p.identity ?? '',
+    pangkat: p.pangkat ?? '',
+    golongan: p.golongan ?? '',
+    jabatan: p.jabatan ?? ''
+  }
+}
+
+const persons = computed(() => {
+  const p = page.props.personel || {}
+  const data = Array.isArray(p.data) ? p.data : []
+  const rawMeta = p.meta || {}
+
+  const meta = {
+    per_page: Number(rawMeta.per_page ?? data.length ?? 0),
+    from: rawMeta.from ?? 0,
+    to: rawMeta.to ?? data.length ?? 0,
+    total: rawMeta.total ?? data.length ?? 0,
+    ...rawMeta,
+  }
+
+  const links = p.links || { prev: null, next: null }
+  return { data, meta, links }
+})
+
+const serverFilters = page.props.filters || {}
+const initialTab = page.props.tab || serverFilters.tab || 'pegawai'
+const tab = ref(initialTab)
+
+const filters = reactive({
+  search: serverFilters.search || '',
+  status: serverFilters.status || '',
+  from: serverFilters.from || '',
+  to: serverFilters.to || '',
+  tab: initialTab,
+})
 
 const columns = [
   { key: 'nama', label: 'Nama' },
   { key: 'identity', label: 'NIM / NIP' },
-  { key: 'status', label: 'Status' }
+  { key: 'jabatan_jurusan', label: 'Jabatan / Jurusan' },
+  { key: 'select', label: 'Aksi' },
 ]
 
-const filteredRows = computed(() => {
-  const base = tab.value === 'mahasiswa' ? mahasiswa : pegawai
+const selected = ref(
+  Array.isArray(props.value)
+    ? props.value.map(normalizeFromWizard)
+    : []
+)
 
-  if (!search.value) return base
+const normalizePerson = (row) => {
+  if (tab.value === 'pegawai') {
+    return {
+      id: row.id,
+      type: 'pegawai',
+      nama: row.nama,
+      nip: row.nip ?? row.identity ?? '',
+      pangkat: row.pangkat ?? '',
+      golongan: row.golongan ?? '',
+      jabatan: row.jabatan ?? '',
+    }
+  }
 
-  return base.filter(item =>
-    item.nama.toLowerCase().includes(search.value.toLowerCase()) ||
-    item.identity.includes(search.value)
+  return {
+    id: row.id,
+    type: 'mahasiswa',
+    nama: row.nama,
+    nim: row.nim ?? row.identity ?? '',
+    jurusan: row.jurusan ?? '',
+    prodi: row.prodi ?? '',
+  }
+}
+
+const isSamePerson = (a, b) => a.id === b.id && a.type === b.type
+
+const toggleSelect = (row) => {
+  const normalized = normalizePerson(row)
+  const idx = selected.value.findIndex((p) => isSamePerson(p, normalized))
+
+  if (idx !== -1) {
+    selected.value.splice(idx, 1)
+  } else {
+    selected.value.push(normalized)
+  }
+}
+
+const removeSelected = (id, type) => {
+  selected.value = selected.value.filter(
+    (p) => !(p.id === id && p.type === type)
   )
-})
-
-const confirm = () => {
-  alert('Personel dipilih')
 }
+
+const selectedPersons = computed(() => selected.value)
+
+const isSelected = (row) => {
+  const normalized = normalizePerson(row)
+  return selected.value.some(p => isSamePerson(p, normalized))
+}
+
+const changeTab = (val) => {
+  tab.value = val
+  filters.tab = val
+  filters.page = 1
+  fetchPersons()
+}
+
+const fetchPersons = debounce(() => {
+  router.get(
+    route('pengusul.form'),
+    { ...filters },
+    {
+      preserveState: true,
+      replace: true,
+      only: ['personel', 'filters', 'tab'],
+    }
+  )
+}, 300)
+
+watch(
+  filters,
+  () => {
+    fetchPersons()
+  },
+  { deep: true }
+)
+
 </script>
-
-<style>
-.fade-enter-active,
-.fade-leave-active {
-  transition: 0.2s;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>

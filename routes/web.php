@@ -53,14 +53,17 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/pengusulan', [PengusulController::class, 'daftarPengusulan'])->name('pengusul.pengajuan');
             Route::get('/tambah-pengusulan', [PengusulController::class, 'formPengusulan'])->name('pengusul.form');
             Route::get('/draft', [PengusulController::class, 'draftPengusulan'])->name('pengusul.draft');
+            Route::get('/personel', [PengusulController::class, 'personel'])->name('pengusul.personel');
     });
 
     // Pelaksana
     Route::prefix('pelaksana')->name('pelaksana.')->middleware(['auth', 'role:pelaksana'])->group(function () {
         Route::get('/dashboard', [PelaksanaController::class, 'dashboard'])->name('dashboard');
         Route::get('/daftarlaporan', [PelaksanaController::class, 'daftarLaporan'])->name('daftarlaporan');
+        Route::get('/historypelaksana', [PelaksanaController::class, 'historypelaksana'])->name('historypelaksana');
     });
 
+    // Wadir 1-4
     Route::middleware(['auth'])->group(function () {
 
         $wadirList = ['wadir1', 'wadir2', 'wadir3', 'wadir4'];
@@ -79,6 +82,10 @@ Route::middleware(['auth'])->group(function () {
                     // Halaman daftar persetujuan
                     Route::get('/persetujuan', [WadirController::class, 'persetujuan'])
                         ->name('persetujuan');
+
+                    // History Wadir
+                    Route::get('/history', [WadirController::class, 'history'])
+                        ->name('history');
 
                     // Lihat surat untuk disetujui
                     Route::get('/persetujuan/{id}', [WadirController::class, 'show'])
@@ -166,6 +173,5 @@ Route::prefix('pegawai')->name('pegawai.')->group(function () {
     Route::patch('/toggle-status/{id}', [PegawaiController::class, 'toggleStatus'])->name('toggleStatus');
     Route::post('/upload-excel', [PegawaiController::class, 'uploadExcel'])->name('uploadExcel');
 });
-
 
 require __DIR__.'/auth.php';
