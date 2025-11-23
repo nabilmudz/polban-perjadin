@@ -114,7 +114,7 @@ export default function getSidebarLinks(role) {
         {
           name: "History",
           route: "bku.historyperjalanandinas",
-          icon: "history",
+          icon: "clock",
           component: "BKU/HistoryPerjalananDinas"
         }
       ];

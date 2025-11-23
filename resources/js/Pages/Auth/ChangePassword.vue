@@ -26,12 +26,12 @@ const submit = () => {
   <div class="min-h-screen flex items-center justify-center bg-gray-100">
     <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
       <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">
-        Change Password
+        Ganti Password
       </h1>
 
       <form @submit.prevent="submit" class="space-y-5">
         <div>
-          <InputLabel for="current_password" value="Current Password" />
+          <InputLabel for="current_password" value="Password lama" />
           <TextInput
             id="current_password"
             type="password"
@@ -44,7 +44,7 @@ const submit = () => {
         </div>
 
         <div>
-          <InputLabel for="password" value="New Password" />
+          <InputLabel for="password" value="Password Baru" />
           <TextInput
             id="password"
             type="password"
@@ -57,7 +57,7 @@ const submit = () => {
         </div>
 
         <div>
-          <InputLabel for="password_confirmation" value="Confirm Password" />
+          <InputLabel for="password_confirmation" value="Konfirmasi Password" />
           <TextInput
             id="password_confirmation"
             type="password"
