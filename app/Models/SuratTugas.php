@@ -69,4 +69,13 @@ class SuratTugas extends Model
     {
         return $this->belongsTo(User::class);
     }
+    
+    public function detailPelaksanaTugas()
+    {
+        return $this->hasMany(
+            DetailPelaksanaTugas::class,
+            'surat_tugas_id',
+            'surat_tugas_id'
+        );
+    }
 }

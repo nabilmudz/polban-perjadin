@@ -53,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/pengusulan', [PengusulController::class, 'daftarPengusulan'])->name('pengusul.pengajuan');
             Route::get('/tambah-pengusulan', [PengusulController::class, 'formPengusulan'])->name('pengusul.form');
             Route::get('/draft', [PengusulController::class, 'draftPengusulan'])->name('pengusul.draft');
+            Route::get('/personel', [PengusulController::class, 'personel'])->name('pengusul.personel');
     });
 
     // Pelaksana
@@ -154,6 +155,5 @@ Route::prefix('pegawai')->name('pegawai.')->group(function () {
     Route::patch('/toggle-status/{id}', [PegawaiController::class, 'toggleStatus'])->name('toggleStatus');
     Route::post('/upload-excel', [PegawaiController::class, 'uploadExcel'])->name('uploadExcel');
 });
-
 
 require __DIR__.'/auth.php';
