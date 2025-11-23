@@ -27,7 +27,7 @@ class WadirController extends Controller
             'rejected' => SuratTugas::where('status_surat', 'rejected')->count(),
         ];
 
-        return Inertia::render('Dashboards/WadirDashboard', [
+        return Inertia::render('Wadir/WadirDashboard', [
             'suratTugas' => [
                 'data'  => $list->items(),
                 'meta'  => [

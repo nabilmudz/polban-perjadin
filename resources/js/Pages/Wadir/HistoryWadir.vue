@@ -1,6 +1,6 @@
 <template>
     <AppLayout>
-        <div class="bg-white w-full h-full rounded-md shadow">
+        <div class="bg-white w-full rounded-md shadow">
             <HeaderPage />
 
             <div class="p-8">

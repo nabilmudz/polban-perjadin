@@ -93,6 +93,7 @@ class SuratTugas extends Model
     public function laporan()
     {
         return $this->hasOne(Laporan::class, 'surat_tugas_id', 'surat_tugas_id');
+    }
     
     public function detailPelaksanaTugas()
     {
