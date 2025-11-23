@@ -60,8 +60,10 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('pelaksana')->name('pelaksana.')->middleware(['auth', 'role:pelaksana'])->group(function () {
         Route::get('/dashboard', [PelaksanaController::class, 'dashboard'])->name('dashboard');
         Route::get('/daftarlaporan', [PelaksanaController::class, 'daftarLaporan'])->name('daftarlaporan');
+        Route::get('/historypelaksana', [PelaksanaController::class, 'historypelaksana'])->name('historypelaksana');
     });
 
+    // Wadir 1-4
     Route::middleware(['auth'])->group(function () {
 
         $wadirList = ['wadir1', 'wadir2', 'wadir3', 'wadir4'];
@@ -80,6 +82,10 @@ Route::middleware(['auth'])->group(function () {
                     // Halaman daftar persetujuan
                     Route::get('/persetujuan', [WadirController::class, 'persetujuan'])
                         ->name('persetujuan');
+
+                    // History Wadir
+                    Route::get('/history', [WadirController::class, 'history'])
+                        ->name('history');
 
                     // Lihat surat untuk disetujui
                     Route::get('/persetujuan/{id}', [WadirController::class, 'show'])
