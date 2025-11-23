@@ -113,6 +113,18 @@ Route::middleware(['auth'])->group(function () {
         // Daftar Persetujuan Page
         Route::get('/daftarpersetujuan', [DaftarPersetujuanController::class, 'index'])
             ->name('daftarpersetujuan');
+        
+        Route::get('/persetujuan/{id}', [DaftarPersetujuanController::class, 'show'])
+            ->name('persetujuan.show');
+
+        Route::post('/persetujuan/{id}/approve', [DaftarPersetujuanController::class, 'approve'])
+        ->name('persetujuan.approve');
+
+        Route::post('/persetujuan/{id}/reject', [DaftarPersetujuanController::class, 'reject'])
+            ->name('persetujuan.reject');
+
+        Route::post('/persetujuan/{id}/revise', [DaftarPersetujuanController::class, 'revise'])
+            ->name('persetujuan.revise');
 
     });
 
@@ -122,8 +134,8 @@ Route::middleware(['auth'])->group(function () {
             ->name('dashboard');
 
         // Daftar Laporan & Perjalanan
-        Route::get('/daftarlaporan&perjalanan', [DaftarLaporanController::class, 'index'])
-            ->name('daftarlaporan&perjalanan');
+        Route::get('/daftarlaporanperjalanan', [DaftarLaporanController::class, 'index'])
+            ->name('daftarlaporanperjalanan');
 
         // History Perjalanan Dinas
         Route::get('/historyperjalanandinas', [HistoryPerjalananDinasController::class, 'index'])

@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="bg-none w-full h-full rounded-md shadow">
+    <div class="bg-white w-full rounded-md shadow">
       <HeaderPage />
 
       <!-- PAGE TITLE & STAT CARDS -->
