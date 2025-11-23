@@ -3,19 +3,15 @@
 use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\PengusulController;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SuratTugasController;
 use App\Http\Controllers\PelaksanaController;
-use App\Http\Controllers\Direktur\DaftarPersetujuanController;
-use App\Http\Controllers\BKU\DaftarLaporanController;
-use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Wadir\WadirController;
-use App\Http\Controllers\BKU\HistoryPerjalananDinasController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SekdirController;
+use App\Http\Controllers\BKUController;
+use App\Http\Controllers\DirekturController;
 use App\Http\Controllers\Admin\TemplateSuratController;
 
 // Entry
@@ -113,38 +109,38 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('direktur')->name('direktur.')->middleware(['auth', 'role:direktur'])->group(function () {
 
         // Dashboard Direktur
-        Route::get('/dashboard', [DashboardController::class, 'direktur'])
+        Route::get('/dashboard', [DirekturController::class, 'direktur'])
             ->name('dashboard');
 
         // Daftar Persetujuan Page
-        Route::get('/daftarpersetujuan', [DaftarPersetujuanController::class, 'index'])
+        Route::get('/daftarpersetujuan', [DirekturController::class, 'persetujuan'])
             ->name('daftarpersetujuan');
         
-        Route::get('/persetujuan/{id}', [DaftarPersetujuanController::class, 'show'])
+        Route::get('/persetujuan/{id}', [DirekturController::class, 'show'])
             ->name('persetujuan.show');
 
-        Route::post('/persetujuan/{id}/approve', [DaftarPersetujuanController::class, 'approve'])
+        Route::post('/persetujuan/{id}/approve', [DirekturController::class, 'approve'])
         ->name('persetujuan.approve');
 
-        Route::post('/persetujuan/{id}/reject', [DaftarPersetujuanController::class, 'reject'])
+        Route::post('/persetujuan/{id}/reject', [DirekturController::class, 'reject'])
             ->name('persetujuan.reject');
 
-        Route::post('/persetujuan/{id}/revise', [DaftarPersetujuanController::class, 'revise'])
+        Route::post('/persetujuan/{id}/revise', [DirekturController::class, 'revise'])
             ->name('persetujuan.revise');
 
     });
 
     // BKU routes
     Route::prefix('bku')->name('bku.')->middleware(['auth', 'role:bku'])->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'bku'])
+        Route::get('/dashboard', [BKUController::class, 'dashboard'])
             ->name('dashboard');
 
         // Daftar Laporan & Perjalanan
-        Route::get('/daftarlaporanperjalanan', [DaftarLaporanController::class, 'index'])
+        Route::get('/daftarlaporanperjalanan', [BKUController::class, 'daftarLaporan'])
             ->name('daftarlaporanperjalanan');
 
         // History Perjalanan Dinas
-        Route::get('/historyperjalanandinas', [HistoryPerjalananDinasController::class, 'index'])
+        Route::get('/historyperjalanandinas', [BKUController::class, 'history'])
             ->name('historyperjalanandinas');
     });
 
