@@ -41,14 +41,14 @@ Route::get('/', function () {
 
 Route::middleware(['auth'])->group(function () {
     // Admin
-    Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
-        Route::get('/pegawai', [AdminController::class, 'pegawai'])
-            ->name('admin.pegawai');
+    Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->group(function () {
+        Route::resource('pegawai', PegawaiController::class);
+        Route::resource('mahasiswa', \App\Http\Controllers\Admin\MahasiswaController::class);
         
         Route::get('/template-surat', [TemplateSuratController::class, 'edit'])
-            ->name('admin.template');
+            ->name('template');
         Route::put('/template-surat', [TemplateSuratController::class, 'update'])
-            ->name('admin.template.update');
+            ->name('template.update');
     });
 
     // Pengusul 
@@ -170,14 +170,6 @@ Route::prefix('surat-tugas')->group(function () {
     Route::delete('/{id}', [SuratTugasController::class, 'destroy']);
 });
 
-Route::prefix('pegawai')->name('pegawai.')->group(function () {
-    Route::get('/', [PegawaiController::class, 'index']);
-    Route::get('/{id}', [PegawaiController::class, 'show']);
-    Route::post('/', [PegawaiController::class, 'store'])->name('store');
-    Route::put('/{id}', [PegawaiController::class, 'update'])->name('update');
-    Route::delete('/{id}', [PegawaiController::class, 'destroy'])->name('destroy');
-    Route::patch('/toggle-status/{id}', [PegawaiController::class, 'toggleStatus'])->name('toggleStatus');
-    Route::post('/upload-excel', [PegawaiController::class, 'uploadExcel'])->name('uploadExcel');
-});
+
 
 require __DIR__.'/auth.php';

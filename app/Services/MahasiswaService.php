@@ -3,88 +3,66 @@
 namespace App\Services;
 
 use App\Models\Mahasiswa;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
+use App\Imports\MahasiswaImport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class MahasiswaService
 {
-    public function getAll(array $filters = [])
+    public function getMahasiswa(Request $request)
     {
         $query = Mahasiswa::query();
 
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('nim', 'like', "%{$search}%")
-                  ->orWhere('jurusan', 'like', "%{$search}%")
-                  ->orWhere('prodi', 'like', "%{$search}%");
-            });
+        if ($request->has('search')) {
+            $query->where('nama', 'like', '%' . $request->search . '%')
+                ->orWhere('nim', 'like', '%' . $request->search . '%')
+                ->orWhere('jurusan', 'like', '%' . $request->search . '%');
         }
 
-        $paginate = $query->latest()->paginate(10)->withQueryString();
+        if ($request->has('sort_by') && $request->has('sort_direction')) {
+            $query->orderBy($request->sort_by, $request->sort_direction);
+        } else {
+            $query->orderBy('nama', 'asc');
+        }
 
-        return [
-            'data' => $paginate->items(),
-            'meta' => [
-                'current_page' => $paginate->currentPage(),
-                'last_page' => $paginate->lastPage(),
-                'per_page' => $paginate->perPage(),
-                'from' => $paginate->firstItem(),
-                'to' => $paginate->lastItem(),
-                'total' => $paginate->total(),
-            ],
-            'links' => [
-                'prev' => $paginate->previousPageUrl(),
-                'next' => $paginate->nextPageUrl(),
-            ],
-        ];
+        return $query->paginate($request->get('limit', 10));
     }
 
-    public function getById($id)
+    public function createMahasiswa(Request $request)
     {
-        $mahasiswa = Mahasiswa::find($id);
-        if (!$mahasiswa) throw new ModelNotFoundException('Mahasiswa not found');
+        $request->validate([
+            'nim' => 'required|unique:mahasiswa,nim',
+            'nama' => 'required|string|max:255',
+            'jurusan' => 'required|string|max:255',
+            'prodi' => 'required|string|max:255',
+        ]);
+
+        return Mahasiswa::create($request->all());
+    }
+
+    public function updateMahasiswa(Request $request, Mahasiswa $mahasiswa)
+    {
+        $request->validate([
+            'nim' => 'required|unique:mahasiswa,nim,' . $mahasiswa->id,
+            'nama' => 'required|string|max:255',
+            'prodi' => 'required|string|max:255',
+        ]);
+
+        $mahasiswa->update($request->all());
         return $mahasiswa;
     }
 
-    public function create(array $data)
+    public function deleteMahasiswa(Mahasiswa $mahasiswa)
     {
-        return Mahasiswa::create($data);
+        return $mahasiswa->delete();
     }
 
-    public function update($id, array $data)
+    public function importMahasiswa(Request $request)
     {
-        $mahasiswa = Mahasiswa::findOrFail($id);
-        $mahasiswa->update($data);
-        return $mahasiswa;
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        Excel::import(new MahasiswaImport, $request->file('file'));
     }
-
-    public function delete($id)
-    {
-        $mahasiswa = Mahasiswa::findOrFail($id);
-        $mahasiswa->delete();
-        return true;
-    }
-
-    public function toggleStatus($id)
-    {
-        $mahasiswa = Mahasiswa::findOrFail($id);
-        $mahasiswa->status = $mahasiswa->status == 1 ? 0 : 1;
-        $mahasiswa->save();
-
-        return $mahasiswa;
-    }
-    
-    // public function importExcel($file)
-    // {
-    //     try {
-    //         Excel::import(new MahasiswaImport, $file);
-    //     } catch (\Exception $e) {
-    //         throw new \Exception("Gagal mengimpor file: " . $e->getMessage());
-    //     }
-
-    //     return true;
-    // }
-
 }
