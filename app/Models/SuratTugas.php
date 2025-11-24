@@ -10,6 +10,7 @@ class SuratTugas extends Model
     use HasFactory;
 
     protected $primaryKey = 'surat_tugas_id';
+
     protected $fillable = [
         'nomor_urutan_surat',
         'kode_unit_kerja',
@@ -92,9 +93,13 @@ class SuratTugas extends Model
 
     public function laporan()
     {
-        return $this->hasOne(Laporan::class, 'surat_tugas_id', 'surat_tugas_id');
+        return $this->hasOne(
+            Laporan::class,
+            'surat_tugas_id',
+            'surat_tugas_id'
+        );
     }
-    
+
     public function detailPelaksanaTugas()
     {
         return $this->hasMany(

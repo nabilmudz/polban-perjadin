@@ -166,7 +166,7 @@ class SekdirController extends Controller
 
     public function review($id)
     {
-        $surat = SuratTugas::findOrFail($id);
+        $surat = SuratTugas::with('pengusul')->findOrFail($id);
 
         $lastSurat = SuratTugas::whereYear('created_at', now()->year)
             ->whereNotNull('nomor_urutan_surat')
@@ -203,7 +203,7 @@ class SekdirController extends Controller
         ]);
 
         return redirect()
-            ->route('sekdir.nomorsurat')
+            ->route('sekdir.history')
             ->with('success', 'Nomor surat berhasil diterapkan!');
     }
 }

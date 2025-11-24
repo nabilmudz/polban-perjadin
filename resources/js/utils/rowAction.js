@@ -1,6 +1,11 @@
 export function getRowActions(row, userRole='') {
   const actions = []
   
+  if (userRole === 'admin') {
+    actions.push({ type: 'edit', icon: 'pen-to-square', color: 'yellow' })
+    actions.push({ type: 'delete', icon: 'trash-can', color: 'red' })
+  }
+
   if (userRole !== 'admin') {
     actions.push({ type: 'view', icon: 'eye', color: 'blue' })
     actions.push({ type: 'download', icon: 'circle-down', color: 'green' })
