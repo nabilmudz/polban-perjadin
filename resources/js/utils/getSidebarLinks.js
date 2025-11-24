@@ -151,10 +151,22 @@ export default function getSidebarLinks(role) {
       return [
         {
           name: "Daftar Pegawai",
-          route: "admin.pegawai",
+          route: "admin.pegawai.index",
           icon: "user",
           component: "Admin/DaftarPegawai"
         },
+        {
+          name: "Daftar Mahasiswa",
+          route: "admin.mahasiswa.index",
+          icon: "user",
+          component: "Admin/Mahasiswa/DaftarMahasiswa"
+        },
+        {
+          name: "Template Surat",
+          route: "admin.template",  
+          icon: "file-lines",
+          component: "Admin/TemplateSurat"
+        }
         // {
         //   name: "Laporan & Bukti Perjalanan Dinas",
         //   route: "bku.daftarlaporan&perjalanan",

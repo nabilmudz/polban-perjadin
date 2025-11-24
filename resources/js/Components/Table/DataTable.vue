@@ -137,7 +137,7 @@ import { router } from '@inertiajs/vue3'
 const props = defineProps({
   columns: Array,
   data: Array,
-  meta: Object,
+  meta: { type: Object, default: () => ({ per_page: 10, total: 0, from: 0, to: 0 }) },
   links: Object,
   filters: Object,
   routeName: String,

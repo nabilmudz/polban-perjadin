@@ -6,11 +6,12 @@
             <div class="p-8">
                 <h1 class="text-3xl font-bold mb-4">Dashboard Wadir</h1>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    <StatCard title="Total Tugas" icon="file" :count="stats.total" />
-                    <StatCard title="Tugas Selesai" icon="square-check" :count="stats.approved" />
-                    <StatCard title="Pending" icon="clock" :count="stats.pending" />
-                    <StatCard title="Ditolak" icon="times-circle" :count="stats.rejected" />
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+                    <StatCard title="Total Pengusulan" icon="file" :count="stats.total" />
+                    <StatCard title="Usulan Baru" icon="PlusSquare" :count="stats.baru" color="green" />
+                    <StatCard title="Dalam Proses (Direktur)" icon="clock" :count="stats.proses_direktur" color="yellow"/>
+                    <StatCard title="Bertugas" icon="briefcase" :count="stats.bertugas" color="light_blue"/>
+                    <StatCard title="Ditolak" icon="times-circle" :count="stats.rejected" color="red"/>
                 </div>
             </div>
 
@@ -67,13 +68,13 @@ const columns = [
 ]
 
 const handleView = (row) => {
-    router.get(route(`${user.role}.persetujuan.show`, row.id))
+  router.get(route(`${user.role}.persetujuan.show`, row.surat_tugas_id))
 }
 
 const handleAction = (type, row) => {
   switch(type) {
     case 'view':
-      router.get(route(`${user.role}.persetujuan.show`, row.id))
+      router.get(route(`${user.role}.persetujuan.show`, row.surat_tugas_id))  
       break
     case 'edit':
       router.get(route('pengusul.edit', row.id))
