@@ -73,8 +73,7 @@ const handleView = (row) => {
 const handleAction = (type, row) => {
   switch(type) {
     case 'view':
-      selectedData.value = row
-      showViewModal.value = true
+      router.get(route(`${user.role}.persetujuan.show`, row.id))
       break
     case 'edit':
       router.get(route('pengusul.edit', row.id))
