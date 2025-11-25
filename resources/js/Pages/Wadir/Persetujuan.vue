@@ -1,6 +1,6 @@
 <template>
     <AppLayout>
-        <div class="bg-white w-full h-full rounded-md shadow">
+        <div class="bg-white w-full rounded-md shadow">
             <HeaderPage />
 
             <div class="p-8">
@@ -14,24 +14,51 @@
                     :meta="suratTugas.meta"
                     :links="suratTugas.links"
                     :filters="filters"
-                    route-name="persetujuanRoute"
+                    :status-options="statusOptions"
+                    :route-name="`${user.role}.persetujuan`"
                     @update:filters="Object.assign(filters, $event)"
                 >
-                    <!-- STATUS BADGE -->
+                    
                     <template #status_surat="{ row }">
                         <StatusBadges :status="row.status_surat" />
                     </template>
-
-                    <!-- ACTION -->
-                    <template #action="{ row }">
-                        <button
-                            @click="handleView(row)"
-                            class="px-3 py-1 rounded bg-blue-500 text-white shadow hover:brightness-90 flex items-center gap-1"
-                        >
-                            <font-awesome-icon :icon="['far', 'eye']" /> Lihat
-                        </button>
+                    <template #path_file_surat_usulan="{ row }">
+                        <div class="flex gap-2">
+                            <button
+                                v-for="action in getSuratUndanganAction(row, user.role)"
+                                :key="action.type"
+                                @click="handleAction(action.type, row)"
+                                :disabled="action.disabled"
+                                class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90"
+                                :class="{
+                                    'bg-blue-500 text-white': action.color === 'blue',
+                                    'bg-gray-300 text-black': action.color === 'gray',
+                                }"
+                            >
+                                <font-awesome-icon :icon="['far', action.icon]" class="text-md" />
+                            </button>
+                        </div>
                     </template>
-
+                    <template #action="{ row }">
+                        <div class="flex gap-2">
+                            <button
+                            v-for="action in getRowActions(row, user.role)"
+                            :key="action.type"
+                            @click="handleAction(action.type, row)"
+                            :title="action.type"
+                            class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90"
+                            :class="{
+                                'bg-blue-500 text-white': action.color === 'blue',
+                                'bg-green-500 text-white': action.color === 'green',
+                                'bg-red-500 text-white': action.color === 'red',
+                                'bg-yellow-400 text-black': action.color === 'yellow',
+                                'bg-purple-500 text-white': action.color === 'purple',
+                            }"
+                            >
+                            <font-awesome-icon :icon="['far', action.icon]" class="text-md" />
+                            </button>
+                        </div>
+                    </template>
                 </DataTable>
             </div>
         </div>
@@ -41,30 +68,77 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
-import StatCard from '@/Components/StatCard.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
 import { usePage, router } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { getRowActions, getSuratUndanganAction } from '@/utils/rowAction'
+import { ref, watch  } from 'vue'
+import { debounce } from 'lodash-es'
 
+const goToReview = () => {
+  router.visit('/wadir/review')
+}
 const { props } = usePage()
-const suratTugas = props.suratTugas
-const stats = props.stats
-const filters = ref(props.filters)
-const user = usePage().props.auth.user
+const suratTugas = props.suratTugas ?? {
+  data: [],
+  meta: {},
+  links: []
+};
+
+
+const stats = props.stats ?? {}
+
+const filters = ref({
+    ...props.filters,
+    status: props.filters?.status ?? ''
+})
+
+watch(
+  () => props.filters,
+  (newFilters) => {
+    filters.value = {
+      ...newFilters,
+      status: newFilters?.status ?? ''
+    }
+  },
+  { deep: true, immediate: true }
+)
+
+
+const page = usePage()
+const user = page.props.auth?.user ?? {}
 const dashboardRoute = `${user.role}.persetujuan`
 
 const columns = [
-  { key: 'pengusul', label: 'Pengusul' },
-  { key: 'nama_kegiatan', label: 'Nama Kegiatan' },
-  { key: 'tanggal_pelaksanaan', label: 'Tanggal Pelaksanaan' },
-  { key: 'pembiayaan', label: 'Pembiayaan' },
-  { key: 'surat_undangan', label: 'Surat Undangan' },
+  { key: 'user_id', label: 'Pengusul' },
+  { key: 'perihal_tugas', label: 'Nama Kegiatan' },
+  { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
+  { key: 'tanggal_kembali', label: 'Tanggal Kembali' },
+  { key: 'sumber_dana', label: 'Pembiayaan' },
   { key: 'status_surat', label: 'Status' },
-  { key: 'action', label: 'Aksi', sortable: false },
+  { key: 'path_file_surat_usulan', label: 'Surat Undangan' },
+  { key: 'action', label: 'Aksi' },
 ]
 
+const statusOptions = [
+    { label: "Menunggu Review", value: "pending" },
+    { label: "Disetujui", value: "approved" },
+    { label: "Ditolak", value: "rejected" },
+]
+
+
 const handleView = (row) => {
-  router.get(route(`${user.role}.surat.show`, row.id))
+  router.get(route(`${user.role}.persetujuan.show`, row.surat_tugas_id))
+}
+
+const handleAction = (type, row) => {
+    switch (type) {
+        case 'download':
+            router.visit(`/surat/download/${row.id}`)
+            break
+        case 'review':
+            router.get(route(`${user.role}.persetujuan.show`, row.surat_tugas_id))  
+            break
+    }
 }
 </script>

@@ -3,130 +3,151 @@
 namespace App\Http\Controllers\Wadir;
 
 use App\Http\Controllers\Controller;
+use App\Models\SuratTugas;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class WadirController extends Controller
 {
-    public function index(Request $request)
+    private function wadirLabel()
     {
-        $role = auth()->user()->role; // wadir1, wadir2, wadir3, wadir4
-
-        // Data dummy per wadir
-        $dataWadir = [
-            'wadir1' => [
-                'stats' => [
-                    'total' => 12,
-                    'pending' => 4,
-                    'approved' => 5,
-                    'rejected' => 3,
-                ],
-                'suratTugas' => [
-                    ['id' => 1, 'perihal_tugas' => 'Audit Internal', 'created_at' => '13-11-2024', 'status_surat' => 'pending'],
-                    ['id' => 2, 'perihal_tugas' => 'Rapat Kurikulum','created_at' => '28-9-2020', 'status_surat' => 'approved'],
-                ]
-            ],
-
-            'wadir2' => [
-                'stats' => [
-                    'total' => 20,
-                    'pending' => 6,
-                    'approved' => 10,
-                    'rejected' => 4,
-                ],
-                'suratTugas' => [
-                    ['id' => 3, 'perihal_tugas' => 'Monitoring Prodi', 'created_at' => '13-11-2024', 'status_surat' => 'pending'],
-                    ['id' => 4, 'perihal_tugas' => 'Workshop Akreditasi', 'created_at' => '13-11-2024', 'status_surat' => 'rejected'],
-                ]
-            ],
-
-            'wadir3' => [
-                'stats' => [
-                    'total' => 8,
-                    'pending' => 2,
-                    'approved' => 5,
-                    'rejected' => 1,
-                ],
-                'suratTugas' => [
-                    ['id' => 5, 'perihal_tugas' => 'Kerjasama Industri', 'status_surat' => 'approved'],
-                ]
-            ],
-
-            'wadir4' => [
-                'stats' => [
-                    'total' => 17,
-                    'pending' => 7,
-                    'approved' => 8,
-                    'rejected' => 2],
-                'suratTugas' => [
-                    ['id' => 6, 'perihal_tugas' => 'Pengabdian Masyarakat', 'status_surat' => 'pending'],
-                    ['id' => 7, 'perihal_tugas' => 'Kunjungan SMK', 'status_surat' => 'approved'],
-                ]
-            ],
-        ];
-
-        $wadir = $dataWadir[$role];
-
-                return Inertia::render('Dashboards/WadirDashboard', [
-                'stats' => $wadir['stats'],
-                'suratTugas' => [
-                    'data' => $wadir['suratTugas'],
-                    'meta' => [
-                        'current_page' => 1,
-                        'last_page' => 1,
-                        'per_page' => count($wadir['suratTugas']),
-                        'total' => count($wadir['suratTugas']),
-                        'from' => 1,
-                        'to' => count($wadir['suratTugas']),
-                    ],
-                    'links' => []
-                ],
-                'filters' => $request->all(),
-            ]);
+        return match(auth()->user()->role) {
+            'wadir1' => 'Wadir I',
+            'wadir2' => 'Wadir II',
+            'wadir3' => 'Wadir III',
+            'wadir4' => 'Wadir IV',
+            default  => null,
+        };
     }
 
-    public function persetujuan()
+    private function mapPagination($paginate)
     {
-        $dataPersetujuan = [
+        return [
+            'data' => $paginate->getCollection()->transform(function ($item) {
+                return [
+                    ...$item->toArray(),
+                    'created_at'        => $item->created_at?->format('Y-m-d'),
+                    'tanggal_berangkat' => $item->tanggal_berangkat?->format('Y-m-d'),
+                    'tanggal_kembali'   => $item->tanggal_kembali?->format('Y-m-d'),
+                    'tanggal_penomoran_sekdir' => $item->tanggal_penomoran_sekdir?->format('Y-m-d'),
+                ];
+            }),
 
-            'wadir1' => [
-                ['id' => 1, 'pengusul' => 'Doni', 'nama_kegiatan' => 'Audit Internal', 'tanggal_pelaksanaan' => '2024-11-22', 'pembiayaan' => 'Dana Dipa', 'surat_undangan' => 'ada.pdf', 'status_surat' => 'pending'],
-                ['id' => 2, 'pengusul' => 'Rani', 'nama_kegiatan' => 'Rapat Kurikulum', 'tanggal_pelaksanaan' => '2024-11-30', 'pembiayaan' => 'BLU', 'surat_undangan' => 'undangan.pdf', 'status_surat' => 'approved'],
+            'meta' => [
+                'current_page' => $paginate->currentPage(),
+                'last_page'    => $paginate->lastPage(),
+                'per_page'     => $paginate->perPage(),
+                'from'         => $paginate->firstItem(),
+                'to'           => $paginate->lastItem(),
+                'total'        => $paginate->total(),
             ],
 
-            'wadir2' => [
-                ['id' => 3, 'pengusul' => 'Sari', 'nama_kegiatan' => 'Monitoring Prodi', 'tanggal_pelaksanaan' => '2024-12-02', 'pembiayaan' => 'Prodi', 'surat_undangan' => 'monitoring.pdf', 'status_surat' => 'pending'],
-                ['id' => 4, 'pengusul' => 'Bima', 'nama_kegiatan' => 'Workshop Akreditasi', 'tanggal_pelaksanaan' => '2024-12-12', 'pembiayaan' => 'DIPA', 'surat_undangan' => null, 'status_surat' => 'rejected'],
+            'links' => [
+                'prev' => $paginate->previousPageUrl(),
+                'next' => $paginate->nextPageUrl(),
             ],
-
-            'wadir3' => [
-                ['id' => 5, 'pengusul' => 'Tika', 'nama_kegiatan' => 'Kerjasama Industri', 'tanggal_pelaksanaan' => '2024-11-20', 'pembiayaan' => 'Industri', 'surat_undangan' => 'kerjasama.pdf', 'status_surat' => 'approved'],
-            ],
-
-            'wadir4' => [
-                ['id' => 6, 'pengusul' => 'Yoga', 'nama_kegiatan' => 'Pengabdian Masyarakat', 'tanggal_pelaksanaan' => '2024-12-10', 'pembiayaan' => 'BLU', 'surat_undangan' => 'pengmas.pdf', 'status_surat' => 'pending'],
-                ['id' => 7, 'pengusul' => 'Wina', 'nama_kegiatan' => 'Kunjungan SMK', 'tanggal_pelaksanaan' => '2024-11-18', 'pembiayaan' => 'DIPA', 'surat_undangan' => null, 'status_surat' => 'approved'],
-            ],
-
         ];
+    }
 
-        $role = auth()->user()->role;
-        $persetujuan = $dataPersetujuan[$role] ?? [];
+    private function querySurat($filters)
+    {
+        $wadir = $this->wadirLabel();
 
-        return inertia('Wadir/Persetujuan', [
-            'suratTugas' => [
-                'data'  => $persetujuan,
-                'meta'  => [
-                    'total' => count($persetujuan),
-                    'per_page' => count($persetujuan),
-                    'current_page' => 1,
-                    'last_page' => 1,
-                ],
-                'links' => [],
+        return SuratTugas::where('diusulkan_kepada', $wadir)
+            ->when($filters['search'] ?? null, function ($q, $s) {
+                $q->where(function ($xx) use ($s) {
+                    $xx->where('perihal_tugas', 'like', "%$s%")
+                       ->orWhere('nomor_surat_tugas', 'like', "%$s%")
+                       ->orWhere('nama_kegiatan', 'like', "%$s%")
+                       ->orWhere('lokasi_tugas', 'like', "%$s%");
+                });
+            })
+            ->when($filters['status'] ?? null, function ($q, $s) {
+                $q->where('status_surat', $s);
+            })
+            ->when(($filters['from'] ?? null) && ($filters['to'] ?? null), function ($q) use ($filters) {
+                $q->whereBetween('created_at', [$filters['from'], $filters['to']]);
+            });
+    }
+
+    public function dashboard(Request $request)
+    {
+        $filters = $request->only(['search', 'status', 'from', 'to', 'page']);
+        $wadir = $this->wadirLabel();
+
+        $paginate = $this->querySurat($filters)
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return Inertia::render('Wadir/WadirDashboard', [
+            'suratTugas' => $this->mapPagination($paginate),
+            'filters'    => $filters,
+
+            'stats'      => [
+                // 2.1 Total Pengusulan
+                "total" => SuratTugas::where('diusulkan_kepada', $wadir)->count(),
+
+                // 2.2 Usulan Baru
+                "baru" => SuratTugas::where('diusulkan_kepada', $wadir)
+                    ->where('status_surat', 'submitted_wadir_review')
+                    ->count(),
+
+                // 2.3 Dalam Proses Direktur
+                "proses_direktur" => SuratTugas::where('diusulkan_kepada', $wadir)
+                    ->where('status_surat', 'pending_direktur_signature')
+                    ->count(),
+
+                // 2.4 Bertugas
+                "bertugas" => SuratTugas::where('diusulkan_kepada', $wadir)
+                    ->whereIn('status_surat', ['published', 'awaiting_proof_upload'])
+                    ->count(),
+
+                // 2.5 Ditolak
+                "rejected" => SuratTugas::where('diusulkan_kepada', $wadir)
+                    ->where('status_surat', 'rejected')
+                    ->count(),
             ],
-            'filters' => [
-                'search' => null,
-            ],
+        ]);
+    }
+
+    public function history(Request $request)
+    {
+        $filters = $request->only(['search', 'status', 'from', 'to', 'page']);
+
+        $paginate = $this->querySurat($filters)
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return Inertia::render('Wadir/HistoryWadir', [
+            'suratTugas' => $this->mapPagination($paginate),
+            'filters'    => $filters,
+        ]);
+    }
+
+    public function persetujuan(Request $request)
+    {
+        $filters = $request->only(['search', 'status', 'from', 'to', 'page']);
+
+        $paginate = $this->querySurat($filters)
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return Inertia::render('Wadir/Persetujuan', [
+            'suratTugas' => $this->mapPagination($paginate),
+            'filters'    => $filters,
+        ]);
+    }
+
+    public function show($id)
+    {
+        $data = SuratTugas::with('user')->findOrFail($id);
+        $data->created_at_formatted = $data->created_at->format('Y-m-d');
+
+        return Inertia::render('Wadir/ReviewWadir', [
+            'data' => $data,
         ]);
     }
 }

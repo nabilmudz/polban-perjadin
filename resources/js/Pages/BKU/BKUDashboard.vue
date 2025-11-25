@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="bg-white w-full h-full rounded-md shadow overflow-hidden">
+    <div class="bg-white w-full rounded-md shadow overflow-hidden">
       <HeaderPage />
 
       <div class="p-8">
@@ -13,7 +13,7 @@
           <StatCard title="Laporan Belum Selesai" icon="circle-exclamation" :count="stats?.laporan_belum_selesai || 0" color="red" />
         </div>
 
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <div class="bg-white  rounded-xl p-6">
           <div class="flex justify-between items-end mb-4">
              <div>
                  <h3 class="text-lg font-bold text-gray-800">Detail Penugasan</h3>
@@ -119,6 +119,6 @@ const columns = [
   { key: 'nomor_surat_tugas', label: 'Nomor Surat Tugas' }, 
   { key: 'sumber_dana', label: 'Sumber Dana' },
   { key: 'status_laporan', label: 'Status Laporan', slot: 'status_laporan' },
-  { key: 'tanggungan_biaya', label: 'Tanggungan Biaya', slot: 'tanggungan_biaya' },
+  { key: 'nominal_dana', label: 'Tanggungan Biaya', slot: 'tanggungan_biaya' },
 ]
 </script>

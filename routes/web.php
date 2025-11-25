@@ -3,19 +3,16 @@
 use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\PengusulController;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SuratTugasController;
 use App\Http\Controllers\PelaksanaController;
-use App\Http\Controllers\Direktur\DaftarPersetujuanController;
-use App\Http\Controllers\BKU\DaftarLaporanController;
-use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Wadir\WadirController;
-use App\Http\Controllers\BKU\HistoryPerjalananDinasController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SekdirController;
+use App\Http\Controllers\BKUController;
+use App\Http\Controllers\DirekturController;
+use App\Http\Controllers\Admin\TemplateSuratController;
 
 // Entry
 Route::get('/', function () {
@@ -40,9 +37,14 @@ Route::get('/', function () {
 
 Route::middleware(['auth'])->group(function () {
     // Admin
-    Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
-        Route::get('/pegawai', [AdminController::class, 'pegawai'])
-            ->name('admin.pegawai');
+    Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->group(function () {
+        Route::resource('pegawai', PegawaiController::class);
+        Route::resource('mahasiswa', \App\Http\Controllers\Admin\MahasiswaController::class);
+        
+        Route::get('/template-surat', [TemplateSuratController::class, 'edit'])
+            ->name('template');
+        Route::put('/template-surat', [TemplateSuratController::class, 'update'])
+            ->name('template.update');
     });
 
     // Pengusul 
@@ -53,14 +55,17 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/pengusulan', [PengusulController::class, 'daftarPengusulan'])->name('pengusul.pengajuan');
             Route::get('/tambah-pengusulan', [PengusulController::class, 'formPengusulan'])->name('pengusul.form');
             Route::get('/draft', [PengusulController::class, 'draftPengusulan'])->name('pengusul.draft');
+            Route::get('/personel', [PengusulController::class, 'personel'])->name('pengusul.personel');
     });
 
     // Pelaksana
     Route::prefix('pelaksana')->name('pelaksana.')->middleware(['auth', 'role:pelaksana'])->group(function () {
         Route::get('/dashboard', [PelaksanaController::class, 'dashboard'])->name('dashboard');
         Route::get('/daftarlaporan', [PelaksanaController::class, 'daftarLaporan'])->name('daftarlaporan');
+        Route::get('/historypelaksana', [PelaksanaController::class, 'historypelaksana'])->name('historypelaksana');
     });
 
+    // Wadir 1-4
     Route::middleware(['auth'])->group(function () {
 
         $wadirList = ['wadir1', 'wadir2', 'wadir3', 'wadir4'];
@@ -73,12 +78,16 @@ Route::middleware(['auth'])->group(function () {
                 ->group(function () {
 
                     // Dashboard
-                    Route::get('/dashboard', [WadirController::class, 'index'])
+                    Route::get('/dashboard', [WadirController::class, 'dashboard'])
                         ->name('dashboard');
 
                     // Halaman daftar persetujuan
                     Route::get('/persetujuan', [WadirController::class, 'persetujuan'])
                         ->name('persetujuan');
+
+                    // History Wadir
+                    Route::get('/history', [WadirController::class, 'history'])
+                        ->name('history');
 
                     // Lihat surat untuk disetujui
                     Route::get('/persetujuan/{id}', [WadirController::class, 'show'])
@@ -100,38 +109,38 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('direktur')->name('direktur.')->middleware(['auth', 'role:direktur'])->group(function () {
 
         // Dashboard Direktur
-        Route::get('/dashboard', [DashboardController::class, 'direktur'])
+        Route::get('/dashboard', [DirekturController::class, 'direktur'])
             ->name('dashboard');
 
         // Daftar Persetujuan Page
-        Route::get('/daftarpersetujuan', [DaftarPersetujuanController::class, 'index'])
+        Route::get('/daftarpersetujuan', [DirekturController::class, 'persetujuan'])
             ->name('daftarpersetujuan');
         
-        Route::get('/persetujuan/{id}', [DaftarPersetujuanController::class, 'show'])
+        Route::get('/persetujuan/{id}', [DirekturController::class, 'show'])
             ->name('persetujuan.show');
 
-        Route::post('/persetujuan/{id}/approve', [DaftarPersetujuanController::class, 'approve'])
+        Route::post('/persetujuan/{id}/approve', [DirekturController::class, 'approve'])
         ->name('persetujuan.approve');
 
-        Route::post('/persetujuan/{id}/reject', [DaftarPersetujuanController::class, 'reject'])
+        Route::post('/persetujuan/{id}/reject', [DirekturController::class, 'reject'])
             ->name('persetujuan.reject');
 
-        Route::post('/persetujuan/{id}/revise', [DaftarPersetujuanController::class, 'revise'])
+        Route::post('/persetujuan/{id}/revise', [DirekturController::class, 'revise'])
             ->name('persetujuan.revise');
 
     });
 
     // BKU routes
     Route::prefix('bku')->name('bku.')->middleware(['auth', 'role:bku'])->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'bku'])
+        Route::get('/dashboard', [BKUController::class, 'dashboard'])
             ->name('dashboard');
 
         // Daftar Laporan & Perjalanan
-        Route::get('/daftarlaporanperjalanan', [DaftarLaporanController::class, 'index'])
+        Route::get('/daftarlaporanperjalanan', [BKUController::class, 'daftarLaporan'])
             ->name('daftarlaporanperjalanan');
 
         // History Perjalanan Dinas
-        Route::get('/historyperjalanandinas', [HistoryPerjalananDinasController::class, 'index'])
+        Route::get('/historyperjalanandinas', [BKUController::class, 'history'])
             ->name('historyperjalanandinas');
     });
 
@@ -157,15 +166,6 @@ Route::prefix('surat-tugas')->group(function () {
     Route::delete('/{id}', [SuratTugasController::class, 'destroy']);
 });
 
-Route::prefix('pegawai')->name('pegawai.')->group(function () {
-    Route::get('/', [PegawaiController::class, 'index']);
-    Route::get('/{id}', [PegawaiController::class, 'show']);
-    Route::post('/', [PegawaiController::class, 'store'])->name('store');
-    Route::put('/{id}', [PegawaiController::class, 'update'])->name('update');
-    Route::delete('/{id}', [PegawaiController::class, 'destroy'])->name('destroy');
-    Route::patch('/toggle-status/{id}', [PegawaiController::class, 'toggleStatus'])->name('toggleStatus');
-    Route::post('/upload-excel', [PegawaiController::class, 'uploadExcel'])->name('uploadExcel');
-});
 
 
 require __DIR__.'/auth.php';

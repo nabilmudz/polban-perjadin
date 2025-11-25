@@ -8,14 +8,20 @@ export default function getSidebarLinks(role) {
         {
           name: "Dashboard",
           route: `${role}.dashboard`,
-          icon: "tachometer-alt",
+          icon: "house",
           component: "Wadir/WadirDashboard"
         },
         {
           name: "Persetujuan",
           route: `${role}.persetujuan`,
-          icon: "check",
+          icon: "square-check",
           component: "Wadir/Persetujuan"
+        },
+        {
+          name: "History",
+          route: `${role}.history`,
+          icon: "clock",
+          component: "Wadir/HistoryWadir"
         },
         {
           name: "Tambah Pengusulan",
@@ -66,6 +72,12 @@ export default function getSidebarLinks(role) {
           route: "pelaksana.daftarlaporan",
           icon: "clipboard",
           component: "Pelaksana/DaftarLaporan"
+        },
+        {
+          name: "History",
+          route: "pelaksana.historypelaksana",
+          icon: "clock",
+          component: "Pelaksana/HistoryPelaksana"
         }
       ];
 
@@ -102,7 +114,7 @@ export default function getSidebarLinks(role) {
         {
           name: "History",
           route: "bku.historyperjalanandinas",
-          icon: "history",
+          icon: "clock",
           component: "BKU/HistoryPerjalananDinas"
         }
       ];
@@ -139,10 +151,22 @@ export default function getSidebarLinks(role) {
       return [
         {
           name: "Daftar Pegawai",
-          route: "admin.pegawai",
+          route: "admin.pegawai.index",
           icon: "user",
           component: "Admin/DaftarPegawai"
         },
+        {
+          name: "Daftar Mahasiswa",
+          route: "admin.mahasiswa.index",
+          icon: "user",
+          component: "Admin/Mahasiswa/DaftarMahasiswa"
+        },
+        {
+          name: "Template Surat",
+          route: "admin.template",  
+          icon: "file-lines",
+          component: "Admin/TemplateSurat"
+        }
         // {
         //   name: "Laporan & Bukti Perjalanan Dinas",
         //   route: "bku.daftarlaporan&perjalanan",

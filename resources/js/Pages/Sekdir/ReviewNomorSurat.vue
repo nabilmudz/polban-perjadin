@@ -1,52 +1,108 @@
 <template>
   <AppLayout>
-    <div class="max-w-xl mx-auto bg-white p-8 rounded shadow">
+    <div class="min-h-screen w-full bg-white p-8">
 
-      <h1 class="text-2xl font-bold mb-4">Input Nomor Surat Resmi</h1>
+      <h1 class="text-3xl font-bold mb-2">Review Surat Tugas</h1>
 
-      <form @submit.prevent="submit">
+      <div class="bg-white w-full rounded-md shadow max-w-8x1 mx-auto p-10">
 
-        <label class="font-semibold">Format Nomor Surat Tugas Final</label>
+        <div class="mb-10">
+          <DetailSurat :surat="surat" />
+        </div>
 
-        <div class="grid grid-cols-4 gap-2 mt-2 mb-4">
+        <div class="flex justify-between items-center border-t pt-6">
+          <button
+            @click="goBack"
+            class="px-5 py-2 border rounded text-gray-700 hover:bg-gray-100 transition"
+          >
+            Kembali ke Daftar
+          </button>
+
+          <button
+            @click="showModal = true"
+            class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition flex items-center gap-2"
+          >
+            <i class="fa-solid fa-pen-to-square"></i>
+            Input Nomor Surat Resmi
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <div
+      v-if="showModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+    >
+      <div class="bg-white w-full max-w-lg rounded-lg shadow-xl p-6">
+
+        <h2 class="text-xl font-semibold mb-4">Input Nomor Surat Resmi</h2>
+
+        <div class="grid grid-cols-4 gap-3 mb-4">
           <input type="number" v-model="form.nomor_urutan_surat" class="border p-2 rounded" />
           <input type="text" v-model="form.kode_unit" class="border p-2 rounded" />
           <input type="text" v-model="form.kode_perihal" class="border p-2 rounded" />
           <input type="number" v-model="form.tahun" class="border p-2 rounded" />
         </div>
 
-        <p class="text-gray-500 text-sm">
-          Nomor urut terakhir yang digunakan tahun ini:
-          <strong>{{ next_number - 1 }}</strong><br />
-          Saran nomor berikutnya: <strong>{{ next_number }}</strong>
+        <p class="text-gray-600 text-sm mb-4 leading-relaxed">
+          Nomor urut terakhir tahun ini:
+          <strong>{{ next_number - 1 }}</strong><br>
+          Saran nomor berikutnya:
+          <strong>{{ next_number }}</strong>
         </p>
 
-        <div class="mt-6 flex justify-end space-x-3">
-          <button class="px-4 py-2 border rounded">Batalkan</button>
-          <button class="px-4 py-2 bg-blue-600 text-white rounded">
-            Terapkan ke Pratinjau
+        <div class="flex justify-end gap-3 mt-4">
+          <button
+            @click="closeModal"
+            class="px-4 py-2 border rounded hover:bg-gray-100 transition"
+          >
+            Batal
+          </button>
+
+          <button
+            @click="submit"
+            class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            Terapkan Nomor Surat
           </button>
         </div>
 
-      </form>
-
+      </div>
     </div>
   </AppLayout>
 </template>
 
 <script setup>
 import { usePage, router } from '@inertiajs/vue3'
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
+import AppLayout from '@/Layouts/AppLayout.vue'
+import DetailSurat from '@/Components/Surat/DetailSurat.vue'
+
 const { props } = usePage()
 
+const surat = props.surat
+const next_number = props.next_number
+const year = props.year
+
 const form = reactive({
-  nomor_urutan_surat: props.next_number,
-  kode_unit: "PLI",
+  nomor_urutan_surat: next_number,
+  kode_unit: "PL1",
   kode_perihal: "RT.01.00",
-  tahun: props.year
+  tahun: year
 })
 
-function submit() {
-  router.post(route('sekdir.nomorsurat.apply', props.surat.id), form)
+const showModal = ref(false)
+
+const closeModal = () => showModal.value = false
+
+const submit = () => {
+  router.post(route('sekdir.nomorsurat.apply', surat.id), form, {
+    onSuccess: () => closeModal()
+  })
+}
+
+const goBack = () => {
+  router.get(route('sekdir.nomorsurat'))
 }
 </script>

@@ -2,40 +2,29 @@
     <AppLayout>
         <div class="bg-white w-full rounded-md shadow">
             <HeaderPage />
+
             <div class="p-8">
-                <h1 class="text-3xl font-bold mb-4">Dashboard Pelaksana</h1>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    <StatCard title="Total Tugas" icon="file" :count="tugas?.meta?.total || 0" />
-                    <StatCard title="Tugas Selesai" icon="square-check" :count="7" />
-                    <StatCard title="Pending" icon="clock" :count="6" />
-                    <StatCard title="Ditolak" icon="times-circle" :count="2" />
-                </div>
+                <h1 class="text-3xl font-bold mb-4">History Surat Tugas</h1>
             </div>
 
             <div class="p-8">
-                <div class="overflow-x-auto">
                 <DataTable
                     :columns="columns"
                     :data="suratTugas.data"
                     :meta="suratTugas.meta"
                     :links="suratTugas.links"
                     :filters="filters"
-                    route-name="pelaksana.dashboard"
+                    route-name="historyWadirRoute"
                     @update:filters="Object.assign(filters, $event)"
-                    @changePage="(page) =>
-                    router.get(route('pengusul.dashboard'), { ...filters }, {
-                        preserveState: true,
-                        replace: true
-                    })
-                    "
                 >
+                    <!-- Status badge -->
                     <template #status_surat="{ row }">
-                    <StatusBadges :status="row.status_surat" />
+                        <StatusBadges :status="row.status_surat" />
                     </template>
                     <template #action="{ row }">
                         <div class="flex gap-2">
                             <button
-                            v-for="action in getRowActions(row, currentUser.role)"
+                            v-for="action in getRowActions(row, user.role)"
                             :key="action.type"
                             @click="handleAction(action.type, row)"
                             :title="action.type"
@@ -53,7 +42,6 @@
                         </div>
                     </template>
                 </DataTable>
-                </div> 
             </div>
         </div>
     </AppLayout>
@@ -62,23 +50,52 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
-import StatCard from '@/Components/StatCard.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
 import { getRowActions } from '@/utils/rowAction'
-import { usePage } from '@inertiajs/vue3'
+import { usePage, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
-import { Link } from '@inertiajs/vue3'
 
 const { props } = usePage()
-const currentUser = props.auth.user
 const suratTugas = props.suratTugas
 const filters = ref(props.filters)
+filters.value.status = filters.value.status ?? ''
+
+const page = usePage()
+const user = page.props.auth?.user ?? {}
 
 const columns = [
-    { key: 'perihal_tugas', label: 'Nama Kegiatan' },
-    { key: 'tanggal_berangkat', label: 'Tanggal Pelaksanaan' },
-    { key: 'status_surat', label: 'Status' },
-    { key: 'action', label: 'Aksi', sortable: false },
+  { key: 'created_at', label: 'Tanggal Pengusulan' },
+  { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
+  { key: 'nomor_surat_usulan_jurusan', label: 'Nomor Surat Pengantar' },
+  { key: 'nomor_surat_tugas_resmi', label: 'Nomor Surat Tugas' },
+  { key: 'tanggal_penomoran_sekdir', label: 'Tanggal Diterbitkan' },
+  { key: 'diusulkan_kepada', label: 'Diajukan Kepada' },
+  { key: 'status_surat', label: 'Status' },
+  { key: 'action', label: 'Aksi', sortable: false },
 ]
+
+const statusOptions = [
+    { label: "Pending Wadir Review", value: "pending" },
+    { label: "Diterbitkan", value: "Diterbitkan" },
+    { label: "Draft", value: "Draft" },
+]
+
+const handleAction = (type, row) => {
+    if (type === 'view') {
+        router.get(route(`${user.role}.persetujuan.show`, row.id))
+    }
+
+    if (type === 'review') {
+        router.get(route(`${user.role}.persetujuan.show`, row.id))
+    }
+}
 </script>
+
+<style scoped>
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
