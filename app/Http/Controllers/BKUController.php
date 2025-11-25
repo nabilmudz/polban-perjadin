@@ -10,25 +10,28 @@ use Inertia\Inertia;
 class BKUController extends Controller
 {
 
-    public function dashboard(Request $request)
+    public function bku(Request $request)
     {
         $stats = [
             'total_pengusulan' => SuratTugas::count(),
-            'surat_tugas_baru' => SuratTugas::where('status_surat', 'approved')
-                                    ->whereDate('created_at', '>=', now()->subDays(7))
-                                    ->count(),
+            'surat_tugas_baru' => SuratTugas::where('status_surat', 'approved')->count(),
             'bertugas' => SuratTugas::where('status_surat', 'approved')
                             ->whereDate('tanggal_berangkat', '<=', now())
                             ->whereDate('tanggal_kembali', '>=', now())
                             ->count(),
             'laporan_belum_selesai' => SuratTugas::where('status_surat', 'approved')
-                                        ->whereDate('tanggal_kembali', '<', now())
                                         ->doesntHave('laporan') 
                                         ->count(),
         ];
 
         $query = SuratTugas::query()
-            ->with(['pengusul', 'laporan']) 
+            ->with(['pengusul', 'laporan'])
+            ->whereIn('status_surat', [
+                'awaiting_proof_upload', 
+                'under_bku_review', 
+                'returned_for_correction', 
+                'completed'
+            ])
             ->latest();
 
         if ($request->search) {
@@ -38,72 +41,24 @@ class BKUController extends Controller
             });
         }
 
-        $latestSurat = $query->paginate(5)->withQueryString();
+        $latestSurat = $query->paginate(5)
+            ->withQueryString()
+            ->through(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'tanggal_pengusulan' => $item->created_at->format('Y-m-d'),
+                    'tanggal_berangkat' => $item->tanggal_berangkat->format('Y-m-d'),
+                    'no_usulan_surat' => $item->nomor_surat_usulan_jurusan ?? '-', 
+                    'nomor_surat_tugas' => $item->nomor_surat_resmi ?? '-',
+                    'sumber_dana' => $item->sumber_dana,
+                    'status_surat' => $item->status_surat, 
+                    'tanggungan_biaya' => '-',
+                ];
+            });
 
-        $latestSurat->getCollection()->transform(function ($item) {
-            $statusLaporan = 'Belum Upload';
-            $badgeColor = 'yellow'; 
-
-            if ($item->laporan) {
-                $statusLaporan = 'Selesai'; 
-                $badgeColor = 'green';
-            } elseif ($item->tanggal_berangkat <= now() && $item->tanggal_kembali >= now()) {
-                $statusLaporan = 'Sedang Bertugas';
-                $badgeColor = 'blue';
-            } elseif ($item->status_surat !== 'approved') {
-                 $statusLaporan = '-'; 
-                 $badgeColor = 'gray';
-            }
-
-            $item->display_status_laporan = $statusLaporan;
-            $item->badge_color = $badgeColor;
-            $item->tanggungan_biaya = '-'; 
-
-            return $item;
-        });
-
-        return Inertia::render('BKU/BKUDashboard', [
+        return Inertia::render('Dashboards/BKUDashboard', [
             'stats' => $stats,
             'latestSurat' => $latestSurat,
-            'filters' => $request->only(['search']),
-        ]);
-    }
-    
-    public function daftarLaporan(Request $request)
-    {
-        $query = SuratTugas::with(['pengusul', 'laporan'])
-            ->where('status_surat', 'approved');
-
-        if ($request->search) {
-            $query->where('nama_kegiatan', 'like', "%{$request->search}%")
-                  ->orWhere('nomor_surat_resmi', 'like', "%{$request->search}%");
-        }
-
-        $data = $query->orderBy('created_at', 'desc')
-            ->paginate(10)
-            ->withQueryString();
-
-        return Inertia::render('BKU/DaftarLaporanPerjalanan', [ 
-            'laporanBukti' => $data,
-            'filters' => $request->only(['search']),
-        ]);
-    }
-
-    public function history(Request $request)
-    {
-        $query = SuratTugas::with(['pengusul', 'wadir']);
-
-        if ($request->search) {
-            $query->where('nama_kegiatan', 'like', "%{$request->search}%")
-                  ->orWhere('nomor_surat_resmi', 'like', "%{$request->search}%");
-        }
-
-        $history = $query->orderBy('created_at', 'desc')
-            ->paginate(10)
-            ->withQueryString();
-
-        return Inertia::render('BKU/HistoryPerjalananDinas', [
-            'history' => $history,
             'filters' => $request->only(['search']),
         ]);
     }

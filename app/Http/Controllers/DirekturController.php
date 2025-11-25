@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\SuratTugas;
+use Illuminate\Support\Facades\Redirect;
 
 class DirekturController extends Controller
 {
-
     public function direktur(Request $request)
     {
         $user = auth()->user();
@@ -31,30 +31,16 @@ class DirekturController extends Controller
         }
 
         $suratTugas = $query->latest()->paginate(10)
-        ->through(function($item) {
-            return [
-                ...$item->toArray(),
-                'created_at' => $item->created_at->format('Y-m-d'),
-            ];
-        })
-        ->withQueryString();
+            ->through(function($item) {
+                return [
+                    ...$item->toArray(),
+                    'created_at' => $item->created_at->format('Y-m-d'),
+                ];
+            })
+            ->withQueryString();
 
         return inertia('Direktur/DirekturDashboard', [
-            'suratTugas' => [
-                'data' => $suratTugas->items(),
-                'meta' => [
-                    'current_page' => $suratTugas->currentPage(),
-                    'last_page' => $suratTugas->lastPage(),
-                    'per_page' => $suratTugas->perPage(),
-                    'from' => $suratTugas->firstItem(),
-                    'to' => $suratTugas->lastItem(),
-                    'total' => $suratTugas->total(),
-                ],
-                'links' => [
-                    'prev' => $suratTugas->previousPageUrl(),
-                    'next' => $suratTugas->nextPageUrl(),
-                ],
-            ],
+            'suratTugas' => $suratTugas, 
             'filters' => [
                 'status' => $request->status,
                 'search' => $request->search,
@@ -81,7 +67,13 @@ class DirekturController extends Controller
         $suratTugas = $query
             ->orderBy('created_at', 'desc')
             ->paginate(10)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(function($item) {
+                return [
+                    ...$item->toArray(),
+                    'tanggal_pelaksanaan' => $item->tanggal_berangkat ? $item->tanggal_berangkat->format('Y-m-d') : '-',
+                ];
+            });
 
         return Inertia::render('Direktur/DaftarPersetujuan', [
             'suratTugas' => $suratTugas,
@@ -98,10 +90,7 @@ class DirekturController extends Controller
         }
 
         $surat->update([
-            // Update status to finished/approved
             'status_surat' => 'approved', 
-            // 'direktur_id' => auth()->id(),
-            // 'tanggal_tanda_tangan' => now(),
         ]);
 
         return Redirect::route('direktur.daftarpersetujuan')
