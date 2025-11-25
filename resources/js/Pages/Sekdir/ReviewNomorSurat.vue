@@ -1,32 +1,32 @@
 <template>
   <AppLayout>
-    <div class="min-h-screen w-full bg-white p-8">
+    <div class="bg-white w-full rounded-md shadow">
+      <HeaderPage />
 
-      <h1 class="text-3xl font-bold mb-2">Review Surat Tugas</h1>
+      <div class="p-8">
+        <h1 class="text-3xl font-bold mb-2">Preview Surat Tugas</h1>
 
-      <div class="bg-white w-full rounded-md shadow max-w-8x1 mx-auto p-10">
-
-        <div class="mb-10">
-          <DetailSurat :surat="surat" />
+        <div class="mt-4">
+          <div class="bg-gray-100 p-8 rounded-lg">
+              <LaporanSurat :surat="surat" />
+          </div>
         </div>
 
-        <div class="flex justify-between items-center border-t pt-6">
+        <div class="mt-6 flex justify-end gap-3">
           <button
             @click="goBack"
-            class="px-5 py-2 border rounded text-gray-700 hover:bg-gray-100 transition"
+            class="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100 transition"
           >
-            Kembali ke Daftar
+            Kembali
           </button>
 
           <button
             @click="showModal = true"
-            class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition flex items-center gap-2"
+            class="px-6 py-2 bg-orange-500 text-white rounded hover:bg-orange-700 transition flex items-center gap-2"
           >
-            <i class="fa-solid fa-pen-to-square"></i>
             Input Nomor Surat Resmi
           </button>
         </div>
-
       </div>
     </div>
 
@@ -35,7 +35,6 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
     >
       <div class="bg-white w-full max-w-lg rounded-lg shadow-xl p-6">
-
         <h2 class="text-xl font-semibold mb-4">Input Nomor Surat Resmi</h2>
 
         <div class="grid grid-cols-4 gap-3 mb-4">
@@ -59,10 +58,9 @@
           >
             Batal
           </button>
-
           <button
             @click="submit"
-            class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            class="px-6 py-2 bg-orange-500 text-white rounded hover:bg-orange-700 transition"
           >
             Terapkan Nomor Surat
           </button>
@@ -77,7 +75,8 @@
 import { usePage, router } from '@inertiajs/vue3'
 import { reactive, ref } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import DetailSurat from '@/Components/Surat/DetailSurat.vue'
+import HeaderPage from '@/Components/HeaderPage.vue'
+import LaporanSurat from '@/Components/LaporanSurat.vue'
 
 const { props } = usePage()
 
@@ -87,14 +86,14 @@ const year = props.year
 
 const form = reactive({
   nomor_urutan_surat: next_number,
-  kode_unit: "PL1",
-  kode_perihal: "RT.01.00",
+  kode_unit: 'PL1',
+  kode_perihal: 'RT.01.00',
   tahun: year
 })
 
 const showModal = ref(false)
 
-const closeModal = () => showModal.value = false
+const closeModal = () => (showModal.value = false)
 
 const submit = () => {
   router.post(route('sekdir.nomorsurat.apply', surat.id), form, {
