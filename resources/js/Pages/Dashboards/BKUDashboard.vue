@@ -7,10 +7,10 @@
         <h1 class="text-3xl font-bold mb-6 text-gray-800">Dashboard BKU</h1>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-          <StatCard title="Total Pengusulan" icon="file" :count="stats.total_pengusulan" color="blue" />
-          <StatCard title="Surat Tugas Baru" icon="plus" :count="stats.surat_tugas_baru" color="green" />
-          <StatCard title="Bertugas" icon="user" :count="stats.bertugas" color="blue" />
-          <StatCard title="Laporan Belum Selesai" icon="folder-closed" :count="stats.laporan_belum_selesai" color="red" />
+          <StatCard title="Total Pengusulan" icon="file" :count="stats?.total_pengusulan || 0" color="blue" />
+          <StatCard title="Surat Tugas Baru" icon="envelope" :count="stats?.surat_tugas_baru || 0" color="green" />
+          <StatCard title="Bertugas" icon="users" :count="stats?.bertugas || 0" color="blue" />
+          <StatCard title="Laporan Belum Selesai" icon="circle-exclamation" :count="stats?.laporan_belum_selesai || 0" color="red" />
         </div>
 
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
@@ -30,6 +30,7 @@
             @update:filters="Object.assign(filters, $event)"
             @changePage="(page) => router.get(route('bku.dashboard'), { ...filters, page }, { preserveState: true, replace: true })"
           >
+            <!-- 1. No (Index) Column -->
             <template #no="{ index }">
                 {{ (suratData.meta.from || 1) + index }}
             </template>
@@ -85,12 +86,12 @@ const suratData = computed(() => {
     return {
         data: raw.data || [],
         meta: {
-            current_page: raw.current_page || 1,
-            last_page: raw.last_page || 1,
-            per_page: raw.per_page || 5,
-            total: raw.total || 0,
-            from: raw.from || 0, 
-            to: raw.to || 0
+            current_page: Number(raw.current_page) || 1,
+            last_page: Number(raw.last_page) || 1,
+            per_page: Number(raw.per_page) || 5,
+            total: Number(raw.total) || 0,
+            from: Number(raw.from) || 0,
+            to: Number(raw.to) || 0
         },
         links: raw.links || []
     }
@@ -113,9 +114,9 @@ const formatDate = (dateString) => {
 }
 
 const columns = [
-  { key: 'created_at', label: 'Tanggal Pengusulan', slot: 'tanggal_pengusulan' }, 
+  { key: 'created_at', label: 'Tanggal Pengusulan', slot: 'created_at' }, 
   { key: 'tanggal_berangkat', label: 'Tanggal Berangkat', slot: 'tanggal_berangkat' }, 
-  { key: 'nomor_surat_resmi', label: 'Nomor Surat Tugas' },
+  { key: 'nomor_surat_tugas', label: 'Nomor Surat Tugas' }, 
   { key: 'sumber_dana', label: 'Sumber Dana' },
   { key: 'status_laporan', label: 'Status Laporan', slot: 'status_laporan' },
   { key: 'tanggungan_biaya', label: 'Tanggungan Biaya', slot: 'tanggungan_biaya' },
