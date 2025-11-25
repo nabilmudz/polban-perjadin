@@ -72,7 +72,8 @@ import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
 import { usePage, router } from '@inertiajs/vue3'
 import { getRowActions, getSuratUndanganAction } from '@/utils/rowAction'
-import { ref } from 'vue'
+import { ref, watch  } from 'vue'
+import { debounce } from 'lodash-es'
 
 const goToReview = () => {
   router.visit('/wadir/review')
@@ -91,6 +92,18 @@ const filters = ref({
     ...props.filters,
     status: props.filters?.status ?? ''
 })
+
+watch(
+  () => props.filters,
+  (newFilters) => {
+    filters.value = {
+      ...newFilters,
+      status: newFilters?.status ?? ''
+    }
+  },
+  { deep: true, immediate: true }
+)
+
 
 const page = usePage()
 const user = page.props.auth?.user ?? {}
@@ -112,6 +125,7 @@ const statusOptions = [
     { label: "Disetujui", value: "approved" },
     { label: "Ditolak", value: "rejected" },
 ]
+
 
 const handleView = (row) => {
   router.get(route(`${user.role}.persetujuan.show`, row.surat_tugas_id))
