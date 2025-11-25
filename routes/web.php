@@ -78,7 +78,7 @@ Route::middleware(['auth'])->group(function () {
                 ->group(function () {
 
                     // Dashboard
-                    Route::get('/dashboard', [WadirController::class, 'index'])
+                    Route::get('/dashboard', [WadirController::class, 'dashboard'])
                         ->name('dashboard');
 
                     // Halaman daftar persetujuan
