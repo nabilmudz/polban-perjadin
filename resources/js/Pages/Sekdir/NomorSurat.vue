@@ -4,9 +4,8 @@
       <HeaderPage />
 
       <div class="p-8">
-
         <h1 class="text-3xl font-bold mb-2">Nomor Surat</h1>
-
+        
         <div class="mt-4">
           <DataTable
             :columns="columns"
@@ -16,6 +15,12 @@
             :filters="filters"
             route-name="sekdir.nomorsurat"
             @update:filters="Object.assign(filters, $event)"
+            @changePage="(page) =>
+              router.get(route('sekdir.nomorsurat'), { ...filters, page }, {
+                preserveState: true,
+                replace: true
+              })
+            "
           >
 
             <template #no="{ index }">
@@ -25,6 +30,7 @@
             <template #aksi="{ row }">
               <button
                 class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm"
+                
                 @click="gotoReview(row.id)"
               >
                 Review & Nomor
@@ -33,7 +39,6 @@
 
           </DataTable>
         </div>
-
       </div>
     </div>
   </AppLayout>
@@ -43,7 +48,6 @@
 import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
-
 import { router, usePage } from '@inertiajs/vue3'
 import { reactive, watch } from 'vue'
 import debounce from 'lodash.debounce'
@@ -52,12 +56,14 @@ const { props } = usePage()
 const surat = props.surat
 
 const filters = reactive({
-  search: props.filters?.search || "",
+  search: props.filters?.search || '',
+  page: props.filters?.page || 1,
 })
 
-watch(filters,
+watch(
+  filters,
   debounce(() => {
-    router.get(route('sekdir.nomorsurat'), filters, {
+    router.get(route('sekdir.nomorsurat'), { ...filters }, {
       preserveState: true,
       replace: true
     })
