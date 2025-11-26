@@ -9,6 +9,29 @@ use Illuminate\Support\Facades\Redirect;
 
 class DirekturController extends Controller
 {
+    private function mapPagination($paginate)
+    {
+        return [
+            'data' => $paginate->getCollection()->transform(function ($item) {
+                return [
+                    ...$item->toArray(),
+                    'nama_kegiatan' => $item->nama_kegiatan ?? $item->perihal_tugas, 
+                    'created_at' => $item->created_at->format('Y-m-d'),
+                    'tanggal_pelaksanaan' => $item->tanggal_berangkat ? $item->tanggal_berangkat->format('Y-m-d') : '-',
+                ];
+            }),
+            'meta' => [
+                'current_page' => $paginate->currentPage(),
+                'last_page'    => $paginate->lastPage(),
+                'per_page'     => $paginate->perPage(),
+                'from'         => $paginate->firstItem(),
+                'to'           => $paginate->lastItem(),
+                'total'        => $paginate->total(),
+            ],
+            'links' => $paginate->toArray()['links'] ?? [], 
+        ];
+    }
+
     public function direktur(Request $request)
     {
         $user = auth()->user();
@@ -17,7 +40,9 @@ class DirekturController extends Controller
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('perihal_tugas', 'like', "%{$request->search}%")
+                $q->where('nama_kegiatan', 'like', "%{$request->search}%")
+                    ->orWhere('perihal_tugas', 'like', "%{$request->search}%")
+                    ->orWhere('nomor_surat_resmi', 'like', "%{$request->search}%")
                     ->orWhere('status_surat', 'like', "%{$request->search}%");
             });
         }
@@ -30,23 +55,25 @@ class DirekturController extends Controller
             $query->whereBetween('created_at', [$request->from, $request->to]);
         }
 
-        $suratTugas = $query->latest()->paginate(10)
-            ->through(function($item) {
-                return [
-                    ...$item->toArray(),
-                    'created_at' => $item->created_at->format('Y-m-d'),
-                ];
-            })
-            ->withQueryString();
+        $paginate = $query->latest()->paginate(10)->withQueryString();
+
+        $stats = [
+            'total_ulasan' => SuratTugas::count(),
+            'bertugas' => SuratTugas::where('status_surat', 'approved')
+                            ->whereDate('tanggal_berangkat', '<=', now())
+                            ->whereDate('tanggal_kembali', '>=', now())
+                            ->count(),
+        ];
 
         return inertia('Direktur/DirekturDashboard', [
-            'suratTugas' => $suratTugas, 
+            'suratTugas' => $this->mapPagination($paginate), 
             'filters' => [
                 'status' => $request->status,
                 'search' => $request->search,
                 'from' => $request->from,
                 'to' => $request->to ?: now()->toDateString(),
             ],
+            'stats' => $stats, 
         ]);
     }
     
@@ -60,23 +87,15 @@ class DirekturController extends Controller
         if ($request->search) {
             $query->where(function($q) use ($request) {
                 $q->where('nama_kegiatan', 'like', "%{$request->search}%")
+                  ->orWhere('perihal_tugas', 'like', "%{$request->search}%") 
                   ->orWhere('nomor_surat_resmi', 'like', "%{$request->search}%");
             });
         }
 
-        $suratTugas = $query
-            ->orderBy('created_at', 'desc')
-            ->paginate(10)
-            ->withQueryString()
-            ->through(function($item) {
-                return [
-                    ...$item->toArray(),
-                    'tanggal_pelaksanaan' => $item->tanggal_berangkat ? $item->tanggal_berangkat->format('Y-m-d') : '-',
-                ];
-            });
+        $paginate = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
 
         return Inertia::render('Direktur/DaftarPersetujuan', [
-            'suratTugas' => $suratTugas,
+            'suratTugas' => $this->mapPagination($paginate),
             'filters' => $filters,
         ]);
     }
