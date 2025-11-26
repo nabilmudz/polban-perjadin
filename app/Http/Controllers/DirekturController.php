@@ -36,13 +36,12 @@ class DirekturController extends Controller
     {
         $user = auth()->user();
 
-        $query = SuratTugas::query();
+        $query = SuratTugas::query()
+            ->where('status_surat', 'pending_direktur_signature');
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('nama_kegiatan', 'like', "%{$request->search}%")
-                    ->orWhere('perihal_tugas', 'like', "%{$request->search}%")
-                    ->orWhere('nomor_surat_resmi', 'like', "%{$request->search}%")
+                $q->where('perihal_tugas', 'like', "%{$request->search}%")
                     ->orWhere('status_surat', 'like', "%{$request->search}%");
             });
         }
@@ -55,7 +54,7 @@ class DirekturController extends Controller
             $query->whereBetween('created_at', [$request->from, $request->to]);
         }
 
-        $paginate = $query->latest()->paginate(10)->withQueryString();
+        $paginate = $query->latest()->paginate(5)->withQueryString();
 
         $stats = [
             'total_ulasan' => SuratTugas::count(),
@@ -86,9 +85,7 @@ class DirekturController extends Controller
 
         if ($request->search) {
             $query->where(function($q) use ($request) {
-                $q->where('nama_kegiatan', 'like', "%{$request->search}%")
-                  ->orWhere('perihal_tugas', 'like', "%{$request->search}%") 
-                  ->orWhere('nomor_surat_resmi', 'like', "%{$request->search}%");
+                $q->where('perihal_tugas', 'like', "%{$request->search}%");
             });
         }
 

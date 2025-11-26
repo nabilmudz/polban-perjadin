@@ -35,7 +35,7 @@ class SekdirController extends Controller
             $query->whereBetween('created_at', [$request->from, $request->to]);
         }
 
-        $suratTugas = $query->latest()->paginate(10)
+        $suratTugas = $query->latest()->paginate(5)
             ->through(fn($item) => [
                 ...$item->toArray(),
                 'created_at' => $this->formatDate($item->created_at, 'Y-m-d'),
@@ -118,7 +118,6 @@ class SekdirController extends Controller
         $query = SuratTugas::query()
             ->where('diusulkan_kepada', 'Wadir I')
             ->whereIn('status_surat', [
-                'pending_sekdir_numbering',
                 'pending_direktur_signature',
                 'published',
                 'awaiting_proof_upload',

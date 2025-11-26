@@ -8,8 +8,6 @@ use App\Services\MahasiswaService;
 use Illuminate\Http\Request;
 use App\Models\SuratTugas;
 use Inertia\Inertia;
-use App\Models\User;
-use Carbon\Carbon;
 use App\Models\Mahasiswa;
 use App\Models\Pegawai;
 
@@ -34,26 +32,53 @@ class PengusulController extends Controller
     {
         $user = $request->user();
 
-        $filters = $request->only(['search', 'status', 'from', 'to', 'page']);
-        $filters['from'] = $filters['from'] ?? null;
-        $filters['to'] = $filters['to'] ?? null;
+        $filters = [
+            'search' => $request->get('search'),
+            'status' => $request->get('status'),
+            'from'   => $request->get('from'),
+            'to'     => $request->get('to'),
+            'page'   => $request->get('page'),
+        ];
 
+        // pastikan service kamu eager-load detailPelaksanaTugas.personable
         $surat = $this->suratTugasService->getAll($filters, $user);
 
         $mapped = [
-            'data' => $surat->getCollection()->transform(function ($item) {
+            'data' => $surat->getCollection()->transform(function (SuratTugas $item) {
+                // kalau service belum with(), bisa pakai:
+                $item->loadMissing('detailPelaksanaTugas.personable');
+
+                $personel = $item->detailPelaksanaTugas->map(function ($d) {
+                    $p = $d->personable;
+                    $isMhs = str_contains($d->personable_type, 'Mahasiswa');
+
+                    return [
+                        'id'       => $p->id,
+                        'type'     => $isMhs ? 'mahasiswa' : 'pegawai',
+                        'nama'     => $p->nama,
+                        'nip'      => $isMhs ? null      : ($p->nip ?? null),
+                        'nim'      => $isMhs ? ($p->nim ?? null) : null,
+                        'pangkat'  => $p->pangkat ?? null,
+                        'golongan' => $p->golongan ?? null,
+                        'jabatan'  => $p->jabatan ?? null,
+                        'jurusan'  => $p->jurusan ?? null,
+                        'prodi'    => $p->prodi ?? null,
+                    ];
+                });
+
                 return [
-                    ...$item->toArray(),
-                    'created_at' => $item->created_at->format('Y-m-d'),
+                    ...$item->toArray(),              // semua field surat
+                    'personel'   => $personel,        // <-- ini yang dipakai LaporanSurat
+                    'created_at' => $item->created_at?->format('Y-m-d'),
                 ];
             }),
             'meta' => [
                 'current_page' => $surat->currentPage(),
-                'last_page' => $surat->lastPage(),
-                'per_page' => $surat->perPage(),
-                'from' => $surat->firstItem(),
-                'to' => $surat->lastItem(),
-                'total' => $surat->total(),
+                'last_page'    => $surat->lastPage(),
+                'per_page'     => $surat->perPage(),
+                'from'         => $surat->firstItem(),
+                'to'           => $surat->lastItem(),
+                'total'        => $surat->total(),
             ],
             'links' => [
                 'prev' => $surat->previousPageUrl(),
@@ -88,26 +113,56 @@ class PengusulController extends Controller
 
         $filters = $request->only(['search', 'status', 'from', 'to', 'page']);
         $filters['from'] = $filters['from'] ?? null;
-        $filters['to'] = $filters['to'] ?? null;
+        $filters['to']   = $filters['to'] ?? null;
 
         $surat = $this->suratTugasService->getAll($filters, $user);
 
         $mapped = [
-            'data' => $surat->getCollection()->transform(function ($item) {
+            'data' => $surat->getCollection()->transform(function (SuratTugas $item) {
+                // pastikan relasi kebawa ke Vue
+                $item->loadMissing('detailPelaksanaTugas.personable');
+
+                $personel = $item->detailPelaksanaTugas->map(function ($d) {
+                    $p     = $d->personable;
+                    $isMhs = str_contains($d->personable_type, 'Mahasiswa');
+
+                    return [
+                        'id'       => $p->id,
+                        'type'     => $isMhs ? 'mahasiswa' : 'pegawai',
+                        'nama'     => $p->nama,
+                        'nip'      => $isMhs ? null : ($p->nip ?? null),
+                        'nim'      => $isMhs ? ($p->nim ?? null) : null,
+                        'pangkat'  => $p->pangkat ?? null,
+                        'golongan' => $p->golongan ?? null,
+                        'jabatan'  => $p->jabatan ?? null,
+                        'jurusan'  => $p->jurusan ?? null,
+                        'prodi'    => $p->prodi ?? null,
+                    ];
+                });
+
                 return [
                     ...$item->toArray(),
-                    'tanggal_berangkat' => $item->created_at->format('Y-m-d'),
-                    'created_at' => $item->created_at->format('Y-m-d'),
-                    'no_usulan_surat' => "$item->nomor_urutan_surat/$item->kode_perihal/$item->tahun_nomor_surat",
+
+                    'created_at'        => $item->created_at?->format('Y-m-d'),
+                    'tanggal_berangkat' => $item->tanggal_berangkat?->format('Y-m-d'),
+
+                    'no_usulan_surat' => sprintf(
+                        '%s/%s/%s',
+                        $item->nomor_urutan_surat,
+                        $item->kode_perihal,
+                        $item->tahun_nomor_surat
+                    ),
+
+                    'personel' => $personel,
                 ];
             }),
             'meta' => [
                 'current_page' => $surat->currentPage(),
-                'last_page' => $surat->lastPage(),
-                'per_page' => $surat->perPage(),
-                'from' => $surat->firstItem(),
-                'to' => $surat->lastItem(),
-                'total' => $surat->total(),
+                'last_page'    => $surat->lastPage(),
+                'per_page'     => $surat->perPage(),
+                'from'         => $surat->firstItem(),
+                'to'           => $surat->lastItem(),
+                'total'        => $surat->total(),
             ],
             'links' => [
                 'prev' => $surat->previousPageUrl(),
@@ -117,34 +172,66 @@ class PengusulController extends Controller
 
         return inertia('Pengusul/DaftarPengusulan', [
             'suratTugas' => $mapped,
-            'filters' => $filters
+            'filters'    => $filters,
         ]);
     }
 
     public function draftPengusulan(Request $request)
     {
         $user = $request->user();
+
         $filters = $request->only(['search', 'from', 'to', 'page']);
         $filters['status'] = 'draft';
+        $filters['from']   = $filters['from'] ?? null;
+        $filters['to']     = $filters['to'] ?? null;
 
         $surat = $this->suratTugasService->getAll($filters, $user);
 
         $mapped = [
-            'data' => $surat->getCollection()->transform(function ($item) {
+            'data' => $surat->getCollection()->transform(function (SuratTugas $item) {
+                $item->loadMissing('detailPelaksanaTugas.personable');
+
+                $personel = $item->detailPelaksanaTugas->map(function ($d) {
+                    $p     = $d->personable;
+                    $isMhs = str_contains($d->personable_type, 'Mahasiswa');
+
+                    return [
+                        'id'       => $p->id,
+                        'type'     => $isMhs ? 'mahasiswa' : 'pegawai',
+                        'nama'     => $p->nama,
+                        'nip'      => $isMhs ? null : ($p->nip ?? null),
+                        'nim'      => $isMhs ? ($p->nim ?? null) : null,
+                        'pangkat'  => $p->pangkat ?? null,
+                        'golongan' => $p->golongan ?? null,
+                        'jabatan'  => $p->jabatan ?? null,
+                        'jurusan'  => $p->jurusan ?? null,
+                        'prodi'    => $p->prodi ?? null,
+                    ];
+                });
+
                 return [
                     ...$item->toArray(),
-                    'created_at' => $item->created_at->format('Y-m-d'),
-                    'tanggal_berangkat' => $item->created_at->format('Y-m-d'),
-                    'no_usulan_surat' => "$item->nomor_urutan_surat/$item->kode_perihal/$item->tahun_nomor_surat",
+
+                    'created_at'        => $item->created_at?->format('Y-m-d'),
+                    'tanggal_berangkat' => $item->tanggal_berangkat?->format('Y-m-d'),
+
+                    'no_usulan_surat' => sprintf(
+                        '%s/%s/%s',
+                        $item->nomor_urutan_surat,
+                        $item->kode_perihal,
+                        $item->tahun_nomor_surat
+                    ),
+
+                    'personel' => $personel,
                 ];
             }),
             'meta' => [
                 'current_page' => $surat->currentPage(),
-                'last_page' => $surat->lastPage(),
-                'per_page' => $surat->perPage(),
-                'from' => $surat->firstItem(),
-                'to' => $surat->lastItem(),
-                'total' => $surat->total(),
+                'last_page'    => $surat->lastPage(),
+                'per_page'     => $surat->perPage(),
+                'from'         => $surat->firstItem(),
+                'to'           => $surat->lastItem(),
+                'total'        => $surat->total(),
             ],
             'links' => [
                 'prev' => $surat->previousPageUrl(),
@@ -154,10 +241,9 @@ class PengusulController extends Controller
 
         return inertia('Pengusul/DraftPengusulan', [
             'suratTugas' => $mapped,
-            'filters' => $filters,
+            'filters'    => $filters,
         ]);
     }
-
     public function formPengusulan(Request $request)
     {
         $filters = $request->only(['search', 'status', 'from', 'to', 'page', 'tab']);
@@ -315,7 +401,7 @@ class PengusulController extends Controller
             $this->suratTugasService->createWithPersonel($suratData, $personel);
 
             return redirect()
-                ->route('pengusul.daftar-pengusulan')
+                ->route('pengusul.dashboard')
                 ->with('success', 'Pengusulan berhasil disimpan sebagai draft.');
         } catch (\Throwable $e) {
             report($e);
