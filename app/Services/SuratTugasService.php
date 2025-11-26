@@ -4,8 +4,12 @@ namespace App\Services;
 
 use App\Models\SuratTugas;
 use App\Models\User;
+use App\Models\DetailPelaksanaTugas;
+use App\Models\Pegawai;
+use App\Models\Mahasiswa;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\DB;
 
 class SuratTugasService
 {
@@ -20,7 +24,7 @@ class SuratTugasService
         if (!empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('perihal_tugas', 'like', "%{$filters['search']}%")
-                ->orWhere('status_surat', 'like', "%{$filters['search']}%");
+                  ->orWhere('status_surat', 'like', "%{$filters['search']}%");
             });
         }
 
@@ -35,11 +39,13 @@ class SuratTugasService
         return $query->latest()->paginate(10)->withQueryString();
     }
 
-
     public function getById($id)
     {
         $item = SuratTugas::find($id);
-        if (!$item) throw new ModelNotFoundException('Surat Tugas not found');
+        if (!$item) {
+            throw new ModelNotFoundException('Surat Tugas not found');
+        }
+
         return $item;
     }
 
@@ -52,6 +58,7 @@ class SuratTugasService
     {
         $item = SuratTugas::findOrFail($id);
         $item->update($data);
+
         return $item;
     }
 
@@ -83,9 +90,10 @@ class SuratTugasService
 
         if (!empty($filters['search'])) {
             $search = $filters['search'];
+
             $query->where(function (Builder $q) use ($search) {
                 $q->where('perihal_tugas', 'like', "%{$search}%")
-                    ->orWhere('nama_penyelenggara', 'like', "%{$search}%");
+                  ->orWhere('nama_penyelenggara', 'like', "%{$search}%");
             });
         }
 
@@ -94,5 +102,27 @@ class SuratTugasService
         }
 
         return $query->latest()->paginate(10);
+    }
+
+    public function createWithPersonel(array $suratData, array $personel)
+    {
+        return DB::transaction(function () use ($suratData, $personel) {
+            $surat = SuratTugas::create($suratData);
+
+            foreach ($personel as $p) {
+                $personableType = $p['type'] === 'pegawai'
+                    ? Pegawai::class
+                    : Mahasiswa::class;
+
+                DetailPelaksanaTugas::create([
+                    'surat_tugas_id'  => $surat->surat_tugas_id,
+                    'personable_type' => $personableType,
+                    'personable_id'   => $p['id'],
+                    'status_sebagai'  => 'Peserta',
+                ]);
+            }
+
+            return $surat;
+        });
     }
 }

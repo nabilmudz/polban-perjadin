@@ -134,7 +134,7 @@ const previewSurat = computed(() => {
 })
 
 function submitFinal() {
-  form.post(route('pengusul.pengusulan.submit'), {
+  form.post(route('pengusul.submit'), {
     forceFormData: true
   })
 }

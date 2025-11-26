@@ -256,4 +256,73 @@ class PengusulController extends Controller
         ];
     }
 
+    public function submitPengusulan(Request $request)
+    {
+        $user = $request->user();
+        $validated = $request->validate([
+            'pengusulan.nama_kegiatan'       => 'required|string|max:255',
+            'pengusulan.diajukan_kepada'     => 'required|string|max:255',
+            'pengusulan.penyelenggara'       => 'required|string|max:50',
+            'pengusulan.nama_penyelenggara'  => 'required|string|max:255',
+            'pengusulan.tanggal'             => 'required|date',
+            'pengusulan.provinsi'            => 'required|string|max:255',
+            'pengusulan.hasPagu'             => 'boolean',
+            'pengusulan.nominal_pagu'        => 'nullable|numeric',
+            'pengusulan.lokasiList'          => 'required|array|min:1',
+            'pengusulan.lokasiList.*.tempat' => 'nullable|string|max:255',
+            'pengusulan.lokasiList.*.alamat' => 'nullable|string|max:255',
+            'pengusulan.surat_undangan'      => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'personel'                       => 'required|array|min:1',
+            'personel.*.id'                  => 'required|integer',
+            'personel.*.type'                => 'required|in:pegawai,mahasiswa',
+            'personel.*.nama'                => 'required|string',
+        ]);
+
+        $pengusulan = $validated['pengusulan'];
+        $personel   = $validated['personel'];
+
+        try {
+            $pathSuratUndangan = null;
+
+            if ($request->hasFile('pengusulan.surat_undangan')) {
+                $pathSuratUndangan = $request
+                    ->file('pengusulan.surat_undangan')
+                    ->store('surat-usulan', 'public');
+            }
+
+            $nomorSuratUsulanJurusan = $request->input('nomor_surat_usulan_jurusan');
+
+            $tanggal = $pengusulan['tanggal'];
+
+            $suratData = [
+                'user_id'                    => $user->id,
+                'diusulkan_kepada'           => $pengusulan['diajukan_kepada'],
+                'nama_penyelenggara'         => $pengusulan['nama_penyelenggara'],
+                'lokasi_kegiatan'            => $pengusulan['lokasiList'],
+                'nomor_surat_usulan_jurusan' => $nomorSuratUsulanJurusan ?? 'TEMP/' . now()->timestamp,
+                'perihal_tugas'              => $pengusulan['nama_kegiatan'],
+                'ditugaskan_sebagai'         => 'Peserta',
+                'kota_tujuan'                => $pengusulan['provinsi'] ?? null,
+                'tanggal_berangkat'          => $tanggal,
+                'tanggal_kembali'            => $tanggal,
+                'status_surat'               => 'draft',
+                'path_file_surat_usulan'     => $pathSuratUndangan,
+                'sumber_dana'                => $pengusulan['hasPagu'] ? 'Pagu Desentralisasi' : 'Non Pagu',
+                'pagu_desentralisasi'        => $pengusulan['hasPagu'],
+                'template_tembusan'          => ['-'],
+            ];
+
+            $this->suratTugasService->createWithPersonel($suratData, $personel);
+
+            return redirect()
+                ->route('pengusul.daftar-pengusulan')
+                ->with('success', 'Pengusulan berhasil disimpan sebagai draft.');
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()
+                ->withErrors(['message' => 'Terjadi kesalahan saat menyimpan pengusulan.'])
+                ->withInput();
+        }
+    }
 }
