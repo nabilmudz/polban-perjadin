@@ -56,6 +56,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/tambah-pengusulan', [PengusulController::class, 'formPengusulan'])->name('pengusul.form');
             Route::get('/draft', [PengusulController::class, 'draftPengusulan'])->name('pengusul.draft');
             Route::get('/personel', [PengusulController::class, 'personel'])->name('pengusul.personel');
+            Route::post('/submit', [PengusulController::class, 'submitPengusulan'])->name('pengusul.submit');
     });
 
     // Pelaksana
