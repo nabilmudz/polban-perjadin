@@ -4,7 +4,7 @@
       <HeaderPage />
 
       <div class="p-8">
-        <h1 class="text-3xl font-bold mb-4">Dashboard</h1>
+        <h1 class="text-3xl font-bold mb-4">Dashboard Direktur</h1>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard title="Total Ulasan" icon="file" :count="stats?.total_ulasan || 0" />
           <StatCard title="Bertugas" icon="user" :count="stats?.bertugas || 0" />
