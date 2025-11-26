@@ -4,7 +4,7 @@
       <HeaderPage title="Daftar Persetujuan Direktur" />
 
       <div class="p-8" :class="{ 'blur-sm': showModal }">
-        <h1 class="text-3xl font-bold mb-6 text-gray-800">Menunggu Tanda Tangan</h1>
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">Menunggu Tanda Tangan </h1>
 
         <DataTable
           :columns="columns"
@@ -39,7 +39,6 @@
         </DataTable>
       </div>
 
-      <!-- MODAL AREA -->
       <div v-if="showModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40 transition-opacity" @click="closeModal"></div>
 
       <div v-if="showModal" class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true">
@@ -55,7 +54,6 @@
             
             <div class="p-6 overflow-y-auto bg-gray-100">
                 <div class="flex flex-col md:flex-row gap-6">
-                    <!-- Using LaporanSurat Component -->
                     <div class="w-full md:w-2/3 shadow-lg h-full overflow-y-auto bg-white">
                          <LaporanSurat v-if="selectedSurat" :surat="selectedSurat" />
                     </div>
@@ -100,7 +98,6 @@ const props = defineProps({
   filters: Object
 })
 
-// Ensure robust mapping of pagination meta
 const suratTugas = computed(() => {
   const raw = props.suratTugas || {};
   return {
@@ -121,7 +118,6 @@ const filters = reactive({
   search: props.filters?.search || '',
 })
 
-// Watch search input to trigger Inertia visits with debounce
 watch(
   filters,
   debounce(() => {
