@@ -1,5 +1,6 @@
 <template>
     <AppLayout>
+        <Head title="Persetujuan" />
         <div class="bg-white w-full rounded-md shadow">
             <HeaderPage />
 
@@ -15,6 +16,7 @@
                     :links="suratTugas.links"
                     :filters="filters"
                     :status-options="statusOptions"
+                    :enable-status="false"
                     :route-name="`${user.role}.persetujuan`"
                     @update:filters="Object.assign(filters, $event)"
                 >
@@ -70,7 +72,7 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
-import { usePage, router } from '@inertiajs/vue3'
+import { usePage, router, Head } from '@inertiajs/vue3'
 import { getRowActions, getSuratUndanganAction } from '@/utils/rowAction'
 import { ref, watch  } from 'vue'
 import { debounce } from 'lodash-es'

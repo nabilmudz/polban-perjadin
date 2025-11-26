@@ -1,11 +1,13 @@
 <template>
-  <Head title="Daftar Pengusulan" />  
-  <div class=" bg-white w-full h-full rounded-md">
-    <HeaderPage/>
+  <Head title="Draft Pengusulan" />
+
+  <div class="bg-white w-full h-full rounded-md">
+    <HeaderPage />
+
     <div class="p-8">
       <h1 class="text-3xl font-bold">Draft Pengusulan</h1>
     </div>
-    
+
     <DataTable
       :columns="columns"
       :data="suratTugas.data"
@@ -16,17 +18,14 @@
       :enable-status="false"
       :enable-date="false"
       route-name="pengusul.draft"
-      @update:filters="Object.assign(filters, $event)"
-      @changePage="(page) =>
-        router.get(route('pengusul.draft'), { ...filters }, {
-          preserveState: true,
-          replace: true
-        })
-      "
+      @update:filters="onUpdateFilters"
+      @changePage="onChangePage"
     >
       <template #status_surat="{ row }">
         <StatusBadges :status="row.status_surat" />
-      </template><template #action="{ row }">
+      </template>
+
+      <template #action="{ row }">
         <div class="flex gap-2">
           <button
             v-for="action in getRowActions(row, currentUser.role)"
@@ -46,19 +45,25 @@
           </button>
         </div>
       </template>
-
     </DataTable>
   </div>
+
+  <!-- Modal preview Laporan -->
+  <ModalLaporan :show="showViewModal" @close="showViewModal = false">
+    <LaporanSurat v-if="selectedData" :surat="selectedData" />
+  </ModalLaporan>
 </template>
 
 <script setup>
 import HeaderPage from '@/Components/HeaderPage.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
+import ModalLaporan from '@/Components/ModalLaporan.vue'
+import LaporanSurat from '@/Components/LaporanSurat.vue'
+
 import { usePage, router, Head } from '@inertiajs/vue3'
-import { reactive, watch } from 'vue'
+import { reactive, watch, computed, ref } from 'vue'
 import debounce from 'lodash.debounce'
-import { computed } from 'vue'
 import { getRowActions } from '@/utils/rowAction'
 import { statusOptions } from '@/utils/statusOptions'
 
@@ -74,15 +79,21 @@ const filters = reactive({
   page: page.props.filters?.page || 1,
 })
 
+// modal state
+const showViewModal = ref(false)
+const selectedData = ref(null)
+
+// auto-fetch untuk perubahan filter (search/status/tanggal/page)
 watch(
   filters,
   debounce(() => {
-    router.get(route('pengusul.draft'), { ...filters }, {
-      preserveState: true,
-      replace: true,
-    })
+    router.get(
+      route('pengusul.draft'),
+      { ...filters },
+      { preserveState: true, replace: true },
+    )
   }, 300),
-  { deep: true }
+  { deep: true },
 )
 
 const columns = [
@@ -91,14 +102,22 @@ const columns = [
   { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
   { key: 'no_usulan_surat', label: 'Nomor Surat Usulan' },
   { key: 'sumber_dana', label: 'Sumber Dana' },
-  // { key: 'surat_undangan', label: 'Surat Undangan' },
-  { key: 'action', label: 'Aksi', fixedWidth: '180px' }
+  { key: 'action', label: 'Aksi', fixedWidth: '180px' },
 ]
 
+const onUpdateFilters = (newFilters) => {
+  Object.assign(filters, newFilters)
+}
+
+const onChangePage = (pageNumber) => {
+  filters.page = pageNumber
+}
+
 const handleAction = (type, row) => {
-  switch(type) {
+  switch (type) {
     case 'view':
-      router.get(route('pengusul.view', row.id))
+      selectedData.value = row
+      showViewModal.value = true
       break
     case 'edit':
       router.get(route('pengusul.edit', row.id))
@@ -113,7 +132,6 @@ const handleAction = (type, row) => {
       break
   }
 }
-
 </script>
 
 <script>

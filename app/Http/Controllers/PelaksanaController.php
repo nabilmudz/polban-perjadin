@@ -8,98 +8,87 @@ use Inertia\Inertia;
 
 class PelaksanaController extends Controller
 {
-    // DASHBOARD PELAKSANA
-    public function dashboard()
+    private function mapPagination($paginate)
+    {
+        return [
+            'data' => $paginate->getCollection()->transform(function ($item) {
+                return [
+                    ...$item->toArray(),
+                    'created_at'        => $item->created_at?->format('Y-m-d'),
+                    'tanggal_berangkat' => $item->tanggal_berangkat?->format('Y-m-d'),
+                    'tanggal_kembali'   => $item->tanggal_kembali?->format('Y-m-d'),
+                ];
+            }),
+
+            'meta' => [
+                'current_page' => $paginate->currentPage(),
+                'last_page'    => $paginate->lastPage(),
+                'from'         => $paginate->firstItem(),
+                'to'           => $paginate->lastItem(),
+                'total'        => $paginate->total(),
+                'per_page'     => $paginate->perPage(),
+            ],
+
+            'links' => [
+                'prev' => $paginate->previousPageUrl(),
+                'next' => $paginate->nextPageUrl(),
+            ],
+        ];
+    }
+
+    private function baseQueryForPelaksana()
     {
         $user = auth()->user();
+        $pegawaiId = $user->pegawai_id;
 
-        $list = SuratTugas::latest()->paginate(10);
+        return SuratTugas::whereHas('detailPelaksanaTugas', function ($q) use ($pegawaiId) {
+            $q->where('personable_type', 'App\\Models\\Pegawai')
+              ->where('personable_id', $pegawaiId);
+        });
+    }
+
+    public function dashboard(Request $request)
+    {
+        $list = $this->baseQueryForPelaksana()
+            ->latest()
+            ->paginate(5)
+            ->withQueryString();
 
         return Inertia::render('Dashboards/PelaksanaDashboard', [
-            'auth' => ['user' => $user],
-
-            'suratTugas' => [
-                'data'  => $list->items(),
-                'meta'  => [
-                    'current_page' => $list->currentPage(),
-                    'last_page'    => $list->lastPage(),
-                    'from'         => $list->firstItem(),
-                    'to'           => $list->lastItem(),
-                    'total'        => $list->total(),
-                    'per_page'     => $list->perPage(),
-                ],
-                'links' => [
-                    'prev' => $list->previousPageUrl(),
-                    'next' => $list->nextPageUrl(),
-                ],
-            ],
-
-            'filters' => [],
-            'role' => 'pelaksana',
+            'auth'       => ['user' => auth()->user()],
+            'suratTugas' => $this->mapPagination($list),
+            'filters'    => [],
+            'role'       => 'pelaksana',
         ]);
     }
 
-
-    // DAFTAR LAPORAN (SEMUA DATA)
-    public function daftarLaporan()
+    public function daftarLaporan(Request $request)
     {
-        $user = auth()->user();
-
-        $list = SuratTugas::latest()->paginate(10);
+        $list = $this->baseQueryForPelaksana()
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('Pelaksana/DaftarLaporan', [
-            'auth' => ['user' => $user],
-
-            'suratTugas' => [
-                'data'  => $list->items(),
-                'meta'  => [
-                    'current_page' => $list->currentPage(),
-                    'last_page'    => $list->lastPage(),
-                    'from'         => $list->firstItem(),
-                    'to'           => $list->lastItem(),
-                    'total'        => $list->total(),
-                    'per_page'     => $list->perPage(),
-                ],
-                'links' => [
-                    'prev' => $list->previousPageUrl(),
-                    'next' => $list->nextPageUrl(),
-                ],
-            ],
-
-            'filters' => [],
-            'role' => 'pelaksana',
+            'auth'       => ['user' => auth()->user()],
+            'suratTugas' => $this->mapPagination($list),
+            'filters'    => [],
+            'role'       => 'pelaksana',
         ]);
     }
 
-
-    // HISTORY PELAKSANA (SEMUA DATA)
-    public function historypelaksana()
+    public function historypelaksana(Request $request)
     {
-        $user = auth()->user();
-
-        $list = SuratTugas::latest()->paginate(10);
+        $list = $this->baseQueryForPelaksana()
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('Pelaksana/HistoryPelaksana', [
-            'auth' => ['user' => $user],
-
-            'suratTugas' => [
-                'data'  => $list->items(),
-                'meta'  => [
-                    'current_page' => $list->currentPage(),
-                    'last_page'    => $list->lastPage(),
-                    'from'         => $list->firstItem(),
-                    'to'           => $list->lastItem(),
-                    'total'        => $list->total(),
-                    'per_page'     => $list->perPage(),
-                ],
-                'links' => [
-                    'prev' => $list->previousPageUrl(),
-                    'next' => $list->nextPageUrl(),
-                ],
-            ],
-
-            'filters' => [],
-            'role' => 'pelaksana',
+            'auth'       => ['user' => auth()->user()],
+            'suratTugas' => $this->mapPagination($list),
+            'filters'    => [],
+            'role'       => 'pelaksana',
         ]);
     }
 }
