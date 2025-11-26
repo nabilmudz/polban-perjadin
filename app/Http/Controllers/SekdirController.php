@@ -16,14 +16,14 @@ class SekdirController extends Controller
     public function dashboard(Request $request)
     {
         $query = SuratTugas::query()
-            ->where('status_surat', 'submitted_wadir_review')
+            ->where('status_surat', 'pending_sekdir_numbering')
             ->where('diusulkan_kepada', 'Wadir I');
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('perihal_tugas', 'like', "%{$request->search}%")
-                  ->orWhere('status_surat', 'like', "%{$request->search}%")
-                  ->orWhere('sumber_dana', 'like', "%{$request->search}%");
+                    ->orWhere('status_surat', 'like', "%{$request->search}%")
+                    ->orWhere('sumber_dana', 'like', "%{$request->search}%");
             });
         }
 
@@ -46,9 +46,9 @@ class SekdirController extends Controller
 
         $summary = [
             'total_usulan' => SuratTugas::count(),
-            'usulan_baru'  => SuratTugas::where('status_surat', 'baru')->count(),
-            'bertugas'     => SuratTugas::where('status_surat', 'bertugas')->count(),
-            'selesai'      => SuratTugas::where('status_surat', 'selesai')->count(),
+            'usulan_baru' => SuratTugas::where('status_surat', 'baru')->count(),
+            'bertugas' => SuratTugas::where('status_surat', 'bertugas')->count(),
+            'selesai' => SuratTugas::where('status_surat', 'selesai')->count(),
         ];
 
         return Inertia::render('Sekdir/SekdirDashboard', [
@@ -56,11 +56,11 @@ class SekdirController extends Controller
                 'data' => $suratTugas->items(),
                 'meta' => [
                     'current_page' => $suratTugas->currentPage(),
-                    'last_page'    => $suratTugas->lastPage(),
-                    'per_page'     => $suratTugas->perPage(),
-                    'from'         => $suratTugas->firstItem(),
-                    'to'           => $suratTugas->lastItem(),
-                    'total'        => $suratTugas->total(),
+                    'last_page' => $suratTugas->lastPage(),
+                    'per_page' => $suratTugas->perPage(),
+                    'from' => $suratTugas->firstItem(),
+                    'to' => $suratTugas->lastItem(),
+                    'total' => $suratTugas->total(),
                 ],
                 'links' => [
                     'prev' => $suratTugas->previousPageUrl(),
@@ -75,7 +75,7 @@ class SekdirController extends Controller
     public function nomorSurat(Request $request)
     {
         $query = SuratTugas::query()
-            ->where('status_surat', 'submitted_wadir_review')
+            ->where('status_surat', 'pending_sekdir_numbering')
             ->where('diusulkan_kepada', 'Wadir I');
 
         if ($request->filled('search')) {
@@ -85,11 +85,11 @@ class SekdirController extends Controller
         $surat = $query->orderBy('created_at', 'asc')
             ->paginate(10)
             ->through(fn($item) => [
-                'id'                     => $item->surat_tugas_id,
-                'created_at'             => $this->formatDate($item->created_at),
-                'tanggal_berangkat'      => $this->formatDate($item->tanggal_berangkat),
+                'id' => $item->surat_tugas_id,
+                'created_at' => $this->formatDate($item->created_at),
+                'tanggal_berangkat' => $this->formatDate($item->tanggal_berangkat),
                 'nomor_surat_pengusulan' => $item->nomor_surat_usulan_jurusan ?? '-',
-                'sumber_dana'            => $item->sumber_dana ?? '-',
+                'sumber_dana' => $item->sumber_dana ?? '-',
             ])
             ->withQueryString();
 
@@ -98,31 +98,40 @@ class SekdirController extends Controller
                 'data' => $surat->items(),
                 'meta' => [
                     'current_page' => $surat->currentPage(),
-                    'last_page'    => $surat->lastPage(),
-                    'per_page'     => $surat->perPage(),
-                    'from'         => $surat->firstItem(),
-                    'to'           => $surat->lastItem(),
-                    'total'        => $surat->total(),
+                    'last_page' => $surat->lastPage(),
+                    'per_page' => $surat->perPage(),
+                    'from' => $surat->firstItem(),
+                    'to' => $surat->lastItem(),
+                    'total' => $surat->total(),
                 ],
                 'links' => [
                     'prev' => $surat->previousPageUrl(),
                     'next' => $surat->nextPageUrl(),
                 ],
             ],
-            'filters' => $request->only(['search']),
+            'filters' => $request->only(['search', 'page']),
         ]);
     }
 
     public function history(Request $request)
     {
         $query = SuratTugas::query()
-            ->where('diusulkan_kepada', 'Wadir I');
+            ->where('diusulkan_kepada', 'Wadir I')
+            ->whereIn('status_surat', [
+                'pending_sekdir_numbering',
+                'pending_direktur_signature',
+                'published',
+                'awaiting_proof_upload',
+                'under_bku_review',
+                'returned_for_correction',
+                'completed',
+            ]);
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('perihal_tugas', 'like', "%{$request->search}%")
-                  ->orWhere('nomor_surat_usulan_jurusan', 'like', "%{$request->search}%")
-                  ->orWhere('nomor_surat_tugas_resmi', 'like', "%{$request->search}%");
+                    ->orWhere('nomor_surat_usulan_jurusan', 'like', "%{$request->search}%")
+                    ->orWhere('nomor_surat_tugas_resmi', 'like', "%{$request->search}%");
             });
         }
 
@@ -132,15 +141,15 @@ class SekdirController extends Controller
 
         $surat = $query->latest()->paginate(10)
             ->through(fn($item) => [
-                'id'                     => $item->surat_tugas_id,
-                'created_at'             => $this->formatDate($item->created_at),
-                'tanggal_berangkat'      => $this->formatDate($item->tanggal_berangkat),
-                'nomor_surat_pengantar'  => $item->nomor_surat_usulan_jurusan ?? '-',
-                'nomor_surat_tugas'      => $item->nomor_surat_tugas_resmi ?? '-',
-                'tanggal_diterbitkan'    => $this->formatDate($item->tanggal_penomoran_sekdir),
-                'diusulkan_kepada'       => $item->diusulkan_kepada ?? '-',
-                'status_surat'           => $item->status_surat,
-                'file_final'             => $item->path_file_surat_tugas_final,
+                'id' => $item->surat_tugas_id,
+                'created_at' => $this->formatDate($item->created_at),
+                'tanggal_berangkat' => $this->formatDate($item->tanggal_berangkat),
+                'nomor_surat_pengantar' => $item->nomor_surat_usulan_jurusan ?? '-',
+                'nomor_surat_tugas' => $item->nomor_surat_tugas_resmi ?? '-',
+                'tanggal_diterbitkan' => $this->formatDate($item->tanggal_penomoran_sekdir),
+                'diusulkan_kepada' => $item->diusulkan_kepada ?? '-',
+                'status_surat' => $item->status_surat,
+                'file_final' => $item->path_file_surat_tugas_final,
             ])
             ->withQueryString();
 
@@ -149,18 +158,18 @@ class SekdirController extends Controller
                 'data' => $surat->items(),
                 'meta' => [
                     'current_page' => $surat->currentPage(),
-                    'last_page'    => $surat->lastPage(),
-                    'per_page'     => $surat->perPage(),
-                    'from'         => $surat->firstItem(),
-                    'to'           => $surat->lastItem(),
-                    'total'        => $surat->total(),
+                    'last_page' => $surat->lastPage(),
+                    'per_page' => $surat->perPage(),
+                    'from' => $surat->firstItem(),
+                    'to' => $surat->lastItem(),
+                    'total' => $surat->total(),
                 ],
                 'links' => [
                     'prev' => $surat->previousPageUrl(),
                     'next' => $surat->nextPageUrl(),
                 ],
             ],
-            'filters' => $request->only(['search', 'status']),
+            'filters' => $request->only(['search', 'status', 'page']),
         ]);
     }
 
@@ -174,9 +183,9 @@ class SekdirController extends Controller
             ->first();
 
         return Inertia::render('Sekdir/ReviewNomorSurat', [
-            'surat'       => $surat,
+            'surat' => $surat,
             'next_number' => $lastSurat ? $lastSurat->nomor_urutan_surat + 1 : 1,
-            'year'        => now()->year,
+            'year' => now()->year,
         ]);
     }
 
@@ -186,20 +195,20 @@ class SekdirController extends Controller
 
         $request->validate([
             'nomor_urutan_surat' => 'required|integer',
-            'kode_unit'          => 'required|string',
-            'kode_perihal'       => 'required|string',
-            'tahun'              => 'required|integer',
+            'kode_unit' => 'required|string',
+            'kode_perihal' => 'required|string',
+            'tahun' => 'required|integer',
         ]);
 
         $nomorFinal = "{$request->nomor_urutan_surat}/{$request->kode_unit}/{$request->kode_perihal}/{$request->tahun}";
 
         $surat->update([
             'nomor_urutan_surat' => $request->nomor_urutan_surat,
-            'kode_unit_kerja'    => $request->kode_unit,
-            'kode_perihal'       => $request->kode_perihal,
-            'tahun_nomor_surat'  => $request->tahun,
-            'nomor_surat'        => $nomorFinal,
-            'status_surat'       => 'diterbitkan_sekdir',
+            'kode_unit_kerja' => $request->kode_unit,
+            'kode_perihal' => $request->kode_perihal,
+            'tahun_nomor_surat' => $request->tahun,
+            'nomor_surat' => $nomorFinal,
+            'status_surat' => 'diterbitkan_sekdir',
         ]);
 
         return redirect()

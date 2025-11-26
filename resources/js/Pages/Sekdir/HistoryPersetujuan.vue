@@ -2,10 +2,10 @@
   <AppLayout>
     <div class="bg-white w-full rounded-md shadow">
       <HeaderPage />
-
+      
       <div class="p-8">
         <h1 class="text-3xl font-bold mb-6">History Persetujuan</h1>
-
+        
         <DataTable
           :columns="columns"
           :data="surat.data"
@@ -14,8 +14,13 @@
           :filters="filters"
           route-name="sekdir.history"
           @update:filters="Object.assign(filters, $event)"
+          @changePage="(page) =>
+            router.get(route('sekdir.history'), { ...filters, page }, {
+              preserveState: true,
+              replace: true,
+            })
+          "
         >
-
           <template #aksi="{ row }">
             <div class="flex gap-2">
               <button
@@ -26,7 +31,6 @@
               >
                 <font-awesome-icon :icon="['far', 'eye']" class="text-md" />
               </button>
-
               <a
                 v-if="row.file_final"
                 :href="fileUrl(row.file_final)"
@@ -42,7 +46,7 @@
           <template #status_surat="{ row }">
             <StatusBadges :status="row.status_surat" />
           </template>
-
+          
         </DataTable>
       </div>
     </div>
@@ -62,14 +66,15 @@ const { props } = usePage()
 const surat = props.surat
 
 const filters = reactive({
-  search: props.filters?.search || "",
-  status: props.filters?.status || "",
+  search: props.filters?.search || '',
+  status: props.filters?.status || '',
+  page: props.filters?.page || 1,
 })
 
 watch(
   filters,
   debounce(() => {
-    router.get(route('sekdir.history'), filters, {
+    router.get(route('sekdir.history'), { ...filters }, {
       preserveState: true,
       replace: true,
     })
@@ -90,7 +95,7 @@ const columns = [
   { key: 'nomor_surat_tugas', label: 'Nomor Surat Tugas' },
   { key: 'tanggal_diterbitkan', label: 'Tanggal Diterbitkan' },
   { key: 'diusulkan_kepada', label: 'Diusulkan Kepada' },
-  { key: 'status_surat', label: 'Status'},
+  { key: 'status_surat', label: 'Status' },
   { key: 'aksi', label: 'Aksi' },
 ]
 </script>
