@@ -16,7 +16,6 @@
           @update:filters="handleFilterUpdate"
           @changePage="handlePageChange"
         >
-           <!-- 1. No Column -->
            <template #no="{ index }">
               {{ (history.meta.from || 1) + index }}
            </template>
@@ -26,9 +25,7 @@
            </template>
 
            <template #status_surat="{ row }">
-             <span class="px-2 py-1 rounded bg-green-600 text-white text-xs font-bold shadow-sm">
-                {{ row.status_surat === 'completed' ? 'Selesai' : row.status_surat }}
-             </span>
+              <StatusBadges :status="row.status_surat" />
            </template>
 
            <template #aksi="{ row }">
@@ -51,6 +48,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
+import StatusBadges from '@/Components/Table/StatusBadges.vue'
 import { router, usePage } from '@inertiajs/vue3'
 import { reactive, computed, watch } from 'vue'
 
@@ -76,7 +74,6 @@ const filters = reactive({
   search: page.props.filters?.search || '',
 })
 
-// Search Logic
 let searchTimeout;
 watch(
   () => filters.search,
@@ -92,12 +89,10 @@ const handleFilterUpdate = (newFilters) => {
     Object.assign(filters, newFilters)
 }
 
-// Pagination Logic
 const handlePageChange = (page) => {
     router.get(route('bku.historyperjalanandinas'), { ...filters, page }, { preserveState: true, replace: true })
 }
 
-// Columns Configuration
 const columns = [
   { key: 'created_at', label: 'Tanggal Pengusulan' },
   { key: 'tanggal_pelaksanaan', label: 'Tanggal Berangkat' },
