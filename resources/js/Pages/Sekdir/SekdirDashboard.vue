@@ -2,11 +2,10 @@
   <AppLayout>
     <div class="bg-white w-full rounded-md shadow">
       <HeaderPage />
+
       <div class="p-8">
-
         <h1 class="text-3xl font-bold mb-6">Dashboard</h1>
-
-        <!-- Summary Cards -->
+        
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <StatCard title="Total Usulan" icon="file" :count="summary.total_usulan" color="blue" />
           <StatCard title="Usulan Baru" icon="folder-closed" :count="summary.usulan_baru" color="green" />
@@ -14,9 +13,7 @@
           <StatCard title="Selesai" icon="square-check" :count="summary.selesai" color="yellow" />
         </div>
 
-        <!-- Table -->
         <div class="mt-10">
-
           <h2 class="text-xl font-semibold mb-4">
             Detail Pengajuan
           </h2>
@@ -39,10 +36,9 @@
             <template #status="{ row }">
               <StatusBadges :status="row.status_surat" />
             </template>
+            
           </DataTable>
-
         </div>
-
       </div>
     </div>
   </AppLayout>
@@ -54,7 +50,6 @@ import HeaderPage from '@/Components/HeaderPage.vue'
 import StatCard from '@/Components/StatCard.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
-
 import { usePage, router } from '@inertiajs/vue3'
 import { reactive, watch, computed } from 'vue'
 import debounce from 'lodash.debounce'
@@ -65,10 +60,10 @@ const summary = page.props.summary
 const suratTugas = computed(() => page.props.suratTugas)
 
 const filters = reactive({
-  search: page.props.filters?.search || "",
-  status: page.props.filters?.status || "",
-  from: page.props.filters?.from || "",
-  to: page.props.filters?.to || "",
+  search: page.props.filters?.search || '',
+  status: page.props.filters?.status || '',
+  from: page.props.filters?.from || '',
+  to: page.props.filters?.to || '',
 })
 
 watch(
