@@ -1,4 +1,6 @@
 <template>
+    <Head title="Review Nomor Surat" />
+
   <AppLayout>
     <div class="bg-white w-full rounded-md shadow">
       <HeaderPage />
