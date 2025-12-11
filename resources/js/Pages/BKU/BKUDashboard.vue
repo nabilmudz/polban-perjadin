@@ -1,19 +1,20 @@
 <template>
   <AppLayout>
-    <div class="bg-white w-full rounded-md shadow overflow-hidden">
+    <div class="bg-white w-full rounded-md shadow">
       <HeaderPage />
 
       <div class="p-8">
-        <h1 class="text-3xl font-bold mb-6 text-gray-800">Dashboard BKU</h1>
+        <h1 class="text-3xl font-bold mb-4">Dashboard BKU</h1>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-          <StatCard title="Total Pengusulan" icon="file" :count="stats?.total_pengusulan || 0" color="blue" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard title="Total Pengusulan" icon="file" :count="stats?.total_pengusulan || 0" />
           <StatCard title="Verifikasi Baru" icon="envelope" :count="stats?.surat_tugas_baru || 0" color="green" />
-          <StatCard title="Bertugas" icon="users" :count="stats?.bertugas || 0" color="blue" />
+          <StatCard title="Bertugas" icon="user" :count="stats?.bertugas || 0" color="yellow" />
           <StatCard title="Laporan Pending" icon="circle-exclamation" :count="stats?.laporan_belum_selesai || 0" color="red" />
         </div>
+      </div>
 
-        <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+      <div class="px-6 pb-8 space-y-10">
           <div class="flex justify-between items-end mb-4">
              <div>
                  <h3 class="text-lg font-bold text-gray-800">Daftar Penugasan</h3>
@@ -31,18 +32,22 @@
             @update:filters="handleFilterUpdate"
             @changePage="handlePageChange"
           >
+            <!-- 1. No Column -->
             <template #no="{ index }">
                 {{ (suratData.meta.from || 1) + index }}
             </template>
 
+            <!-- 2. No Usulan Column -->
             <template #no_usulan_surat="{ row }">
                 <span class="font-medium text-gray-700">{{ row.no_usulan_surat }}</span>
             </template>
 
+            <!-- 3. Status Badge using StatusBadges Component -->
             <template #status_surat="{ row }">
                <StatusBadges :status="row.status_surat" />
             </template>
 
+            <!-- 4. Actions Column -->
             <template #actions="{ row }">
             <div class="flex gap-2">
               <button
@@ -61,7 +66,6 @@
             </div>
           </template>
           </DataTable>
-        </div>
       </div>
     </div>
   </AppLayout>

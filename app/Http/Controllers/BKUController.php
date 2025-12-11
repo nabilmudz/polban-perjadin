@@ -54,7 +54,7 @@ class BKUController extends Controller
                     'no_usulan_surat' => $item->nomor_surat_usulan_jurusan ?? '-', 
                     'nomor_surat_tugas' => $item->nomor_surat_resmi ?? '-',
                     'sumber_dana' => $item->sumber_dana,
-                    'status_surat' => $item->status_surat, // Used for Badge
+                    'status_surat' => $item->status_surat, 
                 ];
             });
 
@@ -71,8 +71,7 @@ class BKUController extends Controller
             ->whereIn('status_surat', [
                 'awaiting_proof_upload', 
                 'under_bku_review', 
-                'returned_for_correction', 
-                'completed'
+                'returned_for_correction'
             ]);
 
         if ($request->search) {
@@ -131,7 +130,7 @@ class BKUController extends Controller
                     'nomor_surat_resmi' => $item->nomor_surat_resmi ?? '-',
                     'updated_at' => $item->updated_at->format('Y-m-d'),
                     'diusulkan_kepada' => $item->wadir ? $item->wadir->name : 'Wakil Direktur I',
-                    'status_surat' => $item->status_surat // Used for Badge
+                    'status_surat' => $item->status_surat 
                 ];
             });
 

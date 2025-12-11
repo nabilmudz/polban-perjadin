@@ -90,6 +90,12 @@ export default function getSidebarLinks(role) {
           component: "Dashboards/DirekturDashboard"
         },
         {
+          name: "Tambah Pengusulan",
+          route: "pengusul.form",
+          icon: "file-lines",
+          component: "Pengusul/FormPengusulan"
+        },
+        {
           name: "Daftar Persetujuan",
           route: "direktur.daftarpersetujuan",
           icon: "square-check",
@@ -104,6 +110,12 @@ export default function getSidebarLinks(role) {
           route: "bku.dashboard",
           icon: "house",
           component: "Dashboards/BKUDashboard"
+        },
+        {
+          name: "Tambah Pengusulan",
+          route: "pengusul.form",
+          icon: "file-lines",
+          component: "Pengusul/FormPengusulan"
         },
         {
           name: "Laporan & Bukti Perjalanan Dinas",
