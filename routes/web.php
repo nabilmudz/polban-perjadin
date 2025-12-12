@@ -49,7 +49,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Pengusul 
     Route::prefix('pengusul')
-        ->middleware(['auth', 'role:pengusul|wadir1|wadir2|wadir3|wadir4|sekdir'])
+        // Check and ask for direktur and bku
+        ->middleware(['auth', 'role:pengusul|wadir1|wadir2|wadir3|wadir4|sekdir|direktur|bku'])
         ->group(function () {
             Route::get('/dashboard', [PengusulController::class, 'dashboardPengusulan'])->name('pengusul.dashboard');
             Route::get('/pengusulan', [PengusulController::class, 'daftarPengusulan'])->name('pengusul.pengajuan');
@@ -129,6 +130,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/persetujuan/{id}/revise', [DirekturController::class, 'revise'])
             ->name('persetujuan.revise');
 
+        // History Direktur Page
+        Route::get('/history', [DirekturController::class, 'history'])
+            ->name('history');
     });
 
     // BKU routes

@@ -1,4 +1,6 @@
 <template>
+  <Head title="Dashboard" />
+
   <AppLayout>
     <div class="bg-white w-full rounded-md shadow overflow-hidden">
       <HeaderPage />
@@ -9,7 +11,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           <StatCard title="Total Pengusulan" icon="file" :count="stats?.total_pengusulan || 0" color="blue" />
           <StatCard title="Verifikasi Baru" icon="envelope" :count="stats?.surat_tugas_baru || 0" color="green" />
-          <StatCard title="Bertugas" icon="users" :count="stats?.bertugas || 0" color="blue" />
+          <StatCard title="Bertugas" icon="users" :count="stats?.bertugas || 0" color="yellow" />
           <StatCard title="Laporan Pending" icon="circle-exclamation" :count="stats?.laporan_belum_selesai || 0" color="red" />
         </div>
 
@@ -37,6 +39,10 @@
 
             <template #no_usulan_surat="{ row }">
                 <span class="font-medium text-gray-700">{{ row.no_usulan_surat }}</span>
+            </template>
+
+            <template #nominal_biaya="{ row }">
+               {{ formatCurrency(row.nominal_biaya) }}
             </template>
 
             <template #status_surat="{ row }">
@@ -74,7 +80,7 @@ import StatCard from '@/Components/StatCard.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
 import { reactive, computed, watch } from 'vue'
-import { router, usePage } from '@inertiajs/vue3'
+import { Head, router, usePage } from '@inertiajs/vue3'
 
 const props = defineProps({
   stats: Object,
@@ -124,6 +130,15 @@ const handlePageChange = (page) => {
     router.get(route('bku.dashboard'), { ...filters, page }, { preserveState: true, replace: true })
 }
 
+const formatCurrency = (value) => {
+  if (!value) return 'Rp 0';
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(value);
+}
+
 const getRowActions = (row) => {
     return [
         { type: 'view', icon: 'eye', color: 'blue' }
@@ -137,9 +152,12 @@ const handleAction = (type, row) => {
 }
 
 const columns = [
-  { key: 'tanggal_pengusulan', label: 'Tanggal Usulan' }, 
+  { key: 'perihal_tugas', label: 'Nama Kegiatan' },
+  { key: 'tanggal_pengusulan', label: 'Tanggal Usulan' },
+  { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' }, 
   { key: 'no_usulan_surat', label: 'No. Usulan Surat', slot: 'no_usulan_surat' }, 
   { key: 'sumber_dana', label: 'Sumber Dana' },
+  { key: 'nominal_biaya', label: 'Total Dana', slot: 'nominal_biaya' },
   { key: 'status_surat', label: 'Status', slot: 'status_surat' },
   { key: 'actions', label: 'Aksi', slot: 'actions' }
 ]

@@ -10,6 +10,50 @@ use Carbon\Carbon;
 
 class BKUController extends Controller
 {
+    private function mapSuratWithPersonel($item)
+    {
+        $item->loadMissing('detailPelaksanaTugas.personable');
+
+        $personel = $item->detailPelaksanaTugas->map(function ($d) {
+            $p = $d->personable;
+            if (!$p) return null;
+            $isMhs = str_contains($d->personable_type, 'Mahasiswa');
+
+            return [
+                'id'       => $p->id,
+                'type'     => $isMhs ? 'mahasiswa' : 'pegawai',
+                'nama'     => $p->nama,
+                'nip'      => $isMhs ? null : ($p->nip ?? null),
+                'nim'      => $isMhs ? ($p->nim ?? null) : null,
+                'pangkat'  => $p->pangkat ?? null,
+                'golongan' => $p->golongan ?? null,
+                'jabatan'  => $p->jabatan ?? null,
+                'jurusan'  => $p->jurusan ?? null,
+                'prodi'    => $p->prodi ?? null,
+            ];
+        })->filter()->values();
+
+        return [
+            'id' => $item->id,
+            'nama_kegiatan' => $item->nama_kegiatan ?? $item->perihal_tugas,
+            'perihal_tugas' => $item->perihal_tugas,
+            'tanggal_pengusulan' => $item->created_at->format('Y-m-d'),
+            'created_at' => $item->created_at->format('Y-m-d'),
+            'tanggal_berangkat' => $item->tanggal_berangkat->format('Y-m-d'),
+            'tanggal_pelaksanaan' => $item->tanggal_berangkat->format('Y-m-d'),
+            'no_usulan_surat' => $item->nomor_surat_usulan_jurusan ?? '-', 
+            'nomor_surat_usulan_jurusan' => $item->nomor_surat_usulan_jurusan ?? '-', 
+            'nomor_surat_resmi' => $item->nomor_surat_resmi ?? '-',
+            'nomor_surat_tugas' => $item->nomor_surat_resmi ?? '-',
+            'updated_at' => $item->updated_at->format('Y-m-d'),
+            'sumber_dana' => $item->sumber_dana,
+            'status_surat' => $item->status_surat,
+            'laporan' => $item->laporan,
+            'diusulkan_kepada' => $item->wadir ? $item->wadir->name : 'Wakil Direktur I',
+            'personel' => $personel, 
+        ];
+    }
+
     public function dashboard(Request $request)
     {
         $bkuStatuses = [
@@ -32,7 +76,7 @@ class BKUController extends Controller
         ];
 
         $query = SuratTugas::query()
-            ->with(['pengusul', 'laporan'])
+            ->with(['pengusul', 'laporan', 'detailPelaksanaTugas.personable'])
             ->whereIn('status_surat', $bkuStatuses)
             ->latest();
 
@@ -47,15 +91,7 @@ class BKUController extends Controller
         $latestSurat = $query->paginate(10)
             ->withQueryString()
             ->through(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'tanggal_pengusulan' => $item->created_at->format('Y-m-d'),
-                    'tanggal_berangkat' => $item->tanggal_berangkat->format('Y-m-d'),
-                    'no_usulan_surat' => $item->nomor_surat_usulan_jurusan ?? '-', 
-                    'nomor_surat_tugas' => $item->nomor_surat_resmi ?? '-',
-                    'sumber_dana' => $item->sumber_dana,
-                    'status_surat' => $item->status_surat, // Used for Badge
-                ];
+                return $this->mapSuratWithPersonel($item);
             });
 
         return Inertia::render('BKU/BKUDashboard', [
@@ -67,7 +103,7 @@ class BKUController extends Controller
 
     public function daftarLaporan(Request $request)
     {
-        $query = SuratTugas::with(['pengusul', 'laporan'])
+        $query = SuratTugas::with(['pengusul', 'laporan', 'detailPelaksanaTugas.personable'])
             ->whereIn('status_surat', [
                 'awaiting_proof_upload', 
                 'under_bku_review', 
@@ -88,14 +124,7 @@ class BKUController extends Controller
             ->paginate(10)
             ->withQueryString()
             ->through(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'nama_kegiatan' => $item->perihal_tugas, 
-                    'created_at' => $item->created_at->format('Y-m-d'), 
-                    'tanggal_pelaksanaan' => $item->tanggal_berangkat->format('Y-m-d'),
-                    'nomor_surat_resmi' => $item->nomor_surat_resmi ?? '-',
-                    'status_surat' => $item->status_surat 
-                ];
+                return $this->mapSuratWithPersonel($item);
             });
 
         return Inertia::render('BKU/DaftarLaporanPerjalanan', [ 
@@ -106,7 +135,7 @@ class BKUController extends Controller
 
     public function history(Request $request)
     {
-        $query = SuratTugas::with(['pengusul', 'wadir'])
+        $query = SuratTugas::with(['pengusul', 'wadir', 'detailPelaksanaTugas.personable'])
             ->where('status_surat', 'completed');
 
         if ($request->search) {
@@ -122,17 +151,7 @@ class BKUController extends Controller
             ->paginate(10)
             ->withQueryString()
             ->through(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'created_at' => $item->created_at->format('Y-m-d'),
-                    'tanggal_pelaksanaan' => $item->tanggal_berangkat->format('Y-m-d'),
-                    'perihal_tugas' => $item->perihal_tugas, 
-                    'nomor_surat_usulan_jurusan' => $item->nomor_surat_usulan_jurusan ?? '-',
-                    'nomor_surat_resmi' => $item->nomor_surat_resmi ?? '-',
-                    'updated_at' => $item->updated_at->format('Y-m-d'),
-                    'diusulkan_kepada' => $item->wadir ? $item->wadir->name : 'Wakil Direktur I',
-                    'status_surat' => $item->status_surat // Used for Badge
-                ];
+                return $this->mapSuratWithPersonel($item);
             });
 
         return Inertia::render('BKU/HistoryPerjalananDinas', [

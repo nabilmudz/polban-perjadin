@@ -1,4 +1,6 @@
 <template>
+  <Head title="Daftar Persetujuan" />
+
   <AppLayout>
     <div class="bg-white w-full rounded-md shadow overflow-hidden relative">
       <HeaderPage title="Daftar Persetujuan Direktur" />
@@ -22,6 +24,11 @@
           <template #wadir="{ row }">
             <span class="text-gray-600">{{ row.wadir ? row.wadir.name : '-' }}</span>
           </template>
+          
+          <template #nominal_biaya="{ row }">
+             {{ formatCurrency(row.nominal_biaya) }}
+          </template>
+
           <template #status_surat="{ row }">
             <StatusBadges :status="row.status_surat" />
           </template>
@@ -86,11 +93,11 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
-import StatusBadges from '@/Components/Table/StatusBadges.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
+import StatusBadges from '@/Components/Table/StatusBadges.vue'
 import LaporanSurat from '@/Components/LaporanSurat.vue' 
+import { Head, router, useForm } from '@inertiajs/vue3' 
 import { reactive, computed, ref, watch } from 'vue'
-import { router, usePage, useForm } from '@inertiajs/vue3'
 import debounce from 'lodash.debounce'
 
 const props = defineProps({
@@ -129,13 +136,23 @@ watch(
   { deep: true }
 )
 
+const formatCurrency = (value) => {
+  if (!value) return 'Rp 0';
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(value);
+}
+
 const columns = [
   { key: 'nama_kegiatan', label: 'Nama Kegiatan' },
   { key: 'pengusul', label: 'Pengusul', slot: 'pengusul' },
   { key: 'wadir', label: 'Wadir', slot: 'wadir' },
-  { key: 'nomor_surat_resmi', label: 'Nomor Surat' },
   { key: 'tanggal_pelaksanaan', label: 'Tanggal' },
+  { key: 'no_usulan_surat', label: 'No. Usulan Surat', slot: 'no_usulan_surat' },
   { key: 'sumber_dana', label: 'Sumber Dana' },
+  { key: 'nominal_biaya', label: 'Total Dana', slot: 'nominal_biaya' },
   { key: 'status_surat', label: 'Status', slot: 'status_surat' },
   { key: 'actions', label: 'Aksi', slot: 'actions' }
 ]

@@ -1,4 +1,6 @@
 <template>
+  <Head title="Daftar Laporan & Bukti" />
+
   <AppLayout>
     <div class="bg-white w-full rounded-md shadow overflow-hidden">
       <HeaderPage title="Laporan & Bukti Perjalanan Dinas" />
@@ -20,14 +22,27 @@
               {{ (laporanData.meta.from || 1) + index }}
           </template>
 
+          <template #nominal_biaya="{ row }">
+             {{ formatCurrency(row.nominal_biaya) }}
+          </template>
+
           <template #status_surat="{ row }">
              <StatusBadges :status="row.status_surat" />
+          </template>
+
+          <template #status_laporan="{ row }">
+             <span v-if="row.laporan" class="px-2 py-1 rounded bg-green-100 text-green-800 text-xs font-bold">
+                Sudah Upload
+             </span>
+             <span v-else class="px-2 py-1 rounded bg-yellow-100 text-yellow-800 text-xs font-bold">
+                Belum Upload
+             </span>
           </template>
 
           <template #actions="{ row }">
              <button 
                 v-if="row.laporan"
-                class="px-3 py-1.5 bg-cyan-500 text-white rounded-md text-sm font-medium hover:bg-cyan-600 shadow-sm flex items-center gap-2 transition-colors"
+                class="px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 shadow-sm flex items-center gap-2 transition-colors"
                 @click="router.get(route('bku.verifikasi', row.id))"
              >
                 <font-awesome-icon :icon="['far', 'eye']" />
@@ -46,8 +61,8 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
+import { Head, router, usePage } from '@inertiajs/vue3' 
 import { reactive, computed, watch } from 'vue'
-import { router, usePage } from '@inertiajs/vue3'
 
 const page = usePage()
 
@@ -90,10 +105,24 @@ const handlePageChange = (page) => {
     router.get(route('bku.daftarlaporanperjalanan'), { ...filters, page }, { preserveState: true, replace: true })
 }
 
+const formatCurrency = (value) => {
+  if (!value) return 'Rp 0';
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(value);
+}
+
 const columns = [
   { key: 'nama_kegiatan', label: 'Nama Kegiatan' },
   { key: 'created_at', label: 'Tanggal Pengusulan' },
-  { key: 'status_surat', label: 'Status Surat', slot: 'status_surat' }, 
+  { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
+  { key: 'no_usulan_surat', label: 'No. Usulan Surat' }, 
+  { key: 'sumber_dana', label: 'Sumber Dana' },
+  { key: 'nominal_biaya', label: 'Total Dana', slot: 'nominal_biaya' },
+  { key: 'status_surat', label: 'Status Surat', slot: 'status_surat' },
+  { key: 'status_laporan', label: 'Status Laporan', slot: 'status_laporan' },
   { key: 'actions', label: 'Aksi', slot: 'actions' }
 ]
 </script>

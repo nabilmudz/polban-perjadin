@@ -1,13 +1,26 @@
 <template>
+  <Head title="Dashboard" />
+
   <AppLayout>
     <div class="bg-white w-full rounded-md shadow">
       <HeaderPage />
 
       <div class="p-8">
         <h1 class="text-3xl font-bold mb-4">Dashboard Direktur</h1>
+        
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard title="Total Ulasan" icon="file" :count="stats?.total_ulasan || 0" />
-          <StatCard title="Bertugas" icon="user" :count="stats?.bertugas || 0" />
+          <StatCard 
+            title="Total Ulasan" 
+            icon="file" 
+            :count="stats?.total_ulasan || 0" 
+            color="blue"
+          />
+          <StatCard 
+            title="Bertugas" 
+            icon="user" 
+            :count="stats?.bertugas || 0" 
+            color="yellow"
+          />
         </div>
       </div>
 
@@ -29,6 +42,14 @@
         >
           <template #tanggal_berangkat="{ row }">
               {{ formatDate(row.tanggal_berangkat) }}
+          </template>
+
+          <template #nominal_biaya="{ row }">
+             {{ formatCurrency(row.nominal_biaya) }}
+          </template>
+
+          <template #no_usulan_surat="{ row }">
+                <span class="font-medium text-gray-700">{{ row.no_usulan_surat }}</span>
           </template>
 
           <template #status_surat="{ row }">
@@ -68,10 +89,11 @@ import HeaderPage from '@/Components/HeaderPage.vue'
 import StatCard from '@/Components/StatCard.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
-import { Link, usePage, router } from '@inertiajs/vue3'
+import { Head, usePage, router } from '@inertiajs/vue3' 
 import { reactive, computed, watch } from 'vue'
 import debounce from 'lodash.debounce'
 import { getRowActions } from '@/utils/rowAction'
+
 
 const props = defineProps({
   suratTugas: Object,
@@ -112,11 +134,22 @@ const formatDate = (dateString) => {
     return date.toISOString().split('T')[0];
 }
 
+const formatCurrency = (value) => {
+  if (!value) return 'Rp 0';
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(value);
+}
+
 const columns = [
+  { key: 'nama_kegiatan', label: 'Nama Kegiatan' },
+  { key: 'created_at', label: 'Tanggal Pengusulan' },
   { key: 'tanggal_berangkat', label: 'Tanggal Berangkat', slot: 'tanggal_berangkat' },
-  { key: 'nomor_surat_tugas_resmi', label: 'Nomor Surat' },
-  { key: 'perihal_tugas', label: 'Perihal Tugas' },
+  { key: 'no_usulan_surat', label: 'No. Usulan Surat', slot: 'no_usulan_surat' }, 
   { key: 'sumber_dana', label: 'Sumber Dana' },
+  { key: 'nominal_biaya', label: 'Total Dana', slot: 'nominal_biaya' },
   { key: 'status_surat', label: 'Status', slot: 'status_surat' },
   { key: 'actions', label: 'Aksi', slot: 'actions' },
 ]
