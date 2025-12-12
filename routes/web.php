@@ -65,6 +65,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/daftarlaporan', [PelaksanaController::class, 'daftarLaporan'])->name('daftarlaporan');
         Route::get('/historypelaksana', [PelaksanaController::class, 'historypelaksana'])->name('historypelaksana');
         Route::get('/status-laporan', [PelaksanaController::class, 'statusLaporan'])->name('status-laporan');
+        Route::post('/pelaksana/bukti/{laporan}', [PelaksanaController::class, 'uploadBukti'])->name('bukti.upload');
 
     });
 

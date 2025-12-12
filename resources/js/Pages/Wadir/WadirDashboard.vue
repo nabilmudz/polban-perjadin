@@ -7,11 +7,11 @@
                 <h1 class="text-3xl font-bold mb-4">Dashboard Wadir</h1>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
-                    <StatCard title="Total Pengusulan" icon="file" :count="stats.total" />
-                    <StatCard title="Usulan Baru" icon="PlusSquare" :count="stats.baru" color="green" />
-                    <StatCard title="Dalam Proses (Direktur)" icon="clock" :count="stats.proses_direktur" color="yellow"/>
-                    <StatCard title="Bertugas" icon="briefcase" :count="stats.bertugas" color="light_blue"/>
-                    <StatCard title="Ditolak" icon="times-circle" :count="stats.rejected" color="red"/>
+                    <StatCard title="Total Pengusulan" icon="file" :count="totalPengusulan" />
+                    <StatCard title="Laporan Selesai" icon="square-check" :count="statusCounts.selesai || 0" color="green" />
+                    <StatCard title="Belum Selesai" icon="folder-closed" :count="statusCounts.published || 0" color="purple" />
+                    <StatCard title="Bertugas" icon="user" :count="statusCounts.on_duty || 0" color="yellow" />
+                    <StatCard title="Dikembalikan" icon="circle-left" :count="statusCounts.revision_requested || 0" color="red" />
                 </div>
             </div>
 
@@ -22,24 +22,39 @@
                     :meta="suratTugas.meta"
                     :links="suratTugas.links"
                     :filters="filters"
-                    route-name="dashboardRoute"
-
-                    <!-- DIGANTI: pakai handler debounce -->
-                    @update:filters="onFiltersUpdate"
-                >
+                    :status-options="statusOptions"
+                    route-name="wadir.dashboard"
+                    @update:filters="Object.assign(filters, $event)"
+                    @changePage="(page) =>
+                      router.get(route('pengusul.dashboard'), { ...filters }, {
+                        preserveState: true,
+                        replace: true
+                      })
+                    "
+                  >
                     <template #status_surat="{ row }">
-                        <StatusBadges :status="row.status_surat" />
+                      <StatusBadges :status="row.status_surat" />
                     </template>
-
                     <template #action="{ row }">
+                      <div class="flex gap-2">
                         <button
-                            @click="handleView(row)"
-                            class="px-3 py-1 rounded bg-blue-500 text-white shadow hover:brightness-90 flex items-center gap-1"
+                          v-for="action in getRowActions(row, currentUser.role)"
+                          :key="action.type"
+                          @click="handleAction(action.type, row)"
+                          :title="action.type"
+                          class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90"
+                          :class="{
+                            'bg-blue-500 text-white': action.color === 'blue',
+                            'bg-green-500 text-white': action.color === 'green',
+                            'bg-red-500 text-white': action.color === 'red',
+                            'bg-yellow-400 text-black': action.color === 'yellow',
+                            'bg-purple-500 text-white': action.color === 'purple',
+                          }"
                         >
-                            <font-awesome-icon :icon="['far', 'eye']" /> Lihat
+                          <font-awesome-icon :icon="['far', action.icon]" class="text-md" />
                         </button>
+                      </div>
                     </template>
-
                 </DataTable>
             </div>
         </div>
@@ -53,21 +68,38 @@ import StatCard from '@/Components/StatCard.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
 import { usePage, router } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import debounce from 'lodash.debounce'
 
 const { props } = usePage()
 const suratTugas = props.suratTugas
-const stats = props.stats
 const filters = ref(props.filters)
 const user = usePage().props.auth.user
 const dashboardRoute = `${user.role}.dashboard`
 
+// --------------------------
+// 1. Definisi stats / counts
+// --------------------------
+const totalPengusulan = ref(props.stats?.total_pengusulan || 0)
+
+const statusCounts = reactive({
+  selesai: props.stats?.selesai || 0,
+  published: props.stats?.published || 0,
+  on_duty: props.stats?.on_duty || 0,
+  revision_requested: props.stats?.revision_requested || 0,
+})
+
+// --------------------------
+// 2. Columns & actions
+// --------------------------
 const columns = [
   { key: 'perihal_tugas', label: 'Nama Kegiatan' },
   { key: 'created_at', label: 'Tanggal Pengusulan' },
-  { key: 'status_surat', label: 'Status' },
-  { key: 'action', label: 'Aksi', sortable: false },
+  { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
+  { key: 'nomor_surat_usulan_jurusan', label: 'Nomor Surat Usulan' },
+  { key: 'sumber_dana', label: 'Sumber Dana' },
+  // { key: 'surat_undangan', label: 'Surat Undangan' },
+  { key: 'action', label: 'Aksi', fixedWidth: '180px' }
 ]
 
 const handleView = (row) => {
@@ -93,11 +125,9 @@ const handleAction = (type, row) => {
   }
 }
 
-/* ---------------------------------------------------------
-|  DEBOUNCE IMPLEMENTATION (TAMBAHAN)
---------------------------------------------------------- */
-
-// fungsi update filter normal
+// --------------------------
+// 3. Filter debounce
+// --------------------------
 const updateFilters = () => {
     router.get(route(dashboardRoute), filters.value, {
         preserveState: true,
@@ -106,12 +136,10 @@ const updateFilters = () => {
     })
 }
 
-// versi debounce 400ms (bisa disesuaikan)
 const debouncedUpdateFilters = debounce(() => {
     updateFilters()
 }, 400)
 
-// dipanggil setiap DataTable emit update:filters
 const onFiltersUpdate = (newFilters) => {
     Object.assign(filters.value, newFilters)
     debouncedUpdateFilters()

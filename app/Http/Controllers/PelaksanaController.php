@@ -133,4 +133,47 @@ class PelaksanaController extends Controller
             ],
         ]);
     }
+
+    // UPLOAD BUKTI PELAKSANAAN
+    public function uploadBukti(Request $request, SuratTugas $laporan)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:jpg,jpeg,png,pdf|max:10240', // max 10MB
+            'kategori' => 'required|in:surat_visum,laporan_perjalanan_dinas,bukti_perjalanan_dinas',
+            'keterangan' => 'nullable|string|max:255',
+            'nominal' => 'nullable|numeric|min:0',
+        ]);
+
+        // simpan file ke storage/app/public/bukti
+        $path = $request->file('file')->store('bukti', 'public');
+
+        // simpan record ke database
+        $bukti = BuktiLaporan::create([
+            'surat_tugas_id' => $laporan->id,
+            'user_id' => auth()->id(),
+            'kategori' => $request->kategori,
+            'file_path' => $path,
+            'keterangan' => $request->keterangan,
+            'nominal' => $request->nominal,
+            'file_type' => $request->file('file')->getMimeType(),
+        ]);
+
+        // ambil semua bukti terbaru untuk laporan ini
+        $uploadedFiles = BuktiLaporan::where('surat_tugas_id', $laporan->id)
+            ->get()
+            ->map(function($file) {
+                return [
+                    'id' => $file->id,
+                    'url' => Storage::url($file->file_path),
+                    'type' => $file->file_type,
+                    'keterangan' => $file->keterangan,
+                    'nominal' => $file->nominal,
+                ];
+            });
+
+        return response()->json([
+            'message' => 'Bukti berhasil diupload',
+            'uploadedFiles' => $uploadedFiles,
+        ]);
+    }
 }
