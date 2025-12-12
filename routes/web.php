@@ -64,6 +64,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [PelaksanaController::class, 'dashboard'])->name('dashboard');
         Route::get('/daftarlaporan', [PelaksanaController::class, 'daftarLaporan'])->name('daftarlaporan');
         Route::get('/historypelaksana', [PelaksanaController::class, 'historypelaksana'])->name('historypelaksana');
+        Route::get('/status-laporan', [PelaksanaController::class, 'statusLaporan'])->name('status-laporan');
+
     });
 
     // Wadir 1-4
@@ -101,6 +103,8 @@ Route::middleware(['auth'])->group(function () {
                     // Aksi reject
                     Route::post('/persetujuan/{id}/reject', [WadirController::class, 'reject'])
                         ->name('persetujuan.reject');
+
+                    
                 });
         }
     });

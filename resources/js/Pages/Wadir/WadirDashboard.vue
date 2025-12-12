@@ -23,7 +23,9 @@
                     :links="suratTugas.links"
                     :filters="filters"
                     route-name="dashboardRoute"
-                    @update:filters="Object.assign(filters, $event)"
+
+                    <!-- DIGANTI: pakai handler debounce -->
+                    @update:filters="onFiltersUpdate"
                 >
                     <template #status_surat="{ row }">
                         <StatusBadges :status="row.status_surat" />
@@ -52,6 +54,7 @@ import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
 import { usePage, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
+import debounce from 'lodash.debounce'
 
 const { props } = usePage()
 const suratTugas = props.suratTugas
@@ -88,5 +91,29 @@ const handleAction = (type, row) => {
       router.get(route('pengusul.download', row.id))
       break
   }
+}
+
+/* ---------------------------------------------------------
+|  DEBOUNCE IMPLEMENTATION (TAMBAHAN)
+--------------------------------------------------------- */
+
+// fungsi update filter normal
+const updateFilters = () => {
+    router.get(route(dashboardRoute), filters.value, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    })
+}
+
+// versi debounce 400ms (bisa disesuaikan)
+const debouncedUpdateFilters = debounce(() => {
+    updateFilters()
+}, 400)
+
+// dipanggil setiap DataTable emit update:filters
+const onFiltersUpdate = (newFilters) => {
+    Object.assign(filters.value, newFilters)
+    debouncedUpdateFilters()
 }
 </script>

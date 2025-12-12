@@ -1,10 +1,15 @@
 <template>
     <AppLayout>
+        <!-- head supaya tab browser berlabel -->
+        <Head title="Persetujuan Surat - Wadir" />
+
         <div class="bg-white w-full rounded-md shadow">
             <HeaderPage />
 
             <div class="p-8">
                 <h1 class="text-3xl font-bold mb-4">Persetujuan</h1>
+
+                
             </div>
 
             <div class="p-8">
@@ -22,6 +27,15 @@
                     <template #status_surat="{ row }">
                         <StatusBadges :status="row.status_surat" />
                     </template>
+                    <div class="mb-4 flex items-center gap-3">
+                    <label class="text-sm text-gray-600">Periode:</label>
+                    <select v-model="filters.range" class="border rounded px-2 py-1">
+                        <option value="">Semua</option>
+                        <option value="week">Minggu</option>
+                        <option value="month">Bulan</option>
+                        <option value="year">Tahun</option>
+                    </select>
+                    </div>
                     <template #path_file_surat_usulan="{ row }">
                         <div class="flex gap-2">
                             <button
@@ -70,14 +84,11 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
-import { usePage, router } from '@inertiajs/vue3'
+import { usePage, router, Head } from '@inertiajs/vue3'
 import { getRowActions, getSuratUndanganAction } from '@/utils/rowAction'
-import { ref, watch  } from 'vue'
+import { reactive, watch  } from 'vue'
 import { debounce } from 'lodash-es'
 
-const goToReview = () => {
-  router.visit('/wadir/review')
-}
 const { props } = usePage()
 const suratTugas = props.suratTugas ?? {
   data: [],
@@ -85,25 +96,28 @@ const suratTugas = props.suratTugas ?? {
   links: []
 };
 
-
 const stats = props.stats ?? {}
 
-const filters = ref({
-    ...props.filters,
-    status: props.filters?.status ?? ''
+// reactive filter supaya DataTable update bekerja tanpa reload
+const safeFilters = props.filters ?? {}
+const filters = reactive({
+  ...safeFilters,
+  status: safeFilters.status ?? '',
+  range: safeFilters.range ?? ''
 })
 
 watch(
   () => props.filters,
   (newFilters) => {
-    filters.value = {
+    // sinkronisasi jika backend mengirim filters baru lewat props
+    Object.assign(filters, {
       ...newFilters,
-      status: newFilters?.status ?? ''
-    }
+      status: newFilters?.status ?? '',
+      range: newFilters?.range ?? ''
+    })
   },
   { deep: true, immediate: true }
 )
-
 
 const page = usePage()
 const user = page.props.auth?.user ?? {}
@@ -115,6 +129,7 @@ const columns = [
   { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
   { key: 'tanggal_kembali', label: 'Tanggal Kembali' },
   { key: 'sumber_dana', label: 'Pembiayaan' },
+  { key: 'total_dana', label: 'Total Dana' }, // tambahan
   { key: 'status_surat', label: 'Status' },
   { key: 'path_file_surat_usulan', label: 'Surat Undangan' },
   { key: 'action', label: 'Aksi' },
@@ -125,7 +140,6 @@ const statusOptions = [
     { label: "Disetujui", value: "approved" },
     { label: "Ditolak", value: "rejected" },
 ]
-
 
 const handleView = (row) => {
   router.get(route(`${user.role}.persetujuan.show`, row.surat_tugas_id))
