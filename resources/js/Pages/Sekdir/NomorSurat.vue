@@ -7,34 +7,30 @@
 
       <div class="p-8">
         <h1 class="text-3xl font-bold mb-6">Nomor Surat</h1>
-        
-        <div class="mt-4">
-          <DataTable
-            :columns="columns"
-            :data="surat.data"
-            :meta="surat.meta"
-            :links="surat.links"
-            :filters="filters"
-            route-name="sekdir.nomorsurat"
-            @update:filters="onUpdateFilters"
-            @changePage="onChangePage"
-          >
 
-            <template #status_surat="{ row }">
-              <StatusBadges :status="row.status_surat" />
-            </template>
+        <DataTable
+          :columns="columns"
+          :data="surat.data"
+          :meta="surat.meta"
+          :links="surat.links"
+          :filters="filters"
+          route-name="sekdir.nomorsurat"
+          @update:filters="onUpdateFilters"
+          @changePage="onChangePage"
+        >
+          <template #status_surat="{ row }">
+            <StatusBadges :status="row.status_surat" />
+          </template>
 
-            <template #aksi="{ row }">
-              <button
-                class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm"
-                @click="gotoReview(row.id)"
-              >
-                Review & Nomor
-              </button>
-            </template>
-
-          </DataTable>
-        </div>
+          <template #aksi="{ row }">
+            <button
+              class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm"
+              @click="gotoReview(row.id)"
+            >
+              Review & Nomor
+            </button>
+          </template>
+        </DataTable>
       </div>
     </div>
   </AppLayout>
@@ -59,6 +55,9 @@ const surat = computed(() => page.props.surat ?? {
 
 const filters = reactive({
   search: page.props.filters?.search ?? '',
+  from: page.props.filters?.from ?? '',
+  to: page.props.filters?.to ?? '',
+  range: page.props.filters?.range ?? '',
 })
 
 const fetchData = debounce(() => {

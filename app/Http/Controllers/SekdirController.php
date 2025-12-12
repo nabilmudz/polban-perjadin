@@ -15,6 +15,7 @@ class SekdirController extends Controller
             'status' => $request->get('status'),
             'from' => $request->get('from'),
             'to' => $request->get('to'),
+            'range' => $request->get('range'),
             'page' => $request->get('page', 1),
         ];
 
@@ -30,7 +31,24 @@ class SekdirController extends Controller
             $query->where('status_surat', $filters['status']);
         }
 
-        if ($filters['from'] && $filters['to']) {
+        if (!empty($filters['range']) && $filters['range'] !== 'all') {
+            $now = now();
+
+            if ($filters['range'] === 'weekly') {
+                $from = $now->copy()->subDays(7);
+            } elseif ($filters['range'] === 'monthly') {
+                $from = $now->copy()->subMonth();
+            } elseif ($filters['range'] === 'yearly') {
+                $from = $now->copy()->subYear();
+            }
+
+            $query->whereBetween('created_at', [
+                $from->format('Y-m-d'),
+                $now->format('Y-m-d')
+            ]);
+        }
+
+        if (!empty($filters['from']) && !empty($filters['to'])) {
             $query->whereBetween('created_at', [$filters['from'], $filters['to']]);
         }
 
@@ -45,16 +63,16 @@ class SekdirController extends Controller
                     $isMhs = str_contains($d->personable_type, 'Mahasiswa');
 
                     return [
-                        'id'       => $p->id,
-                        'type'     => $isMhs ? 'mahasiswa' : 'pegawai',
-                        'nama'     => $p->nama,
-                        'nip'      => $isMhs ? null : ($p->nip ?? null),
-                        'nim'      => $isMhs ? ($p->nim ?? null) : null,
-                        'pangkat'  => $p->pangkat ?? null,
+                        'id' => $p->id,
+                        'type' => $isMhs ? 'mahasiswa' : 'pegawai',
+                        'nama' => $p->nama,
+                        'nip' => $isMhs ? null : ($p->nip ?? null),
+                        'nim' => $isMhs ? ($p->nim ?? null) : null,
+                        'pangkat' => $p->pangkat ?? null,
                         'golongan' => $p->golongan ?? null,
-                        'jabatan'  => $p->jabatan ?? null,
-                        'jurusan'  => $p->jurusan ?? null,
-                        'prodi'    => $p->prodi ?? null,
+                        'jabatan' => $p->jabatan ?? null,
+                        'jurusan' => $p->jurusan ?? null,
+                        'prodi' => $p->prodi ?? null,
                     ];
                 });
 
@@ -105,6 +123,7 @@ class SekdirController extends Controller
             'status' => $request->get('status'),
             'from' => $request->get('from'),
             'to' => $request->get('to'),
+            'range' => $request->get('range'),
             'page' => $request->get('page', 1),
         ];
 
@@ -116,7 +135,24 @@ class SekdirController extends Controller
             $query->where('perihal_tugas', 'like', "%{$filters['search']}%");
         }
 
-        if ($filters['from'] && $filters['to']) {
+        if (!empty($filters['range']) && $filters['range'] !== 'all') {
+            $now = now();
+
+            if ($filters['range'] === 'weekly') {
+                $from = $now->copy()->subDays(7);
+            } elseif ($filters['range'] === 'monthly') {
+                $from = $now->copy()->subMonth();
+            } elseif ($filters['range'] === 'yearly') {
+                $from = $now->copy()->subYear();
+            }
+
+            $query->whereBetween('created_at', [
+                $from->format('Y-m-d'),
+                $now->format('Y-m-d')
+            ]);
+        }
+
+        if (!empty($filters['from']) && !empty($filters['to'])) {
             $query->whereBetween('created_at', [$filters['from'], $filters['to']]);
         }
 
@@ -175,13 +211,39 @@ class SekdirController extends Controller
     {
         $filters = [
             'search' => $request->get('search'),
-            'page' => $request->get('page', 1),
+            'from'   => $request->get('from'),
+            'to'     => $request->get('to'),
+            'range'  => $request->get('range'),
+            'page'   => $request->get('page', 1),
         ];
 
-        $query = SuratTugas::where('status_surat', 'pending_sekdir_numbering');
+        $query = SuratTugas::query()
+            ->with('detailPelaksanaTugas.personable')
+            ->where('status_surat', 'pending_sekdir_numbering');
 
         if ($filters['search']) {
             $query->where('perihal_tugas', 'like', "%{$filters['search']}%");
+        }
+
+        if (!empty($filters['range']) && $filters['range'] !== 'all') {
+            $now = now();
+
+            if ($filters['range'] === 'weekly') {
+                $from = $now->copy()->subDays(7);
+            } elseif ($filters['range'] === 'monthly') {
+                $from = $now->copy()->subMonth();
+            } elseif ($filters['range'] === 'yearly') {
+                $from = $now->copy()->subYear();
+            }
+
+            $query->whereBetween('created_at', [
+                $from->format('Y-m-d'),
+                $now->format('Y-m-d')
+            ]);
+        }
+
+        if (!empty($filters['from']) && !empty($filters['to'])) {
+            $query->whereBetween('created_at', [$filters['from'], $filters['to']]);
         }
 
         $surat = $query->latest()->paginate(10)->withQueryString();

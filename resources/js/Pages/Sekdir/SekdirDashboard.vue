@@ -102,6 +102,7 @@ const filters = reactive({
   status: page.props.filters?.status ?? '',
   from: page.props.filters?.from ?? '',
   to: page.props.filters?.to ?? '',
+  range: page.props.filters?.range ?? '', 
 })
 
 const showViewModal = ref(false)

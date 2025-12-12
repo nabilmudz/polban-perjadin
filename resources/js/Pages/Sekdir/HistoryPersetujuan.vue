@@ -1,13 +1,13 @@
 <template>
   <Head title="History" />
-  
+
   <AppLayout>
     <div class="bg-white w-full rounded-md shadow">
       <HeaderPage />
-      
+
       <div class="p-8">
         <h1 class="text-3xl font-bold mb-6">History Surat Tugas</h1>
-        
+
         <DataTable
           :columns="columns"
           :data="surat.data"
@@ -31,6 +31,7 @@
               >
                 <font-awesome-icon :icon="['far', 'eye']" class="text-md" />
               </button>
+
               <button
                 v-if="row.file_final"
                 title="Lihat File"
@@ -39,6 +40,7 @@
               >
                 <font-awesome-icon :icon="['far', 'file-pdf']" class="text-md" />
               </button>
+
               <a
                 v-if="row.file_final"
                 :href="fileUrl(row.file_final)"
@@ -50,7 +52,7 @@
               </a>
             </div>
           </template>
-          
+
         </DataTable>
       </div>
     </div>
@@ -85,10 +87,8 @@ const filters = reactive({
   status: page.props.filters?.status ?? '',
   from: page.props.filters?.from ?? '',
   to: page.props.filters?.to ?? '',
+  range: page.props.filters?.range ?? '', 
 })
-
-const showViewModal = ref(false)
-const selectedData = ref(null)
 
 const fetchData = debounce(() => {
   router.get(route('sekdir.history'), filters, {
@@ -110,6 +110,9 @@ const onChangePage = (pageNumber) => {
     { preserveState: true, replace: true },
   )
 }
+
+const showViewModal = ref(false)
+const selectedData = ref(null)
 
 const handleViewDetail = (row) => {
   selectedData.value = row
@@ -133,4 +136,3 @@ const columns = [
   { key: 'aksi', label: 'Aksi', fixedWidth: '180px' },
 ]
 </script>
- 
