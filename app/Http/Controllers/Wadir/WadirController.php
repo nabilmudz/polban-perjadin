@@ -61,10 +61,7 @@ class WadirController extends Controller
         return SuratTugas::where('diusulkan_kepada', $wadir)
             ->when($filters['search'] ?? null, function ($q, $s) {
                 $q->where(function ($xx) use ($s) {
-                    $xx->where('perihal_tugas', 'like', "%$s%")
-                       ->orWhere('nomor_surat_tugas_resmi', 'like', "%$s%")
-                       ->orWhere('nama_kegiatan', 'like', "%$s%")
-                       ->orWhere('lokasi_tugas', 'like', "%$s%");
+                    $xx->where('perihal_tugas', 'like', "%$s%");
                 });
             })
             ->when($filters['status'] ?? null, function ($q, $s) {
@@ -77,12 +74,14 @@ class WadirController extends Controller
 
     public function dashboard(Request $request)
     {
+        
         $filters = $request->only(['search', 'status', 'from', 'to', 'page']);
+        $filters['status'] = 'submitted_wadir_review';
         $wadir = $this->wadirLabel();
 
         $paginate = $this->querySurat($filters)
             ->latest()
-            ->paginate(10)
+            ->paginate(5)
             ->withQueryString();
 
         return Inertia::render('Wadir/WadirDashboard', [
@@ -115,7 +114,20 @@ class WadirController extends Controller
     {
         $filters = $request->only(['search', 'status', 'from', 'to', 'page']);
 
+        $allowedStatuses = [
+            'draft',
+            'revision_requested',
+            'rejected',
+            'approved_wadir',
+            'submitted_wadir_review'
+        ];
+
+        if (!empty($filters['status']) && !in_array($filters['status'], $allowedStatuses, true)) {
+            unset($filters['status']);
+        }
+
         $paginate = $this->querySurat($filters)
+            ->whereNotIn('status_surat', $allowedStatuses)
             ->latest()
             ->paginate(10)
             ->withQueryString();
@@ -126,9 +138,11 @@ class WadirController extends Controller
         ]);
     }
 
+
     public function persetujuan(Request $request)
     {
         $filters = $request->only(['search', 'status', 'from', 'to', 'page']);
+        $filters['status'] = 'submitted_wadir_review';
 
         $paginate = $this->querySurat($filters)
             ->latest()

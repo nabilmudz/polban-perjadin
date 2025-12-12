@@ -1,8 +1,6 @@
 <template>
     <AppLayout>
-        <!-- head supaya tab browser berlabel -->
-        <Head title="Persetujuan Surat - Wadir" />
-
+        <Head title="Persetujuan" />
         <div class="bg-white w-full rounded-md shadow">
             <HeaderPage />
 
@@ -20,6 +18,7 @@
                     :links="suratTugas.links"
                     :filters="filters"
                     :status-options="statusOptions"
+                    :enable-status="false"
                     :route-name="`${user.role}.persetujuan`"
                     @update:filters="Object.assign(filters, $event)"
                 >
