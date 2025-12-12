@@ -1,4 +1,6 @@
 <template>
+  <Head title="Daftar Laporan" />
+
   <AppLayout>
     <div class="bg-white w-full rounded-md shadow overflow-hidden">
       <HeaderPage title="Laporan & Bukti Perjalanan Dinas" />
@@ -47,7 +49,7 @@ import HeaderPage from '@/Components/HeaderPage.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
 import { reactive, computed, watch } from 'vue'
-import { router, usePage } from '@inertiajs/vue3'
+import { Head, router, usePage } from '@inertiajs/vue3'
 
 const page = usePage()
 

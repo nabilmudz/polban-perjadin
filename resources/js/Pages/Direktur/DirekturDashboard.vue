@@ -1,4 +1,6 @@
 <template>
+  <Head title="Dashboard" />
+
   <AppLayout>
     <div class="bg-white w-full rounded-md shadow">
       <HeaderPage />
@@ -79,7 +81,7 @@ import HeaderPage from '@/Components/HeaderPage.vue'
 import StatCard from '@/Components/StatCard.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
-import { Link, usePage, router } from '@inertiajs/vue3'
+import { Head, usePage, router } from '@inertiajs/vue3' 
 import { reactive, computed, watch } from 'vue'
 import debounce from 'lodash.debounce'
 import { getRowActions } from '@/utils/rowAction'

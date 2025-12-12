@@ -1,4 +1,6 @@
 <template>
+  <Head title="History" />
+
   <AppLayout>
     <div class="bg-white w-full rounded-md shadow overflow-hidden">
       <HeaderPage title="History Perjalanan Dinas" />
@@ -49,7 +51,7 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
-import { router, usePage } from '@inertiajs/vue3'
+import { Head, router, usePage } from '@inertiajs/vue3'
 import { reactive, computed, watch } from 'vue'
 
 const page = usePage()

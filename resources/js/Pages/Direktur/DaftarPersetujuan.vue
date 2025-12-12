@@ -1,4 +1,6 @@
 <template>
+  <Head title="Daftar Persetujuan" />
+
   <AppLayout>
     <div class="bg-white w-full rounded-md shadow overflow-hidden relative">
       <HeaderPage title="Daftar Persetujuan Direktur" />
@@ -90,7 +92,7 @@ import StatusBadges from '@/Components/Table/StatusBadges.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import LaporanSurat from '@/Components/LaporanSurat.vue' 
 import { reactive, computed, ref, watch } from 'vue'
-import { router, usePage, useForm } from '@inertiajs/vue3'
+import { Head, router, usePage, useForm } from '@inertiajs/vue3'
 import debounce from 'lodash.debounce'
 
 const props = defineProps({
