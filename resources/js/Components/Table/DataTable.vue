@@ -2,8 +2,6 @@
   <div class="bg-white shadow rounded-md p-6">
     <!-- Filters -->
     <div v-if="showFilters" class="mb-4">
-
-      <!-- Row 1 -->
       <div class="flex flex-wrap items-center gap-3">
 
         <!-- Search -->
@@ -47,11 +45,22 @@
           @change="onFilterChange"
         />
 
+        <!-- RANGE FILTER -->
+        <select
+          v-if="enableDate && filters.range !== undefined"
+          v-model="filters.range"
+          class="border rounded-md px-3 py-2 text-sm min-w-[150px]"
+          @change="onRangeChange"
+        >
+          <option value="">Semua Rentang</option>
+          <option value="weekly">Mingguan</option>
+          <option value="monthly">Bulanan</option>
+          <option value="yearly">Tahunan</option>
+        </select>
+
         <slot name="filters-extra" />
       </div>
-
     </div>
-
 
     <!-- Table -->
     <div class="overflow-x-auto">
@@ -91,9 +100,9 @@
             class="border-b"
           >
             <td
-              class="px-4 py-2 h-10"
               v-for="col in columns"
               :key="col.key"
+              class="px-4 py-2 h-10"
             >&nbsp;</td>
           </tr>
 
@@ -112,20 +121,20 @@
         Showing {{ meta.from }}–{{ meta.to }} of {{ meta.total }}
       </div>
       <div class="flex items-center gap-2">
-      <button
-        :disabled="!links.prev"
-        @click="changePageUrl(links.prev)"
-        class="px-3 py-1 border rounded-md text-sm disabled:opacity-50"
-      >
-        Prev
-      </button>
-      <button
-        :disabled="!links.next"
-        @click="changePageUrl(links.next)"
-        class="px-3 py-1 border rounded-md text-sm disabled:opacity-50"
-      >
-        Next
-      </button>
+        <button
+          :disabled="!links.prev"
+          @click="changePageUrl(links.prev)"
+          class="px-3 py-1 border rounded-md text-sm disabled:opacity-50"
+        >
+          Prev
+        </button>
+        <button
+          :disabled="!links.next"
+          @click="changePageUrl(links.next)"
+          class="px-3 py-1 border rounded-md text-sm disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
     </div>
   </div>
@@ -134,6 +143,7 @@
 <script setup>
 import { defineEmits } from 'vue'
 import { router } from '@inertiajs/vue3'
+
 const props = defineProps({
   columns: Array,
   data: Array,
@@ -148,7 +158,6 @@ const props = defineProps({
   enableDate: { type: Boolean, default: true },
 })
 
-
 const filters = props.filters
 const emit = defineEmits(['update:filters', 'changePage'])
 
@@ -156,9 +165,43 @@ const onFilterChange = () => {
   emit('update:filters', { ...filters })
 }
 
+const onRangeChange = () => {
+  const today = new Date()
+
+  // Reset
+  if (filters.range === "") {
+    filters.from = ""
+    filters.to = ""
+    emit("update:filters", { ...filters })
+    return
+  }
+
+  if (filters.range === "weekly") {
+    const start = new Date()
+    start.setDate(today.getDate() - 7)
+    filters.from = start.toISOString().slice(0, 10)
+    filters.to = today.toISOString().slice(0, 10)
+  }
+
+  if (filters.range === "monthly") {
+    const start = new Date()
+    start.setMonth(today.getMonth() - 1)
+    filters.from = start.toISOString().slice(0, 10)
+    filters.to = today.toISOString().slice(0, 10)
+  }
+
+  if (filters.range === "yearly") {
+    const start = new Date()
+    start.setFullYear(today.getFullYear() - 1)
+    filters.from = start.toISOString().slice(0, 10)
+    filters.to = today.toISOString().slice(0, 10)
+  }
+
+  emit("update:filters", { ...filters })
+}
+
 const changePageUrl = (url) => {
   if (!url) return
   router.get(url, {}, { preserveState: true, replace: true })
 }
-
 </script>
