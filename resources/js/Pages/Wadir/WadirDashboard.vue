@@ -6,14 +6,30 @@
 
       <div class="p-8">
         <h1 class="text-3xl font-bold mb-4">Dashboard Wadir</h1>
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+                <StatCard title="Total Pengusulan" icon="file" :count="stats.total" />
+                <StatCard title="Usulan Baru" icon="PlusSquare" :count="stats.baru" color="green" />
+                <StatCard title="Dalam Proses (Direktur)" icon="clock" :count="stats.proses_direktur" color="yellow" />
+                <StatCard title="Bertugas" icon="briefcase" :count="stats.bertugas" color="light_blue" />
+                <StatCard title="Ditolak" icon="times-circle" :count="stats.rejected" color="red" />
+              </div>
+            </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
-          <StatCard title="Total Pengusulan" icon="file" :count="stats.total" />
-          <StatCard title="Usulan Baru" icon="PlusSquare" :count="stats.baru" color="green" />
-          <StatCard title="Dalam Proses (Direktur)" icon="clock" :count="stats.proses_direktur" color="yellow" />
-          <StatCard title="Bertugas" icon="briefcase" :count="stats.bertugas" color="light_blue" />
-          <StatCard title="Ditolak" icon="times-circle" :count="stats.rejected" color="red" />
-        </div>
+            <div class="p-8">
+                <DataTable
+                    :columns="columns"
+                    :data="suratTugas.data"
+                    :meta="suratTugas.meta"
+                    :links="suratTugas.links"
+                    :filters="filters"
+                    route-name="dashboardRoute"
+
+                    <!-- DIGANTI: pakai handler debounce -->
+                    @update:filters="onFiltersUpdate"
+                >
+                    <template #status_surat="{ row }">
+                        <StatusBadges :status="row.status_surat" />
+                    </template>
       </div>
 
       <div class="p-8">
@@ -123,5 +139,29 @@ const handleAction = (type, row) => {
       router.get(route('pengusul.download', row.id))
       break
   }
+}
+
+/* ---------------------------------------------------------
+|  DEBOUNCE IMPLEMENTATION (TAMBAHAN)
+--------------------------------------------------------- */
+
+// fungsi update filter normal
+const updateFilters = () => {
+    router.get(route(dashboardRoute), filters.value, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    })
+}
+
+// versi debounce 400ms (bisa disesuaikan)
+const debouncedUpdateFilters = debounce(() => {
+    updateFilters()
+}, 400)
+
+// dipanggil setiap DataTable emit update:filters
+const onFiltersUpdate = (newFilters) => {
+    Object.assign(filters.value, newFilters)
+    debouncedUpdateFilters()
 }
 </script>

@@ -68,7 +68,7 @@ export default function getSidebarLinks(role) {
           component: "Dashboards/PelaksanaDashboard"
         },
         {
-          name: "Daftar Laporan",
+          name: "Perjalanan Dinas",
           route: "pelaksana.daftarlaporan",
           icon: "clipboard",
           component: "Pelaksana/DaftarLaporan"
@@ -78,6 +78,12 @@ export default function getSidebarLinks(role) {
           route: "pelaksana.historypelaksana",
           icon: "clock",
           component: "Pelaksana/HistoryPelaksana"
+        },
+        {
+          name: "Status Laporan",
+          route: "pelaksana.status-laporan",
+          icon: "file-search",
+          component: "Pelaksana/StatusLaporan"
         }
       ];
 
