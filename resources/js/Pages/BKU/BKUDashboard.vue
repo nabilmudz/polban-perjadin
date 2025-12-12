@@ -2,21 +2,20 @@
   <Head title="Dashboard" />
 
   <AppLayout>
-    <div class="bg-white w-full rounded-md shadow">
+    <div class="bg-white w-full rounded-md shadow overflow-hidden">
       <HeaderPage />
 
       <div class="p-8">
-        <h1 class="text-3xl font-bold mb-4">Dashboard BKU</h1>
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">Dashboard BKU</h1>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard title="Total Pengusulan" icon="file" :count="stats?.total_pengusulan || 0" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+          <StatCard title="Total Pengusulan" icon="file" :count="stats?.total_pengusulan || 0" color="blue" />
           <StatCard title="Verifikasi Baru" icon="envelope" :count="stats?.surat_tugas_baru || 0" color="green" />
-          <StatCard title="Bertugas" icon="user" :count="stats?.bertugas || 0" color="yellow" />
+          <StatCard title="Bertugas" icon="users" :count="stats?.bertugas || 0" color="yellow" />
           <StatCard title="Laporan Pending" icon="circle-exclamation" :count="stats?.laporan_belum_selesai || 0" color="red" />
         </div>
-      </div>
 
-      <div class="px-6 pb-8 space-y-10">
+        <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
           <div class="flex justify-between items-end mb-4">
              <div>
                  <h3 class="text-lg font-bold text-gray-800">Daftar Penugasan</h3>
@@ -34,22 +33,22 @@
             @update:filters="handleFilterUpdate"
             @changePage="handlePageChange"
           >
-            <!-- 1. No Column -->
             <template #no="{ index }">
                 {{ (suratData.meta.from || 1) + index }}
             </template>
 
-            <!-- 2. No Usulan Column -->
             <template #no_usulan_surat="{ row }">
                 <span class="font-medium text-gray-700">{{ row.no_usulan_surat }}</span>
             </template>
 
-            <!-- 3. Status Badge using StatusBadges Component -->
+            <template #nominal_biaya="{ row }">
+               {{ formatCurrency(row.nominal_biaya) }}
+            </template>
+
             <template #status_surat="{ row }">
                <StatusBadges :status="row.status_surat" />
             </template>
 
-            <!-- 4. Actions Column -->
             <template #actions="{ row }">
             <div class="flex gap-2">
               <button
@@ -68,6 +67,7 @@
             </div>
           </template>
           </DataTable>
+        </div>
       </div>
     </div>
   </AppLayout>
@@ -130,6 +130,15 @@ const handlePageChange = (page) => {
     router.get(route('bku.dashboard'), { ...filters, page }, { preserveState: true, replace: true })
 }
 
+const formatCurrency = (value) => {
+  if (!value) return 'Rp 0';
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(value);
+}
+
 const getRowActions = (row) => {
     return [
         { type: 'view', icon: 'eye', color: 'blue' }
@@ -143,9 +152,12 @@ const handleAction = (type, row) => {
 }
 
 const columns = [
-  { key: 'tanggal_pengusulan', label: 'Tanggal Usulan' }, 
+  { key: 'perihal_tugas', label: 'Nama Kegiatan' },
+  { key: 'tanggal_pengusulan', label: 'Tanggal Usulan' },
+  { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' }, 
   { key: 'no_usulan_surat', label: 'No. Usulan Surat', slot: 'no_usulan_surat' }, 
   { key: 'sumber_dana', label: 'Sumber Dana' },
+  { key: 'nominal_biaya', label: 'Total Dana', slot: 'nominal_biaya' },
   { key: 'status_surat', label: 'Status', slot: 'status_surat' },
   { key: 'actions', label: 'Aksi', slot: 'actions' }
 ]

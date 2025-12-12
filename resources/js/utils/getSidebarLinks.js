@@ -100,6 +100,12 @@ export default function getSidebarLinks(role) {
           route: "direktur.daftarpersetujuan",
           icon: "square-check",
           component: "Direktur/DaftarPersetujuan"
+        },
+        {
+          name: "History",
+          route: "direktur.history",
+          icon: "clock",
+          component: "Direktur/DirekturHistory"
         }
       ];
 

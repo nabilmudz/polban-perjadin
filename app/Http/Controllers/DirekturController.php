@@ -13,11 +13,34 @@ class DirekturController extends Controller
     {
         return [
             'data' => $paginate->getCollection()->transform(function ($item) {
+                $item->loadMissing('detailPelaksanaTugas.personable');
+
+                $personel = $item->detailPelaksanaTugas->map(function ($d) {
+                    $p = $d->personable;
+                    if (!$p) return null; 
+
+                    $isMhs = str_contains($d->personable_type, 'Mahasiswa');
+
+                    return [
+                        'id'       => $p->id,
+                        'type'     => $isMhs ? 'mahasiswa' : 'pegawai',
+                        'nama'     => $p->nama,
+                        'nip'      => $isMhs ? null : ($p->nip ?? null),
+                        'nim'      => $isMhs ? ($p->nim ?? null) : null,
+                        'pangkat'  => $p->pangkat ?? null,
+                        'golongan' => $p->golongan ?? null,
+                        'jabatan'  => $p->jabatan ?? null,
+                        'jurusan'  => $p->jurusan ?? null,
+                        'prodi'    => $p->prodi ?? null,
+                    ];
+                })->filter(); 
+
                 return [
                     ...$item->toArray(),
                     'nama_kegiatan' => $item->nama_kegiatan ?? $item->perihal_tugas, 
                     'created_at' => $item->created_at->format('Y-m-d'),
                     'tanggal_pelaksanaan' => $item->tanggal_berangkat ? $item->tanggal_berangkat->format('Y-m-d') : '-',
+                    'personel' => $personel,
                 ];
             }),
             'meta' => [
@@ -37,7 +60,7 @@ class DirekturController extends Controller
         $user = auth()->user();
 
         $query = SuratTugas::query()
-            ->where('status_surat', 'pending_direktur_signature');
+            ->with(['detailPelaksanaTugas.personable']); 
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -80,12 +103,14 @@ class DirekturController extends Controller
     {
         $filters = $request->only(['search', 'status', 'from', 'to']);
 
-        $query = SuratTugas::with(['pengusul', 'wadir'])
+        $query = SuratTugas::with(['pengusul', 'wadir', 'detailPelaksanaTugas.personable'])
             ->where('status_surat', 'pending_direktur_signature');
 
         if ($request->search) {
             $query->where(function($q) use ($request) {
-                $q->where('perihal_tugas', 'like', "%{$request->search}%");
+                $q->where('nama_kegiatan', 'like', "%{$request->search}%")
+                  ->orWhere('perihal_tugas', 'like', "%{$request->search}%")
+                  ->orWhere('nomor_surat_resmi', 'like', "%{$request->search}%");
             });
         }
 
@@ -94,6 +119,71 @@ class DirekturController extends Controller
         return Inertia::render('Direktur/DaftarPersetujuan', [
             'suratTugas' => $this->mapPagination($paginate),
             'filters' => $filters,
+        ]);
+    }
+
+    public function history(Request $request)
+    {
+        $filters = $request->only(['search', 'status', 'from', 'to']);
+
+        $statuses = [
+            'published',
+            'awaiting_proof_upload',
+            'under_bku_review',
+            'returned_for_correction',
+            'completed'
+        ];
+
+        $query = SuratTugas::with(['detailPelaksanaTugas.personable'])
+            ->whereIn('status_surat', $statuses);
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama_kegiatan', 'like', "%{$request->search}%")
+                  ->orWhere('perihal_tugas', 'like', "%{$request->search}%")
+                  ->orWhere('nomor_surat_resmi', 'like', "%{$request->search}%");
+            });
+        }
+
+        $paginate = $query->latest()->paginate(10)->withQueryString();
+
+        return Inertia::render('Direktur/DirekturHistory', [
+            'history' => $this->mapPagination($paginate),
+            'filters' => $filters,
+        ]);
+    }
+
+    public function show($id)
+    {
+        $surat = SuratTugas::with(['detailPelaksanaTugas.personable', 'user'])->findOrFail($id);
+        
+        $surat->loadMissing('detailPelaksanaTugas.personable');
+        $personel = $surat->detailPelaksanaTugas->map(function ($d) {
+            $p = $d->personable;
+            if (!$p) return null;
+            $isMhs = str_contains($d->personable_type, 'Mahasiswa');
+            return [
+                'id'       => $p->id,
+                'type'     => $isMhs ? 'mahasiswa' : 'pegawai',
+                'nama'     => $p->nama,
+                'nip'      => $isMhs ? null : ($p->nip ?? null),
+                'nim'      => $isMhs ? ($p->nim ?? null) : null,
+                'pangkat'  => $p->pangkat ?? null,
+                'golongan' => $p->golongan ?? null,
+                'jabatan'  => $p->jabatan ?? null,
+                'jurusan'  => $p->jurusan ?? null,
+                'prodi'    => $p->prodi ?? null,
+            ];
+        })->filter();
+
+        $suratData = [
+            ...$surat->toArray(),
+            'personel' => $personel, 
+            'created_at_formatted' => $surat->created_at->format('Y-m-d'),
+        ];
+
+        return Inertia::render('Direktur/ReviewDirektur', [
+            'data' => $suratData,
         ]);
     }
 

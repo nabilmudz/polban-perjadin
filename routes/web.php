@@ -130,6 +130,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/persetujuan/{id}/revise', [DirekturController::class, 'revise'])
             ->name('persetujuan.revise');
 
+        // History Direktur Page
+        Route::get('/history', [DirekturController::class, 'history'])
+            ->name('history');
     });
 
     // BKU routes
