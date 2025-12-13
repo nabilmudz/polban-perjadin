@@ -40,6 +40,8 @@ class DirekturController extends Controller
                     'nama_kegiatan' => $item->nama_kegiatan ?? $item->perihal_tugas,
                     'created_at' => $item->created_at->format('Y-m-d'),
                     'tanggal_pelaksanaan' => $item->tanggal_berangkat ? $item->tanggal_berangkat->format('Y-m-d') : '-',
+                    'no_usulan_surat' => $item->nomor_surat_usulan_jurusan ?? '-', 
+                    // ----------------------------------------------------------
                     'personel' => $personel,
                 ];
             }),
@@ -62,7 +64,6 @@ class DirekturController extends Controller
         $query = SuratTugas::query()
             ->with(['detailPelaksanaTugas.personable']);
 
-        // Filter by Search
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('perihal_tugas', 'like', "%{$request->search}%")
@@ -70,12 +71,10 @@ class DirekturController extends Controller
             });
         }
 
-        // Filter by Status
         if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status_surat', $request->status);
         }
 
-        // Filter by Preset Range (Weekly, Monthly, Yearly)
         if ($request->filled('range') && $request->range !== 'all') {
             $now = now();
             $from = null;
@@ -96,7 +95,6 @@ class DirekturController extends Controller
             }
         }
 
-        // Filter by Explicit Date Range (From - To)
         if ($request->filled('from') && $request->filled('to')) {
             $query->whereBetween('created_at', [$request->from, $request->to]);
         }
@@ -144,7 +142,6 @@ class DirekturController extends Controller
             });
         }
 
-        // Filter by Preset Range
         if (!empty($filters['range']) && $filters['range'] !== 'all') {
             $now = now();
             $from = null;
@@ -157,7 +154,6 @@ class DirekturController extends Controller
             }
         }
 
-        // Filter by Explicit Date Range
         if (!empty($filters['from']) && !empty($filters['to'])) {
              $query->whereBetween('created_at', [$filters['from'], $filters['to']]);
         }
@@ -186,7 +182,6 @@ class DirekturController extends Controller
         $query = SuratTugas::with(['detailPelaksanaTugas.personable'])
             ->whereIn('status_surat', $statuses);
 
-        // Filter by Search
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('nama_kegiatan', 'like', "%{$request->search}%")
@@ -199,7 +194,6 @@ class DirekturController extends Controller
             $query->where('status_surat', $request->status);
         }
 
-        // Filter by Preset Range
         if (!empty($filters['range']) && $filters['range'] !== 'all') {
             $now = now();
             $from = null;
@@ -212,7 +206,6 @@ class DirekturController extends Controller
             }
         }
 
-        // Filter by Explicit Date Range
         if (!empty($filters['from']) && !empty($filters['to'])) {
              $query->whereBetween('created_at', [$filters['from'], $filters['to']]);
         }
@@ -250,7 +243,9 @@ class DirekturController extends Controller
 
         $suratData = [
             ...$surat->toArray(),
-            'personel' => $personel, 
+            'personel' => $personel,
+            'no_usulan_surat' => $surat->nomor_surat_usulan_jurusan ?? '-',
+            // --------------------------------------------------------- 
             'created_at_formatted' => $surat->created_at->format('Y-m-d'),
         ];
 

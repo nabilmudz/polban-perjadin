@@ -19,6 +19,9 @@
           @changePage="(page) => router.get(route('bku.historyperjalanandinas'), { ...filters, page }, { preserveState: true, replace: true })"
         >
            <template #no="{ index }">{{ (history.meta.from || 1) + index }}</template>
+           <template #created_at="{ row }">{{ formatDate(row.created_at) }}</template>
+           <template #tanggal_pelaksanaan="{ row }">{{ formatDate(row.tanggal_pelaksanaan) }}</template>
+           
            <template #diusulkan_kepada="{ row }"><span class="text-gray-700">{{ row.diusulkan_kepada }}</span></template>
            <template #nominal_biaya="{ row }">{{ formatCurrency(row.nominal_biaya) }}</template>
            <template #status_surat="{ row }"><StatusBadges :status="row.status_surat" /></template>
@@ -97,6 +100,14 @@ watch(
   { deep: true }
 )
 
+const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    if (dateString.length === 10 && dateString.includes('-')) return dateString;
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString; 
+    return date.toISOString().split('T')[0];
+}
+
 const formatCurrency = (value) => {
   if (!value) return 'Rp 0';
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value);
@@ -112,8 +123,8 @@ const openModal = (row) => {
 
 const columns = [
   { key: 'perihal_tugas', label: 'Nama Kegiatan' },
-  { key: 'created_at', label: 'Tanggal Pengusulan' },
-  { key: 'tanggal_pelaksanaan', label: 'Tanggal Berangkat' },
+  { key: 'created_at', label: 'Tanggal Pengusulan', slot: 'created_at' },
+  { key: 'tanggal_pelaksanaan', label: 'Tanggal Berangkat', slot: 'tanggal_pelaksanaan' },
   { key: 'nomor_surat_usulan_jurusan', label: 'Nomor Surat Usulan' }, 
   { key: 'diusulkan_kepada', label: 'Diusulkan Kepada', slot: 'diusulkan_kepada' },
   { key: 'sumber_dana', label: 'Sumber Dana' }, 

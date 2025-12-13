@@ -125,7 +125,6 @@ const formatCurrency = (value) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value);
 }
 
-// Modal State
 const showViewModal = ref(false)
 const selectedData = ref(null)
 
@@ -135,7 +134,6 @@ const getRowActions = (row) => {
 
 const handleAction = (type, row) => {
     if (type === 'view') {
-        // Instead of redirecting, we set the data and open the modal
         selectedData.value = row
         showViewModal.value = true
     }
