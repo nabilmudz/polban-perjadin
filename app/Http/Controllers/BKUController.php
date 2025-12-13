@@ -56,23 +56,23 @@ class BKUController extends Controller
 
     public function dashboard(Request $request)
     {
+        $totalPengusulan = SuratTugas::count();
+        
+        $statusCounts = [
+            'completed' => SuratTugas::where('status_surat', 'completed')->count(),
+            'published' => SuratTugas::where('status_surat', 'published')->count(), // Belum Selesai (Active/No Report)
+            'on_duty'   => SuratTugas::whereIn('status_surat', ['approved', 'published'])
+                            ->whereDate('tanggal_berangkat', '<=', now())
+                            ->whereDate('tanggal_kembali', '>=', now())
+                            ->count(),
+            'revision_requested' => SuratTugas::whereIn('status_surat', ['revision_requested', 'returned_for_correction'])->count(),
+        ];
+
         $bkuStatuses = [
             'awaiting_proof_upload', 
             'under_bku_review', 
             'returned_for_correction', 
             'completed'
-        ];
-
-        $stats = [
-            'total_pengusulan' => SuratTugas::whereIn('status_surat', $bkuStatuses)->count(),
-            'surat_tugas_baru' => SuratTugas::where('status_surat', 'under_bku_review')->count(),
-            'bertugas' => SuratTugas::where('status_surat', 'approved')
-                            ->whereDate('tanggal_berangkat', '<=', now())
-                            ->whereDate('tanggal_kembali', '>=', now())
-                            ->count(),
-            'laporan_belum_selesai' => SuratTugas::where('status_surat', 'completed')
-                                            ->doesntHave('laporan') 
-                                            ->count(),
         ];
 
         $query = SuratTugas::query()
@@ -95,9 +95,10 @@ class BKUController extends Controller
             });
 
         return Inertia::render('BKU/BKUDashboard', [
-            'stats' => $stats,
-            'latestSurat' => $latestSurat,
-            'filters' => $request->only(['search']),
+            'statusCounts'    => $statusCounts,    
+            'totalPengusulan' => $totalPengusulan, 
+            'latestSurat'     => $latestSurat,
+            'filters'         => $request->only(['search']),
         ]);
     }
 

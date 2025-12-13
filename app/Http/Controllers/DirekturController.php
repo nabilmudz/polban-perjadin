@@ -79,13 +79,17 @@ class DirekturController extends Controller
 
         $paginate = $query->latest()->paginate(5)->withQueryString();
 
-        $stats = [
-            'total_ulasan' => SuratTugas::count(),
-            'bertugas' => SuratTugas::where('status_surat', 'approved')
+        $statusCounts = [
+            'completed' => SuratTugas::where('status_surat', 'completed')->count(),
+            'published' => SuratTugas::where('status_surat', 'published')->count(), 
+            'on_duty' => SuratTugas::where('status_surat', 'approved') 
                             ->whereDate('tanggal_berangkat', '<=', now())
                             ->whereDate('tanggal_kembali', '>=', now())
                             ->count(),
+            'revision_requested' => SuratTugas::where('status_surat', 'revision_requested')->count(),
         ];
+
+        $totalPengusulan = SuratTugas::count();
 
         return inertia('Direktur/DirekturDashboard', [
             'suratTugas' => $this->mapPagination($paginate), 
@@ -95,7 +99,8 @@ class DirekturController extends Controller
                 'from' => $request->from,
                 'to' => $request->to ?: now()->toDateString(),
             ],
-            'stats' => $stats, 
+            'totalPengusulan' => $totalPengusulan,
+            'statusCounts' => $statusCounts,
         ]);
     }
     

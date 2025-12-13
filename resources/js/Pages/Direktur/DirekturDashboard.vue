@@ -9,18 +9,35 @@
         <h1 class="text-3xl font-bold mb-4">Dashboard Direktur</h1>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard 
-            title="Total Ulasan" 
-            icon="file" 
-            :count="stats?.total_ulasan || 0" 
-            color="blue"
-          />
-          <StatCard 
-            title="Bertugas" 
-            icon="user" 
-            :count="stats?.bertugas || 0" 
-            color="yellow"
-          />
+            <StatCard
+                title="Total Pengusulan"
+                icon="file"
+                :count="totalPengusulan || 0"
+            />
+            <StatCard
+                title="Laporan Selesai"
+                icon="square-check"
+                :count="statusCounts?.completed || 0"
+                color="green"
+            />
+            <StatCard
+                title="Belum Selesai"
+                icon="folder-closed"
+                :count="statusCounts?.published || 0"
+                color="purple"
+            />
+            <StatCard
+                title="Bertugas"
+                icon="user"
+                :count="statusCounts?.on_duty || 0"
+                color="yellow"
+            />
+            <StatCard
+                title="Dikembalikan"
+                icon="circle-left"
+                :count="statusCounts?.revision_requested || 0"
+                color="red"
+            />
         </div>
       </div>
 
@@ -98,7 +115,8 @@ import { getRowActions } from '@/utils/rowAction'
 const props = defineProps({
   suratTugas: Object,
   filters: Object,
-  stats: Object 
+  statusCounts: Object,
+  totalPengusulan: Number  
 })
 
 const page = usePage()
@@ -147,7 +165,7 @@ const columns = [
   { key: 'nama_kegiatan', label: 'Nama Kegiatan' },
   { key: 'created_at', label: 'Tanggal Pengusulan' },
   { key: 'tanggal_berangkat', label: 'Tanggal Berangkat', slot: 'tanggal_berangkat' },
-  { key: 'no_usulan_surat', label: 'No. Usulan Surat', slot: 'no_usulan_surat' }, 
+  { key: 'no_usulan_surat', label: 'Nomor Surat Usulan', slot: 'no_usulan_surat' }, 
   { key: 'sumber_dana', label: 'Sumber Dana' },
   { key: 'nominal_biaya', label: 'Total Dana', slot: 'nominal_biaya' },
   { key: 'status_surat', label: 'Status', slot: 'status_surat' },

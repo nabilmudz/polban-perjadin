@@ -108,7 +108,7 @@ const columns = [
   { key: 'nama_kegiatan', label: 'Nama Kegiatan' },
   { key: 'created_at', label: 'Tanggal Pengusulan' },
   { key: 'tanggal_pelaksanaan', label: 'Tanggal Pelaksanaan' },
-  { key: 'nomor_surat_resmi', label: 'Nomor Surat Tugas' },
+  { key: 'no_usulan_surat', label: 'Nomor Surat Usulan' },
   { key: 'sumber_dana', label: 'Sumber Dana' },
   { key: 'nominal_biaya', label: 'Total Dana', slot: 'nominal_biaya' },
   { key: 'status_surat', label: 'Status', slot: 'status_surat' },

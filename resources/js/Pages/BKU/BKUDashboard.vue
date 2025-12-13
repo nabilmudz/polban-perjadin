@@ -8,11 +8,36 @@
       <div class="p-8">
         <h1 class="text-3xl font-bold mb-6 text-gray-800">Dashboard BKU</h1>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-          <StatCard title="Total Pengusulan" icon="file" :count="stats?.total_pengusulan || 0" color="blue" />
-          <StatCard title="Verifikasi Baru" icon="envelope" :count="stats?.surat_tugas_baru || 0" color="green" />
-          <StatCard title="Bertugas" icon="users" :count="stats?.bertugas || 0" color="yellow" />
-          <StatCard title="Laporan Pending" icon="circle-exclamation" :count="stats?.laporan_belum_selesai || 0" color="red" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <StatCard
+                title="Total Pengusulan"
+                icon="file"
+                :count="totalPengusulan || 0"
+            />
+            <StatCard
+                title="Laporan Selesai"
+                icon="square-check"
+                :count="statusCounts?.completed || 0"
+                color="green"
+            />
+            <StatCard
+                title="Belum Selesai"
+                icon="folder-closed"
+                :count="statusCounts?.published || 0"
+                color="purple"
+            />
+            <StatCard
+                title="Bertugas"
+                icon="user"
+                :count="statusCounts?.on_duty || 0"
+                color="yellow"
+            />
+            <StatCard
+                title="Dikembalikan"
+                icon="circle-left"
+                :count="statusCounts?.revision_requested || 0"
+                color="red"
+            />
         </div>
 
         <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
@@ -83,7 +108,8 @@ import { reactive, computed, watch } from 'vue'
 import { Head, router, usePage } from '@inertiajs/vue3'
 
 const props = defineProps({
-  stats: Object,
+  statusCounts: Object,
+  totalPengusulan: Number,
   latestSurat: Object, 
   filters: Object
 })
