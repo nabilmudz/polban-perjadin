@@ -7,7 +7,6 @@
     <div class="p-8">
       <h1 class="text-3xl font-bold">Persetujuan Surat Tugas</h1>
 
-      <!-- DETAIL SURAT -->
       <div class="mt-6">
         <LaporanSurat :surat="surat" />
       </div>
@@ -15,7 +14,6 @@
 
     <div class="px-10 pb-20">
 
-      <!-- NOTE KETERANGAN -->
       <h2 class="text-xl font-semibold mb-3">
         Catatan / Komentar (Wajib jika Revisi / Ditolak)
       </h2>
@@ -27,7 +25,6 @@
         class="w-full border rounded-md p-3 text-gray-700 focus:ring focus:ring-blue-300"
       ></textarea>
 
-      <!-- BUTTON AKSI -->
       <div class="flex justify-end mt-6 gap-4">
 
         <button
@@ -73,12 +70,9 @@ import { Head, useForm, usePage, router } from '@inertiajs/vue3'
 import { reactive } from 'vue'
 import LaporanSurat from '@/Components/LaporanSurat.vue'
 
-// props dari controller
 const page = usePage()
 const user = page.props.auth.user
 const surat = page.props.data
-
-// form inertia
 const form = useForm({
   status_surat: '',
   catatan_revisi: '',
@@ -89,7 +83,6 @@ const goDashboard = () => {
 }
 
 const submit = (status) => {
-  // jika status revisi atau tolak → harus ada catatan
   if (['revision_requested', 'rejected'].includes(status) && !form.catatan_revisi) {
     alert('Catatan wajib diisi untuk revisi atau tolak.')
     return

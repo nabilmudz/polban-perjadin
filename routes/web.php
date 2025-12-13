@@ -49,7 +49,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Pengusul 
     Route::prefix('pengusul')
-        ->middleware(['auth', 'role:pengusul|wadir1|wadir2|wadir3|wadir4|sekdir'])
+        // Check and ask for direktur and bku
+        ->middleware(['auth', 'role:pengusul|wadir1|wadir2|wadir3|wadir4|sekdir|direktur|bku'])
         ->group(function () {
             Route::get('/dashboard', [PengusulController::class, 'dashboardPengusulan'])->name('pengusul.dashboard');
             Route::get('/pengusulan', [PengusulController::class, 'daftarPengusulan'])->name('pengusul.pengajuan');
@@ -65,8 +66,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/daftarlaporan', [PelaksanaController::class, 'daftarLaporan'])->name('daftarlaporan');
         Route::get('/historypelaksana', [PelaksanaController::class, 'historypelaksana'])->name('historypelaksana');
         Route::get('/status-laporan', [PelaksanaController::class, 'statusLaporan'])->name('status-laporan');
-        Route::post('/pelaksana/bukti/{laporan}', [PelaksanaController::class, 'uploadBukti'])->name('bukti.upload');
-
+        Route::get('/bukti/{laporan}', [PelaksanaController::class, 'uploadBuktiPage'])->name('bukti.page');
+        Route::post('/bukti/{laporan}', [PelaksanaController::class, 'storeBukti'])->name('bukti.store');
+        Route::get('/laporan/{laporan}', [PelaksanaController::class, 'showLaporan'])->name('laporan.show');
+        Route::get('/laporan/{laporan}/download', [PelaksanaController::class, 'download'])->name('laporan.download');
     });
 
     // Wadir 1-4
@@ -134,6 +137,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/persetujuan/{id}/revise', [DirekturController::class, 'revise'])
             ->name('persetujuan.revise');
 
+        // History Direktur Page
+        Route::get('/history', [DirekturController::class, 'history'])
+            ->name('history');
     });
 
     // BKU routes

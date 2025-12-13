@@ -74,17 +74,17 @@ export default function getSidebarLinks(role) {
           component: "Pelaksana/DaftarLaporan"
         },
         {
+          name: "Status Laporan",
+          route: "pelaksana.status-laporan",
+          icon: "file-search",
+          component: "Pelaksana/StatusLaporan"
+        },
+        {
           name: "History",
           route: "pelaksana.historypelaksana",
           icon: "clock",
           component: "Pelaksana/HistoryPelaksana"
         },
-        {
-          name: "Status Laporan",
-          route: "pelaksana.status-laporan",
-          icon: "file-search",
-          component: "Pelaksana/StatusLaporan"
-        }
       ];
 
     case 'direktur':
@@ -96,10 +96,22 @@ export default function getSidebarLinks(role) {
           component: "Dashboards/DirekturDashboard"
         },
         {
+          name: "Tambah Pengusulan",
+          route: "pengusul.form",
+          icon: "file-lines",
+          component: "Pengusul/FormPengusulan"
+        },
+        {
           name: "Daftar Persetujuan",
           route: "direktur.daftarpersetujuan",
           icon: "square-check",
           component: "Direktur/DaftarPersetujuan"
+        },
+        {
+          name: "History",
+          route: "direktur.history",
+          icon: "clock",
+          component: "Direktur/DirekturHistory"
         }
       ];
 
@@ -110,6 +122,12 @@ export default function getSidebarLinks(role) {
           route: "bku.dashboard",
           icon: "house",
           component: "Dashboards/BKUDashboard"
+        },
+        {
+          name: "Tambah Pengusulan",
+          route: "pengusul.form",
+          icon: "file-lines",
+          component: "Pengusul/FormPengusulan"
         },
         {
           name: "Laporan & Bukti Perjalanan Dinas",

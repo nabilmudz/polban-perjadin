@@ -1,4 +1,6 @@
 <template>
+  <Head title="Dashboard" />
+
   <AppLayout>
     <div class="bg-white w-full rounded-md shadow overflow-hidden">
       <HeaderPage />
@@ -7,16 +9,17 @@
         <h1 class="text-3xl font-bold mb-6 text-gray-800">Dashboard BKU</h1>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-          <StatCard title="Total Pengusulan" icon="file" :count="stats.total_pengusulan" color="blue" />
-          <StatCard title="Surat Tugas Baru" icon="plus" :count="stats.surat_tugas_baru" color="green" />
-          <StatCard title="Bertugas" icon="user" :count="stats.bertugas" color="blue" />
-          <StatCard title="Laporan Belum Selesai" icon="folder-closed" :count="stats.laporan_belum_selesai" color="red" />
+          <StatCard title="Total Pengusulan" icon="file" :count="stats?.total_pengusulan || 0" color="blue" />
+          <StatCard title="Verifikasi Baru" icon="envelope" :count="stats?.surat_tugas_baru || 0" color="green" />
+          <StatCard title="Bertugas" icon="users" :count="stats?.bertugas || 0" color="yellow" />
+          <StatCard title="Laporan Pending" icon="circle-exclamation" :count="stats?.laporan_belum_selesai || 0" color="red" />
         </div>
 
-        <div class="bg-white  rounded-xl p-6">
+        <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
           <div class="flex justify-between items-end mb-4">
              <div>
-                 <h3 class="text-lg font-bold text-gray-800">Detail Penugasan</h3>
+                 <h3 class="text-lg font-bold text-gray-800">Daftar Penugasan</h3>
+                 <p class="text-sm text-gray-500">Kelola validasi keuangan surat tugas</p>
              </div>
           </div>
           
@@ -27,38 +30,42 @@
             :links="suratData.links"
             :filters="filters"
             route-name="bku.dashboard"
-            @update:filters="Object.assign(filters, $event)"
-            @changePage="(page) => router.get(route('bku.dashboard'), { ...filters, page }, { preserveState: true, replace: true })"
+            @update:filters="handleFilterUpdate"
+            @changePage="handlePageChange"
           >
             <template #no="{ index }">
                 {{ (suratData.meta.from || 1) + index }}
             </template>
 
-            <template #created_at="{ row }">
-                {{ formatDate(row.created_at) }}
+            <template #no_usulan_surat="{ row }">
+                <span class="font-medium text-gray-700">{{ row.no_usulan_surat }}</span>
             </template>
 
-            <template #tanggal_berangkat="{ row }">
-                {{ formatDate(row.tanggal_berangkat) }}
+            <template #nominal_biaya="{ row }">
+               {{ formatCurrency(row.nominal_biaya) }}
             </template>
 
-            <template #status_laporan="{ row }">
-               <span 
-                  class="px-3 py-1 rounded-md text-xs font-bold text-white"
-                  :class="{
-                      'bg-yellow-500': row.badge_color === 'yellow',
-                      'bg-green-600': row.badge_color === 'green',
-                      'bg-blue-500': row.badge_color === 'blue',
-                      'bg-gray-400': row.badge_color === 'gray',
-                  }"
-               >
-                  {{ row.display_status_laporan }}
-               </span>
+            <template #status_surat="{ row }">
+               <StatusBadges :status="row.status_surat" />
             </template>
 
-            <template #tanggungan_biaya="{ row }">
-                {{ row.tanggungan_biaya || '-' }}
-            </template>
+            <template #actions="{ row }">
+            <div class="flex gap-2">
+              <button
+                v-for="action in getRowActions(row)"
+                :key="action.type"
+                @click="handleAction(action.type, row)"
+                :title="action.type"
+                class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90"
+                :class="{
+                  'bg-blue-500 text-white': action.color === 'blue',
+                  'bg-green-500 text-white': action.color === 'green',
+                }"
+              >
+                <font-awesome-icon :icon="['far', action.icon]" class="text-md" />
+              </button>
+            </div>
+          </template>
           </DataTable>
         </div>
       </div>
@@ -71,14 +78,17 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import StatCard from '@/Components/StatCard.vue' 
 import DataTable from '@/Components/Table/DataTable.vue'
-import { reactive, computed } from 'vue'
-import { router } from '@inertiajs/vue3'
+import StatusBadges from '@/Components/Table/StatusBadges.vue'
+import { reactive, computed, watch } from 'vue'
+import { Head, router, usePage } from '@inertiajs/vue3'
 
 const props = defineProps({
   stats: Object,
   latestSurat: Object, 
   filters: Object
 })
+
+const page = usePage()
 
 const suratData = computed(() => {
     const raw = props.latestSurat || {};
@@ -87,9 +97,9 @@ const suratData = computed(() => {
         meta: {
             current_page: raw.current_page || 1,
             last_page: raw.last_page || 1,
-            per_page: raw.per_page || 5,
+            per_page: raw.per_page || 10,
             total: raw.total || 0,
-            from: raw.from || 0, 
+            from: raw.from || 0,
             to: raw.to || 0
         },
         links: raw.links || []
@@ -100,24 +110,55 @@ const filters = reactive({
   search: props.filters?.search || ''
 })
 
-const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString; 
-    
-    return new Intl.DateTimeFormat('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-    }).format(date);
+let searchTimeout;
+
+watch(
+  () => filters.search,
+  (value) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        router.get(route('bku.dashboard'), { search: value }, { preserveState: true, replace: true })
+    }, 300);
+  }
+)
+
+const handleFilterUpdate = (newFilters) => {
+    Object.assign(filters, newFilters)
+}
+
+const handlePageChange = (page) => {
+    router.get(route('bku.dashboard'), { ...filters, page }, { preserveState: true, replace: true })
+}
+
+const formatCurrency = (value) => {
+  if (!value) return 'Rp 0';
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(value);
+}
+
+const getRowActions = (row) => {
+    return [
+        { type: 'view', icon: 'eye', color: 'blue' }
+    ];
+}
+
+const handleAction = (type, row) => {
+    if (type === 'view') {
+        router.get(route('bku.verifikasi', row.id)); 
+    }
 }
 
 const columns = [
-  { key: 'created_at', label: 'Tanggal Pengusulan', slot: 'tanggal_pengusulan' }, 
-  { key: 'tanggal_berangkat', label: 'Tanggal Berangkat', slot: 'tanggal_berangkat' }, 
-  { key: 'nomor_surat_resmi', label: 'Nomor Surat Tugas' },
+  { key: 'perihal_tugas', label: 'Nama Kegiatan' },
+  { key: 'tanggal_pengusulan', label: 'Tanggal Usulan' },
+  { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' }, 
+  { key: 'no_usulan_surat', label: 'No. Usulan Surat', slot: 'no_usulan_surat' }, 
   { key: 'sumber_dana', label: 'Sumber Dana' },
-  { key: 'status_laporan', label: 'Status Laporan', slot: 'status_laporan' },
-  { key: 'nominal_dana', label: 'Tanggungan Biaya', slot: 'tanggungan_biaya' },
+  { key: 'nominal_biaya', label: 'Total Dana', slot: 'nominal_biaya' },
+  { key: 'status_surat', label: 'Status', slot: 'status_surat' },
+  { key: 'actions', label: 'Aksi', slot: 'actions' }
 ]
 </script>

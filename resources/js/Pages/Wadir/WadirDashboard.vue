@@ -1,147 +1,140 @@
 <template>
-    <AppLayout>
-        <div class="bg-white w-full rounded-md shadow">
-            <HeaderPage />
+  <Head title="Dashboard Wadir" />
 
-            <div class="p-8">
-                <h1 class="text-3xl font-bold mb-4">Dashboard Wadir</h1>
+  <AppLayout>
+    <div class="bg-white w-full rounded-md shadow">
+      <HeaderPage />
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
-                    <StatCard title="Total Pengusulan" icon="file" :count="totalPengusulan" />
-                    <StatCard title="Laporan Selesai" icon="square-check" :count="statusCounts.selesai || 0" color="green" />
-                    <StatCard title="Belum Selesai" icon="folder-closed" :count="statusCounts.published || 0" color="purple" />
-                    <StatCard title="Bertugas" icon="user" :count="statusCounts.on_duty || 0" color="yellow" />
-                    <StatCard title="Dikembalikan" icon="circle-left" :count="statusCounts.revision_requested || 0" color="red" />
-                </div>
-            </div>
+      <div class="p-8">
+        <h1 class="text-3xl font-bold mb-4">Dashboard Wadir</h1>
 
-            <div class="p-8">
-                <DataTable
-                    :columns="columns"
-                    :data="suratTugas.data"
-                    :meta="suratTugas.meta"
-                    :links="suratTugas.links"
-                    :filters="filters"
-                    :status-options="statusOptions"
-                    route-name="wadir.dashboard"
-                    @update:filters="Object.assign(filters, $event)"
-                    @changePage="(page) =>
-                      router.get(route('pengusul.dashboard'), { ...filters }, {
-                        preserveState: true,
-                        replace: true
-                      })
-                    "
-                  >
-                    <template #status_surat="{ row }">
-                      <StatusBadges :status="row.status_surat" />
-                    </template>
-                    <template #action="{ row }">
-                      <div class="flex gap-2">
-                        <button
-                          v-for="action in getRowActions(row, currentUser.role)"
-                          :key="action.type"
-                          @click="handleAction(action.type, row)"
-                          :title="action.type"
-                          class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90"
-                          :class="{
-                            'bg-blue-500 text-white': action.color === 'blue',
-                            'bg-green-500 text-white': action.color === 'green',
-                            'bg-red-500 text-white': action.color === 'red',
-                            'bg-yellow-400 text-black': action.color === 'yellow',
-                            'bg-purple-500 text-white': action.color === 'purple',
-                          }"
-                        >
-                          <font-awesome-icon :icon="['far', action.icon]" class="text-md" />
-                        </button>
-                      </div>
-                    </template>
-                </DataTable>
-            </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+          <StatCard title="Total Pengusulan" icon="file" :count="stats.total" />
+          <StatCard title="Usulan Baru" icon="plus-square" color="green" :count="stats.baru" />
+          <StatCard title="Proses Direktur" icon="clock" color="yellow" :count="stats.proses_direktur" />
+          <StatCard title="Bertugas" icon="user" color="purple" :count="stats.bertugas" />
+          <StatCard title="Ditolak" icon="times-circle" color="red" :count="stats.rejected" />
         </div>
-    </AppLayout>
+      </div>
+
+      <div class="p-8">
+        <DataTable
+          :columns="columns"
+          :data="suratTugas.data"
+          :meta="suratTugas.meta"
+          :links="suratTugas.links"
+          :filters="filters"
+          @update:filters="updateFilters"
+          @changePage="changePage"
+        >
+          <div class="mb-4 flex items-center gap-3">
+            <label class="text-sm text-gray-600">Periode:</label>
+            <select v-model="filters.range" class="border rounded px-2 py-1">
+              <option value="">Semua</option>
+              <option value="weekly">Minggu</option>
+              <option value="monthly">Bulan</option>
+              <option value="yearly">Tahun</option>
+            </select>
+          </div>
+
+          <template #status_surat="{ row }">
+            <StatusBadges :status="row.status_surat" />
+          </template>
+
+          <template #total_dana="{ row }">
+            Rp {{ Number(row.total_dana).toLocaleString('id-ID') }}
+          </template>
+
+          <template #action="{ row }">
+            <div class="flex gap-2">
+              <button
+                v-for="action in getRowActions(row, currentUser.role)"
+                :key="action.type"
+                @click="handleAction(action.type, row)"
+                class="px-2 py-1 rounded shadow"
+                :class="buttonClass(action.color)"
+              >
+                <font-awesome-icon :icon="['far', action.icon]" />
+              </button>
+            </div>
+          </template>
+        </DataTable>
+      </div>
+    </div>
+  </AppLayout>
 </template>
 
 <script setup>
+import { Head, router, usePage } from '@inertiajs/vue3'
+import { reactive, computed } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
-import StatCard from '@/Components/StatCard.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
+import StatCard from '@/Components/StatCard.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
-import { usePage, router } from '@inertiajs/vue3'
-import { ref, reactive, onMounted } from 'vue'
-import debounce from 'lodash.debounce'
+import { getRowActions } from '@/utils/rowAction'
 
-const { props } = usePage()
-const suratTugas = props.suratTugas
-const filters = ref(props.filters)
-const user = usePage().props.auth.user
-const dashboardRoute = `${user.role}.dashboard`
+const page = usePage()
+const currentUser = page.props.auth.user
 
-// --------------------------
-// 1. Definisi stats / counts
-// --------------------------
-const totalPengusulan = ref(props.stats?.total_pengusulan || 0)
+const suratTugas = computed(() => page.props.suratTugas)
+const stats = computed(() => page.props.stats)
 
-const statusCounts = reactive({
-  selesai: props.stats?.selesai || 0,
-  published: props.stats?.published || 0,
-  on_duty: props.stats?.on_duty || 0,
-  revision_requested: props.stats?.revision_requested || 0,
+const filters = reactive({
+  search: page.props.filters?.search ?? '',
+  status: page.props.filters?.status ?? '',
+  from: page.props.filters?.from ?? '',
+  to: page.props.filters?.to ?? '',
+  range: page.props.filters?.range ?? '',
+  page: page.props.filters?.page ?? 1,
 })
 
-// --------------------------
-// 2. Columns & actions
-// --------------------------
 const columns = [
   { key: 'perihal_tugas', label: 'Nama Kegiatan' },
   { key: 'created_at', label: 'Tanggal Pengusulan' },
   { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
-  { key: 'nomor_surat_usulan_jurusan', label: 'Nomor Surat Usulan' },
+  { key: 'nomor_surat_usulan_jurusan', label: 'Nomor Surat' },
   { key: 'sumber_dana', label: 'Sumber Dana' },
-  // { key: 'surat_undangan', label: 'Surat Undangan' },
-  { key: 'action', label: 'Aksi', fixedWidth: '180px' }
+  { key: 'total_dana', label: 'Total Dana' },
+  { key: 'status_surat', label: 'Status' },
+  { key: 'action', label: 'Aksi', fixedWidth: '150px' },
 ]
 
-const handleView = (row) => {
-  router.get(route(`${user.role}.persetujuan.show`, row.surat_tugas_id))
+const updateFilters = (newFilters) => {
+  Object.assign(filters, newFilters)
+
+  router.get(route(route().current()), filters, {
+    preserveState: true,
+    preserveScroll: true,
+    replace: true,
+  })
+}
+
+const changePage = (pageNumber) => {
+  filters.page = pageNumber
+
+  router.get(route(route().current()), filters, {
+    preserveState: true,
+    preserveScroll: true,
+    replace: true,
+  })
 }
 
 const handleAction = (type, row) => {
-  switch(type) {
-    case 'view':
-      router.get(route(`${user.role}.persetujuan.show`, row.surat_tugas_id))  
-      break
-    case 'edit':
-      router.get(route('pengusul.edit', row.id))
-      break
-    case 'delete':
-      if (confirm('Are you sure?')) {
-        router.delete(route('pengusul.destroy', row.id))
-      }
-      break
-    case 'download':
-      router.get(route('pengusul.download', row.id))
-      break
+  if (type === 'view') {
+    router.get(route(`${currentUser.role}.persetujuan.show`, row.id))
+  }
+
+  if (type === 'download') {
+    router.get(route('laporan.download', row.id))
   }
 }
 
-// --------------------------
-// 3. Filter debounce
-// --------------------------
-const updateFilters = () => {
-    router.get(route(dashboardRoute), filters.value, {
-        preserveState: true,
-        preserveScroll: true,
-        replace: true,
-    })
-}
-
-const debouncedUpdateFilters = debounce(() => {
-    updateFilters()
-}, 400)
-
-const onFiltersUpdate = (newFilters) => {
-    Object.assign(filters.value, newFilters)
-    debouncedUpdateFilters()
-}
+const buttonClass = (color) => ({
+  'bg-blue-500 text-white': color === 'blue',
+  'bg-green-500 text-white': color === 'green',
+  'bg-red-500 text-white': color === 'red',
+  'bg-purple-500 text-white': color === 'purple',
+  'bg-yellow-400 text-black': color === 'yellow',
+})
 </script>

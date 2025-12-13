@@ -1,18 +1,29 @@
 <template>
+  <Head title="Dashboard" />
+
   <AppLayout>
     <div class="bg-white w-full rounded-md shadow">
       <HeaderPage />
 
-      <!-- PAGE TITLE & STAT CARDS -->
       <div class="p-8">
-        <h1 class="text-3xl font-bold mb-4">Dashboard</h1>
+        <h1 class="text-3xl font-bold mb-4">Dashboard Direktur</h1>
+        
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard title="Total Ulasan" icon="file" :count="10" />
-          <StatCard title="Bertugas" icon="user" :count="4" />
+          <StatCard 
+            title="Total Ulasan" 
+            icon="file" 
+            :count="stats?.total_ulasan || 0" 
+            color="blue"
+          />
+          <StatCard 
+            title="Bertugas" 
+            icon="user" 
+            :count="stats?.bertugas || 0" 
+            color="yellow"
+          />
         </div>
       </div>
 
-      <!-- MAIN CONTENT -->
       <div class="px-6 pb-8 space-y-10">
         <DataTable
           :columns="columns"
@@ -29,10 +40,22 @@
             })
           "
         >
-          <!-- Status Badge slot -->
+          <template #tanggal_berangkat="{ row }">
+              {{ formatDate(row.tanggal_berangkat) }}
+          </template>
+
+          <template #nominal_biaya="{ row }">
+             {{ formatCurrency(row.nominal_biaya) }}
+          </template>
+
+          <template #no_usulan_surat="{ row }">
+                <span class="font-medium text-gray-700">{{ row.no_usulan_surat }}</span>
+          </template>
+
           <template #status_surat="{ row }">
             <StatusBadges :status="row.status_surat" />
           </template>
+          
           <template #actions="{ row }">
             <div class="flex gap-2">
               <button
@@ -66,21 +89,28 @@ import HeaderPage from '@/Components/HeaderPage.vue'
 import StatCard from '@/Components/StatCard.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
-import { Link, usePage, router } from '@inertiajs/vue3'
+import { Head, usePage, router } from '@inertiajs/vue3' 
 import { reactive, computed, watch } from 'vue'
 import debounce from 'lodash.debounce'
 import { getRowActions } from '@/utils/rowAction'
 
+
+const props = defineProps({
+  suratTugas: Object,
+  filters: Object,
+  stats: Object 
+})
+
 const page = usePage()
 const currentUser = page.props.auth.user
-const suratTugas = computed(() => page.props.suratTugas)
-console.log("Surat Tugas: ", suratTugas);
+
+const suratTugas = computed(() => props.suratTugas)
 
 const filters = reactive({
-  search: page.props.filters?.search || '',
-  status: page.props.filters?.status || '',
-  from: page.props.filters?.from || '',
-  to: page.props.filters?.to || '',
+  search: props.filters?.search || '',
+  status: props.filters?.status || '',
+  from: props.filters?.from || '',
+  to: props.filters?.to || '',
 })
 
 watch(
@@ -94,11 +124,32 @@ watch(
   { deep: true }
 )
 
+const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    if (dateString.length === 10 && dateString.includes('-')) return dateString;
+
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString; 
+    
+    return date.toISOString().split('T')[0];
+}
+
+const formatCurrency = (value) => {
+  if (!value) return 'Rp 0';
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(value);
+}
+
 const columns = [
-  { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
-  { key: 'nomor_surat_tugas_resmi', label: 'Nomor Surat' },
-  { key: 'perihal_tugas', label: 'Perihal Tugas' },
+  { key: 'nama_kegiatan', label: 'Nama Kegiatan' },
+  { key: 'created_at', label: 'Tanggal Pengusulan' },
+  { key: 'tanggal_berangkat', label: 'Tanggal Berangkat', slot: 'tanggal_berangkat' },
+  { key: 'no_usulan_surat', label: 'No. Usulan Surat', slot: 'no_usulan_surat' }, 
   { key: 'sumber_dana', label: 'Sumber Dana' },
+  { key: 'nominal_biaya', label: 'Total Dana', slot: 'nominal_biaya' },
   { key: 'status_surat', label: 'Status', slot: 'status_surat' },
   { key: 'actions', label: 'Aksi', slot: 'actions' },
 ]
@@ -107,18 +158,16 @@ const columns = [
 const handleAction = (type, row) => {
   switch(type) {
     case 'view':
-      router.get(route('direktur.view', row.id))
+      router.get(route('direktur.persetujuan.show', row.id)) 
       break
     case 'approve':
-      router.post(route('direktur.approve', row.id))
+      router.post(route('direktur.persetujuan.approve', row.id))
       break
     case 'reject':
-      router.post(route('direktur.reject', row.id))
+      router.post(route('direktur.persetujuan.reject', row.id))
       break
     default:
       console.warn(`Unhandled action type: ${type}`)
   }
 }
 </script>
-
-

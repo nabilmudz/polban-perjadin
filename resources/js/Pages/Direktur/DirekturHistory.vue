@@ -1,12 +1,12 @@
 <template>
-  <Head title="Riwayat Perjalanan Dinas" />
+  <Head title="Riwayat Surat Tugas" />
 
   <AppLayout>
     <div class="bg-white w-full rounded-md shadow overflow-hidden">
       <HeaderPage title="History Perjalanan Dinas" />
 
       <div class="p-8">
-        <h1 class="text-3xl font-bold mb-6 text-gray-800">Riwayat Lengkap</h1>
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">Riwayat Surat Tugas</h1>
 
         <DataTable
           :columns="columns"
@@ -14,7 +14,7 @@
           :meta="history.meta"
           :links="history.links"
           :filters="filters"
-          route-name="bku.historyperjalanandinas"
+          route-name="direktur.history"
           @update:filters="handleFilterUpdate"
           @changePage="handlePageChange"
         >
@@ -22,12 +22,8 @@
               {{ (history.meta.from || 1) + index }}
            </template>
 
-           <template #diusulkan_kepada="{ row }">
-              <span class="text-gray-700">{{ row.diusulkan_kepada }}</span>
-           </template>
-
            <template #nominal_biaya="{ row }">
-              {{ formatCurrency(row.nominal_biaya) }}
+             {{ formatCurrency(row.nominal_biaya) }}
            </template>
 
            <template #status_surat="{ row }">
@@ -37,16 +33,16 @@
            <template #aksi="{ row }">
             <div class="flex gap-2 justify-center">
               <button 
-                class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90 bg-blue-500 text-white" 
+                @click="router.get(route('direktur.persetujuan.show', row.id))" 
+                class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90 bg-blue-500 text-white"
                 title="Lihat Detail"
-                @click="router.get(route('bku.verifikasi', row.id))"
               >
                  <font-awesome-icon :icon="['far', 'eye']" class="text-md" />
               </button>
               
               <button 
-                v-if="['approved', 'completed', 'published', 'awaiting_proof_upload', 'under_bku_review', 'returned_for_correction'].includes(row.status_surat)" 
-                class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90 bg-green-500 text-white" 
+                v-if="['approved', 'completed'].includes(row.status_surat)" 
+                class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90 bg-green-500 text-white"
                 title="Download"
                 @click="router.get(route('surat.download', row.id))"
               >
@@ -75,14 +71,7 @@ const history = computed(() => {
     const raw = page.props.history || {};
     return {
         data: raw.data || [],
-        meta: {
-            current_page: raw.current_page || 1,
-            last_page: raw.last_page || 1,
-            total: raw.total || 0,
-            per_page: raw.per_page || 10,
-            from: raw.from || 0,
-            to: raw.to || 0
-        },
+        meta: raw.meta || {},
         links: raw.links || []
     }
 })
@@ -94,7 +83,7 @@ const filters = reactive({
 watch(
   () => filters.search,
   debounce((value) => {
-    router.get(route('bku.historyperjalanandinas'), { search: value }, { preserveState: true, replace: true })
+    router.get(route('direktur.history'), { search: value }, { preserveState: true, replace: true })
   }, 300)
 )
 
@@ -103,7 +92,7 @@ const handleFilterUpdate = (newFilters) => {
 }
 
 const handlePageChange = (pageNumber) => {
-    router.get(route('bku.historyperjalanandinas'), { ...filters, page: pageNumber }, { preserveState: true, replace: true })
+    router.get(route('direktur.history'), { ...filters, page: pageNumber }, { preserveState: true, replace: true })
 }
 
 const formatCurrency = (value) => {
@@ -116,13 +105,11 @@ const formatCurrency = (value) => {
 }
 
 const columns = [
-  { key: 'perihal_tugas', label: 'Nama Kegiatan' },
+  { key: 'nama_kegiatan', label: 'Nama Kegiatan' },
   { key: 'created_at', label: 'Tanggal Pengusulan' },
-  { key: 'tanggal_pelaksanaan', label: 'Tanggal Berangkat' },
-  { key: 'nomor_surat_usulan_jurusan', label: 'Nomor Surat Pengantar' }, 
+  { key: 'tanggal_pelaksanaan', label: 'Tanggal Pelaksanaan' },
   { key: 'nomor_surat_resmi', label: 'Nomor Surat Tugas' },
-  { key: 'diusulkan_kepada', label: 'Diusulkan Kepada', slot: 'diusulkan_kepada' },
-  { key: 'sumber_dana', label: 'Sumber Dana' }, 
+  { key: 'sumber_dana', label: 'Sumber Dana' },
   { key: 'nominal_biaya', label: 'Total Dana', slot: 'nominal_biaya' },
   { key: 'status_surat', label: 'Status', slot: 'status_surat' },
   { key: 'aksi', label: 'Aksi', slot: 'aksi' },

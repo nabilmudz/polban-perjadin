@@ -54,10 +54,6 @@ class DashboardController extends Controller
     // }
 
 
-
-    // ==== Adding the BKU dashboard method ==== //
-
-
     // public function direktur()
     // {
     //     $user = auth()->user();

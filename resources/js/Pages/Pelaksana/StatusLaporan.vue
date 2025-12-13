@@ -1,117 +1,137 @@
 <template>
+  <Head title="Status Laporan" />
+
   <AppLayout>
     <div class="bg-white w-full max-w-7xl mx-auto rounded-md shadow">
       <HeaderPage />
 
-      <!-- TITLE -->
       <div class="p-8 border-b">
-        <h1 class="text-3xl font-bold mb-4">Status Laporan</h1>
-        <p class="text-gray-600">
-          Status pertanggungjawaban perjalanan dinas setelah kegiatan selesai.
+        <h1 class="text-3xl font-bold">Status Laporan</h1>
+        <p class="text-sm text-gray-500 mt-1">
+          Monitoring pertanggungjawaban perjalanan dinas
         </p>
       </div>
 
       <div class="p-8">
-        <div class="overflow-x-auto">
+        <DataTable
+          :columns="columns"
+          :data="suratTugas.data"
+          :meta="suratTugas.meta"
+          :links="suratTugas.links"
+          :filters="filters"
+          @update:filters="updateFilters"
+          @changePage="changePage"
+        >
+          <template #status_surat="{ row }">
+            <StatusBadges :status="row.status_surat" type="laporan" />
+          </template>
 
-          <DataTable
-            :columns="columns"
-            :data="suratTugas.data"
-            :meta="suratTugas.meta"
-            :links="suratTugas.links"
-            :filters="filters"
-            route-name="pelaksana.status-laporan"
-            @update:filters="Object.assign(filters, $event)"
-            @changePage="(page) =>
-              router.get(route('pelaksana.status-laporan'), { ...filters }, {
-                preserveState: true,
-                replace: true
-              })
-            "
-          >
-
-            <!-- STATUS LAPORAN -->
-            <template #status_laporan="{ row }">
-              <StatusBadges :status="row.status_laporan" type="laporan" />
-            </template>
-
-            <!-- ACTIONS -->
-            <template #action="{ row }">
-              <div class="flex gap-2">
-                <button
-                  v-for="action in getRowActions(row, currentUser.role, 'laporan')"
-                  :key="action.type"
-                  @click="handleAction(action.type, row)"
-                  class="px-2 py-1 rounded shadow transition hover:brightness-90 flex items-center justify-center"
-                  :class="{
-                    'bg-blue-500 text-white': action.color === 'blue',
-                    'bg-green-500 text-white': action.color === 'green',
-                    'bg-red-500 text-white': action.color === 'red',
-                    'bg-yellow-400 text-black': action.color === 'yellow',
-                    'bg-purple-500 text-white': action.color === 'purple',
-                  }"
-                >
-                  <font-awesome-icon :icon="['far', action.icon]" />
-                </button>
-              </div>
-            </template>
-
-          </DataTable>
-        </div>
+          <template #action="{ row }">
+            <div class="flex gap-2">
+              <button
+                v-for="action in getRowActions(row, currentUser.role)"
+                :key="action.type"
+                @click="handleAction(action.type, row)"
+                class="px-2 py-1 rounded shadow transition hover:brightness-90"
+                :class="buttonClass(action.color)"
+              >
+                <font-awesome-icon :icon="['far', action.icon]" />
+              </button>
+            </div>
+          </template>
+        </DataTable>
       </div>
-
-      <Modal :show="isUploadModalOpen" @close="isUploadModalOpen = false" />
     </div>
   </AppLayout>
 </template>
 
 <script setup>
+import { Head, router, usePage } from '@inertiajs/vue3'
+import { reactive, computed } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
-import Modal from './Partials/Modal.vue'
-import { usePage, router } from '@inertiajs/vue3'
-import { ref } from 'vue'
 import { getRowActions } from '@/utils/rowAction'
 
-/* MODAL */
-const isUploadModalOpen = ref(false)
-const openUploadModal = (row) => {
-  console.log('Upload modal opened for:', row)
-  isUploadModalOpen.value = true
-}
+const page = usePage()
+const currentUser = page.props.auth.user
+const suratTugas = computed(() => page.props.suratTugas)
+const filters = reactive({
+  search: page.props.filters?.search ?? '',
+  status_surat: page.props.filters?.status_surat ?? '',
+  page: page.props.filters?.page ?? 1,
+})
 
-/* PAGE PROPS */
-const { props } = usePage()
-const currentUser = props.auth.user
-const suratTugas = props.suratTugas
-const filters = ref(props.filters)
-
-/* TABLE COLUMNS */
 const columns = [
   { key: 'nomor_surat_tugas_resmi', label: 'No Surat Resmi' },
   { key: 'perihal_tugas', label: 'Nama Kegiatan' },
   { key: 'tanggal_berangkat', label: 'Tanggal Pelaksanaan' },
-  { key: 'status_laporan', label: 'Status Laporan' },
-  { key: 'action', label: 'Aksi' },
+  { key: 'status_surat', label: 'Status Laporan' },
+  { key: 'action', label: 'Aksi', fixedWidth: '160px' },
 ]
 
-/* ACTION HANDLER */
+const updateFilters = (newFilters) => {
+  filters.search = newFilters.search ?? ''
+  filters.status_surat = newFilters.status_surat ?? ''
+  filters.page = 1
+
+  router.get(route(route().current()), filters, {
+    preserveState: true,
+    preserveScroll: true,
+    replace: true,
+  })
+}
+
+const changePage = (pageNumber) => {
+  filters.page = pageNumber
+
+  router.get(route(route().current()), filters, {
+    preserveState: true,
+    preserveScroll: true,
+    replace: true,
+  })
+}
+
+const resolveRowData = (row) => {
+  return (
+    row?.original ||
+    row?.row ||
+    row?.item ||
+    row?.data ||
+    row
+  )
+}
+
 const handleAction = (type, row) => {
+  const id = row?.id
+  if (!id) return
+
   switch (type) {
-    case 'upload':
-      openUploadModal(row)
+    case 'upload-bukti':
+      router.get(route('pelaksana.bukti.page', id))
       break
+
     case 'view':
-      router.get(route('pelaksana.laporan.view', row.id))
+      router.get(route('surat-tugas.show', id))
       break
-    case 'download':
-      router.get(route('pelaksana.laporan.download', row.id))
-      break
+
     case 'fix':
-      router.get(route('pelaksana.laporan.revision', row.id))
+      router.get(route('pelaksana.bukti.page', id))
       break
+
+    case 'download':
+      window.open(route('laporan.download', id))
+      break
+
   }
 }
+
+const buttonClass = (color) => ({
+  'bg-blue-500 text-white': color === 'blue',
+  'bg-green-500 text-white': color === 'green',
+  'bg-red-500 text-white': color === 'red',
+  'bg-yellow-400 text-black': color === 'yellow',
+  'bg-purple-500 text-white': color === 'purple',
+})
 </script>
