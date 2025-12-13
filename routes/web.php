@@ -65,6 +65,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [PelaksanaController::class, 'dashboard'])->name('dashboard');
         Route::get('/daftarlaporan', [PelaksanaController::class, 'daftarLaporan'])->name('daftarlaporan');
         Route::get('/historypelaksana', [PelaksanaController::class, 'historypelaksana'])->name('historypelaksana');
+        Route::get('/status-laporan', [PelaksanaController::class, 'statusLaporan'])->name('status-laporan');
+
     });
 
     // Wadir 1-4
@@ -102,6 +104,8 @@ Route::middleware(['auth'])->group(function () {
                     // Aksi reject
                     Route::post('/persetujuan/{id}/reject', [WadirController::class, 'reject'])
                         ->name('persetujuan.reject');
+
+                    
                 });
         }
     });
@@ -163,13 +167,20 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+
 Route::prefix('surat-tugas')->group(function () {
+
     Route::get('/', [SuratTugasController::class, 'index']);
     Route::get('/{id}', [SuratTugasController::class, 'show']);
     Route::post('/', [SuratTugasController::class, 'store']);
     Route::put('/{id}', [SuratTugasController::class, 'update']);
     Route::delete('/{id}', [SuratTugasController::class, 'destroy']);
+
+    Route::patch('/{surat_tugas}/status', [SuratTugasController::class, 'updateStatus'])->middleware('auth')
+        ->name('surat-tugas.update-status');
 });
+
+
 
 
 

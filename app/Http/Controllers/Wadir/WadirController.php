@@ -26,6 +26,10 @@ class WadirController extends Controller
             'data' => $paginate->getCollection()->transform(function ($item) {
                 return [
                     ...$item->toArray(),
+
+                    'sumber_dana' => $item->sumber_dana,
+                    'total_dana'  => $item->total_dana,
+
                     'created_at'        => $item->created_at?->format('Y-m-d'),
                     'tanggal_berangkat' => $item->tanggal_berangkat?->format('Y-m-d'),
                     'tanggal_kembali'   => $item->tanggal_kembali?->format('Y-m-d'),
@@ -48,6 +52,7 @@ class WadirController extends Controller
             ],
         ];
     }
+
 
     private function querySurat($filters)
     {
@@ -84,25 +89,20 @@ class WadirController extends Controller
             'filters'    => $filters,
 
             'stats'      => [
-                // 2.1 Total Pengusulan
                 "total" => SuratTugas::where('diusulkan_kepada', $wadir)->count(),
 
-                // 2.2 Usulan Baru
                 "baru" => SuratTugas::where('diusulkan_kepada', $wadir)
                     ->where('status_surat', 'submitted_wadir_review')
                     ->count(),
 
-                // 2.3 Dalam Proses Direktur
                 "proses_direktur" => SuratTugas::where('diusulkan_kepada', $wadir)
                     ->where('status_surat', 'pending_direktur_signature')
                     ->count(),
 
-                // 2.4 Bertugas
                 "bertugas" => SuratTugas::where('diusulkan_kepada', $wadir)
                     ->whereIn('status_surat', ['published', 'awaiting_proof_upload'])
                     ->count(),
 
-                // 2.5 Ditolak
                 "rejected" => SuratTugas::where('diusulkan_kepada', $wadir)
                     ->where('status_surat', 'rejected')
                     ->count(),

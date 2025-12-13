@@ -5,28 +5,29 @@
     <HeaderPage />
 
     <div class="p-8">
-    <h1 class="text-3xl font-bold">Persetujuan Surat Tugas</h1>
+      <h1 class="text-3xl font-bold">Persetujuan Surat Tugas</h1>
 
-    <!-- TAMPILKAN DATA SURAT DI SINI -->
-    <div class="mt-6">
-      <LaporanSurat :surat="surat" />
+      <!-- DETAIL SURAT -->
+      <div class="mt-6">
+        <LaporanSurat :surat="surat" />
+      </div>
     </div>
-  </div>
-
 
     <div class="px-10 pb-20">
 
+      <!-- NOTE KETERANGAN -->
       <h2 class="text-xl font-semibold mb-3">
-        Catatan / Komentar (Jika Perlu Revisi / Ditolak)
+        Catatan / Komentar (Wajib jika Revisi / Ditolak)
       </h2>
 
       <textarea
-        v-model="form.catatan"
+        v-model="form.catatan_revisi"
         rows="4"
-        placeholder="Masukkan catatan atau alasan penolakan/revisi..."
+        placeholder="Masukkan catatan jika minta revisi/penolakan"
         class="w-full border rounded-md p-3 text-gray-700 focus:ring focus:ring-blue-300"
       ></textarea>
 
+      <!-- BUTTON AKSI -->
       <div class="flex justify-end mt-6 gap-4">
 
         <button
@@ -36,67 +37,72 @@
           Kembali ke Dashboard
         </button>
 
+        <template v-if="surat.status_surat === 'submitted_wadir_review'">
+          <button
+            @click="submit('revision_requested')"
+            class="flex items-center gap-2 bg-yellow-500 text-black px-5 py-2 rounded-md hover:brightness-95 shadow"
+          >
+            <font-awesome-icon icon="rotate-left" />
+            Kembalikan untuk Revisi
+          </button>
 
-        <button
-          @click="submit('revisi')"
-          class="flex items-center gap-2 bg-yellow-500 text-black px-5 py-2 rounded-md hover:brightness-95 shadow"
-        >
-          <font-awesome-icon icon="rotate-left" />
-          Kembalikan untuk Revisi
-        </button>
+          <button
+            @click="submit('rejected')"
+            class="flex items-center gap-2 bg-red-500 text-white px-5 py-2 rounded-md hover:brightness-95 shadow"
+          >
+            <font-awesome-icon :icon="['fas', 'xmark']" />
+            Tolak
+          </button>
 
-        <button
-          @click="submit('tolak')"
-          class="flex items-center gap-2 bg-red-500 text-white px-5 py-2 rounded-md hover:brightness-95 shadow"
-        >
-          <font-awesome-icon :icon="['fas', 'xmark']" />
-          Tolak
-        </button>
-
-        <button
-          @click="submit('setujui')"
-          class="flex items-center gap-2 bg-green-600 text-white px-5 py-2 rounded-md hover:brightness-95 shadow"
-        >
-          <font-awesome-icon :icon="['fas', 'Square-Check']" />
-          Setujui
-        </button>
-
+          <button
+            @click="submit('approved_wadir')"
+            class="flex items-center gap-2 bg-green-600 text-white px-5 py-2 rounded-md hover:brightness-95 shadow"
+          >
+            <font-awesome-icon :icon="['fas', 'square-check']" />
+            Setujui
+          </button>
+        </template>
       </div>
-
     </div>
   </div>
 </template>
 
 <script setup>
 import HeaderPage from '@/Components/HeaderPage.vue'
-import { Head, router, usePage } from '@inertiajs/vue3'
-import { ref, reactive, onMounted } from 'vue'
+import { Head, useForm, usePage, router } from '@inertiajs/vue3'
+import { reactive } from 'vue'
 import LaporanSurat from '@/Components/LaporanSurat.vue'
 
+// props dari controller
 const page = usePage()
 const user = page.props.auth.user
 const surat = page.props.data
 
-const form = reactive({
-  catatan: '',
+// form inertia
+const form = useForm({
+  status_surat: '',
+  catatan_revisi: '',
 })
 
 const goDashboard = () => {
   router.get(route(`${user.role}.dashboard`))
 }
 
-const submit = (aksi) => {
-  if (aksi === 'setujui') {
-    router.post(route(`${user.role}.persetujuan.approve`, surat.id), {
-      catatan: form.catatan,
-    })
+const submit = (status) => {
+  // jika status revisi atau tolak → harus ada catatan
+  if (['revision_requested', 'rejected'].includes(status) && !form.catatan_revisi) {
+    alert('Catatan wajib diisi untuk revisi atau tolak.')
+    return
   }
 
-  if (aksi === 'tolak' || aksi === 'revisi') {
-    router.post(route(`${user.role}.persetujuan.reject`, surat.id), {
-      catatan: form.catatan,
-    })
-  }
+  form.status_surat = status
+
+  form.patch(route('surat-tugas.update-status', surat.id), {
+    preserveScroll: true,
+    onSuccess: () => {
+      goDashboard()
+    }
+  })
 }
 </script>
 

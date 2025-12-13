@@ -13,6 +13,7 @@
 
       <div class="p-8">
         <div class="overflow-x-auto">
+
           <DataTable
             :columns="columns"
             :data="suratTugas.data"
@@ -28,14 +29,10 @@
               })
             "
           >
+
             <!-- STATUS LAPORAN -->
             <template #status_laporan="{ row }">
               <StatusBadges :status="row.status_laporan" type="laporan" />
-            </template>
-
-            <!-- TANGGAL TERFORMAT -->
-            <template #tanggal_berangkat="{ row }">
-              {{ formatDate(row.tanggal_berangkat) }}
             </template>
 
             <!-- ACTIONS -->
@@ -58,11 +55,11 @@
                 </button>
               </div>
             </template>
+
           </DataTable>
         </div>
       </div>
 
-      <!-- UPLOAD MODAL -->
       <Modal :show="isUploadModalOpen" @close="isUploadModalOpen = false" />
     </div>
   </AppLayout>
@@ -77,28 +74,21 @@ import Modal from './Partials/Modal.vue'
 import { usePage, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import { getRowActions } from '@/utils/rowAction'
-import { parseISO, format } from 'date-fns'
 
-/* =========================
-   MODAL UPLOAD
-========================= */
+/* MODAL */
 const isUploadModalOpen = ref(false)
 const openUploadModal = (row) => {
-  console.log('Upload modal for:', row)
+  console.log('Upload modal opened for:', row)
   isUploadModalOpen.value = true
 }
 
-/* =========================
-   PAGE PROPS
-========================= */
+/* PAGE PROPS */
 const { props } = usePage()
 const currentUser = props.auth.user
 const suratTugas = props.suratTugas
-const filters = ref(props.filters || {})
+const filters = ref(props.filters)
 
-/* =========================
-   TABLE COLUMNS
-========================= */
+/* TABLE COLUMNS */
 const columns = [
   { key: 'nomor_surat_tugas_resmi', label: 'No Surat Resmi' },
   { key: 'perihal_tugas', label: 'Nama Kegiatan' },
@@ -107,17 +97,7 @@ const columns = [
   { key: 'action', label: 'Aksi' },
 ]
 
-/* =========================
-   DATE FORMAT FUNCTION
-========================= */
-const formatDate = (isoString) => {
-  if (!isoString) return ''
-  return format(parseISO(isoString), 'dd MMM yyyy')
-}
-
-/* =========================
-   ACTION HANDLER
-========================= */
+/* ACTION HANDLER */
 const handleAction = (type, row) => {
   switch (type) {
     case 'upload':

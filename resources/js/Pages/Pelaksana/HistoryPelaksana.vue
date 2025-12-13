@@ -10,7 +10,7 @@
                 <div class="overflow-x-auto">
                     <DataTable
                         :columns="columns"
-                        :data="suratTugas.data"
+                        :data="formattedSuratTugas"
                         :meta="suratTugas.meta"
                         :links="suratTugas.links"
                         :filters="filters"
@@ -51,25 +51,41 @@ import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
 import { getRowActions } from '@/utils/rowAction'
 import { usePage, router } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const { props } = usePage()
 const suratTugas = props.suratTugas
 const filters = ref(props.filters || { search: '' })
 
+// =====================
+// Format tanggal
+// =====================
+const formatDate = (dateStr) => {
+    if (!dateStr) return ''
+    // pastikan cuma ambil YYYY-MM-DD dari string ISO
+    return dateStr.split('T')[0]
+}
+
+// computed untuk data tabel dengan tanggal sudah diformat
+const formattedSuratTugas = computed(() =>
+    suratTugas.data.map(row => ({
+        ...row,
+        created_at: formatDate(row.created_at),
+        tanggal_berangkat: formatDate(row.tanggal_berangkat),
+        tanggal_penomoran_sekdir: formatDate(row.tanggal_penomoran_sekdir),
+    }))
+)
+
 const columns = [
     { key: 'created_at', label: 'Tanggal Pengusulan' },
-  { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
-  { key: 'nomor_surat_usulan_jurusan', label: 'Nomor Surat Pengantar' },
-  { key: 'nomor_surat_tugas_resmi', label: 'Nomor Surat Tugas' },
-  { key: 'tanggal_penomoran_sekdir', label: 'Tanggal Diterbitkan' },
-  { key: 'diusulkan_kepada', label: 'Diajukan Kepada' },
-  { key: 'status_surat', label: 'Status' },
-  { key: 'action', label: 'Aksi', sortable: false },
+    { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
+    { key: 'nomor_surat_usulan_jurusan', label: 'Nomor Surat Pengantar' },
+    { key: 'nomor_surat_tugas_resmi', label: 'Nomor Surat Tugas' },
+    { key: 'tanggal_penomoran_sekdir', label: 'Tanggal Diterbitkan' },
+    { key: 'diusulkan_kepada', label: 'Diajukan Kepada' },
+    { key: 'status_surat', label: 'Status' },
+    { key: 'action', label: 'Aksi', sortable: false },
 ]
-
-const page = usePage()
-console.log('ROLE:', page.props.auth?.user?.role)
 
 function handleAction(type, row) {
     if (type === 'view') {
