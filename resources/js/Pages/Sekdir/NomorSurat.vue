@@ -25,7 +25,7 @@
           <template #aksi="{ row }">
             <button
               class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm"
-              @click="gotoReview(row.id)"
+              @click="gotoReview(row.surat_tugas_id)"
             >
               Review & Nomor
             </button>
