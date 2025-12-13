@@ -17,7 +17,7 @@ class DirekturController extends Controller
 
                 $personel = $item->detailPelaksanaTugas->map(function ($d) {
                     $p = $d->personable;
-                    if (!$p) return null; 
+                    if (!$p) return null;
 
                     $isMhs = str_contains($d->personable_type, 'Mahasiswa');
 
@@ -33,11 +33,11 @@ class DirekturController extends Controller
                         'jurusan'  => $p->jurusan ?? null,
                         'prodi'    => $p->prodi ?? null,
                     ];
-                })->filter(); 
+                })->filter();
 
                 return [
                     ...$item->toArray(),
-                    'nama_kegiatan' => $item->nama_kegiatan ?? $item->perihal_tugas, 
+                    'nama_kegiatan' => $item->nama_kegiatan ?? $item->perihal_tugas,
                     'created_at' => $item->created_at->format('Y-m-d'),
                     'tanggal_pelaksanaan' => $item->tanggal_berangkat ? $item->tanggal_berangkat->format('Y-m-d') : '-',
                     'personel' => $personel,
@@ -51,7 +51,7 @@ class DirekturController extends Controller
                 'to'           => $paginate->lastItem(),
                 'total'        => $paginate->total(),
             ],
-            'links' => $paginate->toArray()['links'] ?? [], 
+            'links' => $paginate->toArray()['links'] ?? [],
         ];
     }
 
@@ -60,8 +60,9 @@ class DirekturController extends Controller
         $user = auth()->user();
 
         $query = SuratTugas::query()
-            ->with(['detailPelaksanaTugas.personable']); 
+            ->with(['detailPelaksanaTugas.personable']);
 
+        // Filter by Search
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('perihal_tugas', 'like', "%{$request->search}%")
@@ -69,10 +70,33 @@ class DirekturController extends Controller
             });
         }
 
-        if ($request->filled('status')) {
+        // Filter by Status
+        if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status_surat', $request->status);
         }
 
+        // Filter by Preset Range (Weekly, Monthly, Yearly)
+        if ($request->filled('range') && $request->range !== 'all') {
+            $now = now();
+            $from = null;
+
+            if ($request->range === 'weekly') {
+                $from = $now->copy()->subDays(7);
+            } elseif ($request->range === 'monthly') {
+                $from = $now->copy()->subMonth();
+            } elseif ($request->range === 'yearly') {
+                $from = $now->copy()->subYear();
+            }
+
+            if ($from) {
+                $query->whereBetween('created_at', [
+                    $from->format('Y-m-d'),
+                    $now->format('Y-m-d')
+                ]);
+            }
+        }
+
+        // Filter by Explicit Date Range (From - To)
         if ($request->filled('from') && $request->filled('to')) {
             $query->whereBetween('created_at', [$request->from, $request->to]);
         }
@@ -81,8 +105,8 @@ class DirekturController extends Controller
 
         $statusCounts = [
             'completed' => SuratTugas::where('status_surat', 'completed')->count(),
-            'published' => SuratTugas::where('status_surat', 'published')->count(), 
-            'on_duty' => SuratTugas::where('status_surat', 'approved') 
+            'published' => SuratTugas::where('status_surat', 'published')->count(),
+            'on_duty' => SuratTugas::where('status_surat', 'approved')
                             ->whereDate('tanggal_berangkat', '<=', now())
                             ->whereDate('tanggal_kembali', '>=', now())
                             ->count(),
@@ -92,21 +116,22 @@ class DirekturController extends Controller
         $totalPengusulan = SuratTugas::count();
 
         return inertia('Direktur/DirekturDashboard', [
-            'suratTugas' => $this->mapPagination($paginate), 
+            'suratTugas' => $this->mapPagination($paginate),
             'filters' => [
                 'status' => $request->status,
                 'search' => $request->search,
                 'from' => $request->from,
-                'to' => $request->to ?: now()->toDateString(),
+                'to' => $request->to,
+                'range' => $request->range,
             ],
             'totalPengusulan' => $totalPengusulan,
             'statusCounts' => $statusCounts,
         ]);
     }
-    
+
     public function persetujuan(Request $request)
     {
-        $filters = $request->only(['search', 'status', 'from', 'to']);
+        $filters = $request->only(['search', 'status', 'from', 'to', 'range']);
 
         $query = SuratTugas::with(['pengusul', 'wadir', 'detailPelaksanaTugas.personable'])
             ->where('status_surat', 'pending_direktur_signature');
@@ -119,6 +144,24 @@ class DirekturController extends Controller
             });
         }
 
+        // Filter by Preset Range
+        if (!empty($filters['range']) && $filters['range'] !== 'all') {
+            $now = now();
+            $from = null;
+            if ($filters['range'] === 'weekly') $from = $now->copy()->subDays(7);
+            elseif ($filters['range'] === 'monthly') $from = $now->copy()->subMonth();
+            elseif ($filters['range'] === 'yearly') $from = $now->copy()->subYear();
+
+            if ($from) {
+                $query->whereBetween('created_at', [$from->format('Y-m-d'), $now->format('Y-m-d')]);
+            }
+        }
+
+        // Filter by Explicit Date Range
+        if (!empty($filters['from']) && !empty($filters['to'])) {
+             $query->whereBetween('created_at', [$filters['from'], $filters['to']]);
+        }
+
         $paginate = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
 
         return Inertia::render('Direktur/DaftarPersetujuan', [
@@ -129,25 +172,49 @@ class DirekturController extends Controller
 
     public function history(Request $request)
     {
-        $filters = $request->only(['search', 'status', 'from', 'to']);
+        $filters = $request->only(['search', 'status', 'from', 'to', 'range']);
 
         $statuses = [
             'published',
             'awaiting_proof_upload',
             'under_bku_review',
             'returned_for_correction',
-            'completed'
+            'completed',
+            'rejected' 
         ];
 
         $query = SuratTugas::with(['detailPelaksanaTugas.personable'])
             ->whereIn('status_surat', $statuses);
 
+        // Filter by Search
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('nama_kegiatan', 'like', "%{$request->search}%")
                   ->orWhere('perihal_tugas', 'like', "%{$request->search}%")
                   ->orWhere('nomor_surat_resmi', 'like', "%{$request->search}%");
             });
+        }
+
+        if ($request->filled('status') && $request->status !== 'all' && in_array($request->status, $statuses)) {
+            $query->where('status_surat', $request->status);
+        }
+
+        // Filter by Preset Range
+        if (!empty($filters['range']) && $filters['range'] !== 'all') {
+            $now = now();
+            $from = null;
+            if ($filters['range'] === 'weekly') $from = $now->copy()->subDays(7);
+            elseif ($filters['range'] === 'monthly') $from = $now->copy()->subMonth();
+            elseif ($filters['range'] === 'yearly') $from = $now->copy()->subYear();
+
+            if ($from) {
+                $query->whereBetween('created_at', [$from->format('Y-m-d'), $now->format('Y-m-d')]);
+            }
+        }
+
+        // Filter by Explicit Date Range
+        if (!empty($filters['from']) && !empty($filters['to'])) {
+             $query->whereBetween('created_at', [$filters['from'], $filters['to']]);
         }
 
         $paginate = $query->latest()->paginate(10)->withQueryString();
