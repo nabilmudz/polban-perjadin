@@ -14,7 +14,6 @@
           :meta="suratTugas.meta"
           :links="suratTugas.links"
           :filters="filters"
-          :status-options="statusOptions" 
           route-name="direktur.daftarpersetujuan"
           @update:filters="Object.assign(filters, $event)"
           @changePage="(page) => router.get(route('direktur.daftarpersetujuan'), { ...filters, page }, { preserveState: true, replace: true })"
@@ -74,8 +73,6 @@ import LaporanSurat from '@/Components/LaporanSurat.vue'
 import { Head, router, useForm } from '@inertiajs/vue3' 
 import { reactive, computed, ref, watch } from 'vue'
 import debounce from 'lodash.debounce'
-import { statusOptions } from '@/utils/statusOptions'
-
 
 const props = defineProps({ suratTugas: Object, filters: Object })
 
@@ -95,10 +92,8 @@ const suratTugas = computed(() => {
   }
 })
 
-// Include all filters defined in the controller
 const filters = reactive({
   search: props.filters?.search || '',
-  status: props.filters?.status || '', // Status will be visible but will only ever be "pending_direktur_signature" on this page
   from: props.filters?.from || '',
   to: props.filters?.to || '',
   range: props.filters?.range || '',

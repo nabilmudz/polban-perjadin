@@ -32,7 +32,7 @@
                  <button 
                     class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90 bg-blue-500 text-white" 
                     title="Lihat Detail"
-                    @click="router.get(route('bku.verifikasi', row.id))"
+                    @click="openModal(row)"
                  >
                     <font-awesome-icon :icon="['far', 'eye']" class="text-md" />
                  </button>
@@ -44,6 +44,11 @@
         </DataTable>
       </div>
     </div>
+
+    <ModalLaporan :show="showViewModal" @close="showViewModal = false">
+        <LaporanSurat v-if="selectedData" :surat="selectedData" />
+    </ModalLaporan>
+
   </AppLayout>
 </template>
 
@@ -52,8 +57,11 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
+import ModalLaporan from '@/Components/ModalLaporan.vue'
+import LaporanSurat from '@/Components/LaporanSurat.vue'
+
 import { Head, router, usePage } from '@inertiajs/vue3' 
-import { reactive, computed, watch } from 'vue'
+import { reactive, computed, watch, ref } from 'vue'
 import { statusOptions } from '@/utils/statusOptions'
 import debounce from 'lodash.debounce'
 
@@ -94,6 +102,14 @@ watch(
 const formatCurrency = (value) => {
   if (!value) return 'Rp 0';
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value);
+}
+
+const showViewModal = ref(false)
+const selectedData = ref(null)
+
+const openModal = (row) => {
+    selectedData.value = row
+    showViewModal.value = true
 }
 
 const columns = [

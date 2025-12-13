@@ -50,6 +50,11 @@
         </DataTable>
       </div>
     </div>
+
+    <ModalLaporan :show="showViewModal" @close="showViewModal = false">
+        <LaporanSurat v-if="selectedData" :surat="selectedData" />
+    </ModalLaporan>
+
   </AppLayout>
 </template>
 
@@ -59,8 +64,11 @@ import HeaderPage from '@/Components/HeaderPage.vue'
 import StatCard from '@/Components/StatCard.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
+import ModalLaporan from '@/Components/ModalLaporan.vue'
+import LaporanSurat from '@/Components/LaporanSurat.vue'
+
 import { Head, usePage, router } from '@inertiajs/vue3' 
-import { reactive, computed, watch } from 'vue'
+import { reactive, computed, watch, ref } from 'vue' 
 import debounce from 'lodash.debounce'
 import { getRowActions } from '@/utils/rowAction'
 import { statusOptions } from '@/utils/statusOptions'
@@ -114,11 +122,21 @@ const columns = [
   { key: 'actions', label: 'Aksi', slot: 'actions' },
 ]
 
+const showViewModal = ref(false)
+const selectedData = ref(null)
+
 const handleAction = (type, row) => {
   switch(type) {
-    case 'view': router.get(route('direktur.persetujuan.show', row.id)); break
-    case 'approve': router.post(route('direktur.persetujuan.approve', row.id)); break
-    case 'reject': router.post(route('direktur.persetujuan.reject', row.id)); break
+    case 'view': 
+        selectedData.value = row
+        showViewModal.value = true
+        break
+    case 'approve': 
+        router.post(route('direktur.persetujuan.approve', row.id))
+        break
+    case 'reject': 
+        router.post(route('direktur.persetujuan.reject', row.id))
+        break
     default: console.warn(`Unhandled action type: ${type}`)
   }
 }

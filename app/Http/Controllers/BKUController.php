@@ -33,26 +33,20 @@ class BKUController extends Controller
             ];
         })->filter()->values();
 
-        return [
+        return array_merge($item->toArray(), [ 
             'id' => $item->id,
             'nama_kegiatan' => $item->nama_kegiatan ?? $item->perihal_tugas,
             'perihal_tugas' => $item->perihal_tugas,
             'tanggal_pengusulan' => $item->created_at->format('Y-m-d'),
-            'created_at' => $item->created_at->format('Y-m-d'),
             'tanggal_berangkat' => $item->tanggal_berangkat ? $item->tanggal_berangkat->format('Y-m-d') : '-',
             'tanggal_pelaksanaan' => $item->tanggal_berangkat ? $item->tanggal_berangkat->format('Y-m-d') : '-',
             'no_usulan_surat' => $item->nomor_surat_usulan_jurusan ?? '-', 
-            'nomor_surat_usulan_jurusan' => $item->nomor_surat_usulan_jurusan ?? '-', 
             'nomor_surat_resmi' => $item->nomor_surat_resmi ?? '-',
-            'nomor_surat_tugas' => $item->nomor_surat_resmi ?? '-',
-            'updated_at' => $item->updated_at->format('Y-m-d'),
-            'sumber_dana' => $item->sumber_dana,
             'status_surat' => $item->status_surat,
-            'laporan' => $item->laporan,
             'diusulkan_kepada' => $item->wadir ? $item->wadir->name : 'Wakil Direktur I',
             'personel' => $personel, 
             'nominal_biaya' => $item->nominal_biaya ?? 0,
-        ];
+        ]);
     }
 
     public function dashboard(Request $request)

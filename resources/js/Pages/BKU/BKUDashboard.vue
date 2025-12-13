@@ -57,6 +57,11 @@
         </div>
       </div>
     </div>
+
+    <ModalLaporan :show="showViewModal" @close="showViewModal = false">
+        <LaporanSurat v-if="selectedData" :surat="selectedData" />
+    </ModalLaporan>
+
   </AppLayout>
 </template>
 
@@ -66,7 +71,10 @@ import HeaderPage from '@/Components/HeaderPage.vue'
 import StatCard from '@/Components/StatCard.vue' 
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
-import { reactive, computed, watch } from 'vue'
+import ModalLaporan from '@/Components/ModalLaporan.vue'
+import LaporanSurat from '@/Components/LaporanSurat.vue'
+
+import { reactive, computed, watch, ref } from 'vue' 
 import { Head, router, usePage } from '@inertiajs/vue3'
 import { statusOptions } from '@/utils/statusOptions'
 import debounce from 'lodash.debounce'
@@ -117,13 +125,19 @@ const formatCurrency = (value) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value);
 }
 
+// Modal State
+const showViewModal = ref(false)
+const selectedData = ref(null)
+
 const getRowActions = (row) => {
     return [{ type: 'view', icon: 'eye', color: 'blue' }];
 }
 
 const handleAction = (type, row) => {
     if (type === 'view') {
-        router.get(route('bku.verifikasi', row.id)); 
+        // Instead of redirecting, we set the data and open the modal
+        selectedData.value = row
+        showViewModal.value = true
     }
 }
 
