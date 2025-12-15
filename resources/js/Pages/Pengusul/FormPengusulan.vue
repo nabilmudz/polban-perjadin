@@ -75,10 +75,20 @@
 
           <div>
             <label class="block font-medium mb-1">
-              Tanggal Pelaksanaan <span class="text-red-500">*</span>
+              Tanggal<span class="text-red-500">*</span>
             </label>
+
+            <span class="text-gray-600 text-sm">Dari</span>
             <input
-              v-model="form.tanggal"
+              v-model="form.tanggal_berangkat"
+              type="date"
+              class="w-full border rounded px-3 py-2 mb-2"
+              required
+            />
+
+            <span class="text-gray-600 text-sm">Sampai</span>
+            <input
+              v-model="form.tanggal_kembali"
               type="date"
               class="w-full border rounded px-3 py-2"
               required
@@ -178,9 +188,10 @@
               />
               <span>/</span>
               <input
+                v-model="form.kode_pengusul"
                 type="text"
-                placeholder="Nomor Pengusul"
-                class="border rounded px-2 py-1 w-24 text-center"
+                class="border rounded px-2 py-1 w-32 text-center bg-gray-100 cursor-not-allowed"
+                disabled
               />
               <span>/</span>
               <input
@@ -190,9 +201,10 @@
               />
               <span>/</span>
               <input
+                v-model="form.tahun"
                 type="text"
-                placeholder="Tahun"
-                class="border rounded px-2 py-1 w-20 text-center"
+                class="border rounded px-2 py-1 w-20 text-center bg-gray-100 cursor-not-allowed"
+                disabled
               />
             </div>
             <button
@@ -224,49 +236,64 @@
     </div>
   </div>
 </template>
-<script setup>
 
-import { reactive } from 'vue'
+<script setup>
+import { reactive, watch } from 'vue'
 import provinsiList from '@/utils/provinsi.js'
 
 const props = defineProps({
-  initialValue: {
-    type: Object,
-    default: () => ({})
-  }
+  initialValue: { type: Object, default: () => ({}) },
+  currentUser: Object,
 })
 
 const emit = defineEmits(['next'])
+
+const currentYear = new Date().getFullYear()
 
 const defaultForm = {
   nama_kegiatan: '',
   diajukan_kepada: '',
   penyelenggara: '',
   nama_penyelenggara: '',
-  tanggal: '',
+  tanggal_berangkat: '',
+  tanggal_kembali: '',
   hasPagu: false,
   nominal_pagu: '',
   provinsi: '',
   surat_undangan: null,
-  lokasiList: [{ tempat: '', alamat: '' }]
+  kode_pengusul: '',
+  tahun: currentYear,
+  lokasiList: [{ tempat: '', alamat: '' }],
 }
 
 const form = reactive({
   ...defaultForm,
-  ...(props.initialValue || {}),
+  ...Object.fromEntries(
+    Object.entries(props.initialValue || {})
+      .filter(([key]) => key in defaultForm)
+  ),
   lokasiList: (props.initialValue?.lokasiList?.length
     ? props.initialValue.lokasiList
     : defaultForm.lokasiList
-  ).map(l => ({ ...l }))
+  ).map(l => ({ ...l })),
+  kode_pengusul: props.currentUser?.kode_pengusul ?? '',
+  tahun: props.initialValue?.tahun ?? currentYear,
 })
+
+watch(
+  () => props.currentUser?.kode_pengusul,
+  (val) => {
+    form.kode_pengusul = val ?? ''
+  },
+  { immediate: true }
+)
 
 const addLokasi = () => {
   form.lokasiList.push({ tempat: '', alamat: '' })
 }
 
 function onFileChange(e) {
-  const file = e.target.files[0] ?? null
-  form.surat_undangan = file
+  form.surat_undangan = e.target.files?.[0] ?? null
 }
 
 function handleNext() {

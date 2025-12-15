@@ -17,6 +17,7 @@
 
       <FormPengusulan
         v-if="currentStep === 1"
+        :currentUser="userLogin"
         :initial-value="form.pengusulan"
         @next="handlePengusulanNext"
       />
@@ -35,7 +36,6 @@
         </p>
 
         <div class="border rounded-lg overflow-hidden">
-            <pre class="text-xs">{{ JSON.stringify(personnelList, null, 2) }}</pre>
           <LaporanSurat :surat="previewSurat" />
         </div>
 
@@ -58,12 +58,15 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { Head, useForm } from '@inertiajs/vue3'
+import { Head, useForm, usePage } from '@inertiajs/vue3'
 
 import HeaderPage from '@/Components/HeaderPage.vue'
 import FormPengusulan from './FormPengusulan.vue'
 import FormPersonel from './FormPersonel.vue'
 import LaporanSurat from '@/Components/LaporanSurat.vue'
+
+const page = usePage()
+const userLogin = computed(() => page.props.auth?.user ?? null)
 
 const currentStep = ref(1)
 
@@ -108,8 +111,8 @@ const previewSurat = computed(() => {
         perihal_tugas: p.nama_kegiatan || '',
         nama_penyelenggara: p.nama_penyelenggara || '',
         
-        tanggal_berangkat: p.tanggal || null,
-        tanggal_kembali: p.tanggal || null,
+        tanggal_berangkat: p.tanggal_berangkat || null,
+        tanggal_kembali: p.tanggal_kembali || null,
         lokasi_kegiatan: p.lokasiList || [],
         
         template_tembusan: ['-'],

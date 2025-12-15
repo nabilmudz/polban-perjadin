@@ -350,7 +350,8 @@ class PengusulController extends Controller
             'pengusulan.diajukan_kepada'     => 'required|string|max:255',
             'pengusulan.penyelenggara'       => 'required|string|max:50',
             'pengusulan.nama_penyelenggara'  => 'required|string|max:255',
-            'pengusulan.tanggal'             => 'required|date',
+            'pengusulan.tanggal_berangkat' => 'required|date',
+            'pengusulan.tanggal_kembali'   => 'required|date|after_or_equal:pengusulan.tanggal_berangkat',
             'pengusulan.provinsi'            => 'required|string|max:255',
             'pengusulan.hasPagu'             => 'boolean',
             'pengusulan.nominal_pagu'        => 'nullable|numeric',
@@ -378,8 +379,6 @@ class PengusulController extends Controller
 
             $nomorSuratUsulanJurusan = $request->input('nomor_surat_usulan_jurusan');
 
-            $tanggal = $pengusulan['tanggal'];
-
             $suratData = [
                 'user_id'                    => $user->id,
                 'diusulkan_kepada'           => $pengusulan['diajukan_kepada'],
@@ -389,8 +388,8 @@ class PengusulController extends Controller
                 'perihal_tugas'              => $pengusulan['nama_kegiatan'],
                 'ditugaskan_sebagai'         => 'Peserta',
                 'kota_tujuan'                => $pengusulan['provinsi'] ?? null,
-                'tanggal_berangkat'          => $tanggal,
-                'tanggal_kembali'            => $tanggal,
+                'tanggal_berangkat'          => $pengusulan['tanggal_berangkat'],
+                'tanggal_kembali'            => $pengusulan['tanggal_kembali'],
                 'status_surat'               => 'draft',
                 'path_file_surat_usulan'     => $pathSuratUndangan,
                 'sumber_dana'                => $pengusulan['hasPagu'] ? 'Pagu Desentralisasi' : 'Non Pagu',
