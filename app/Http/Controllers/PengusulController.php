@@ -13,6 +13,7 @@ use App\Models\Pegawai;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Models\TemplateSurat;
 
 class PengusulController extends Controller
 {
@@ -30,8 +31,22 @@ class PengusulController extends Controller
             $this->pegawaiService = $pegawaiService;
             $this->mahasiswaService = $mahasiswaService;
         }
-    
-        private function mapSuratPaginator($surat)
+    private function templateSnapshotForNewSurat(): array
+    {
+        $tpl = TemplateSurat::query()
+            ->where('status', 1)
+            ->orderByDesc('id')
+            ->first();
+
+        return [
+            'template_nama_kementerian' => $tpl?->nama_kementerian,
+            'template_nama_direktur'    => $tpl?->nama_direktur,
+            'template_nip_direktur'     => $tpl?->nip_direktur,
+            'template_tembusan'         => $tpl?->tembusan_default ?? [],
+        ];
+    }
+
+    private function mapSuratPaginator($surat)
     {
         return [
             'data' => $surat->getCollection()->transform(function (SuratTugas $item) {
@@ -351,7 +366,7 @@ class PengusulController extends Controller
                 'path_file_surat_usulan'     => $pathSuratUndangan,
                 'sumber_dana'                => $pengusulan['hasPagu'] ? 'Pagu Desentralisasi' : 'Non Pagu',
                 'pagu_desentralisasi'        => $pengusulan['hasPagu'],
-                'template_tembusan' => ['Ketua Jurusan'],
+                ...$this->templateSnapshotForNewSurat(),
             ];
 
             $this->suratTugasService->createWithPersonel($suratData, $personel);
@@ -399,7 +414,7 @@ class PengusulController extends Controller
         'sumber_dana'                => $pengusulan['hasPagu'] ? 'Pagu Desentralisasi' : 'Non Pagu',
         'pagu_desentralisasi'        => $pengusulan['hasPagu'],
         'nominal_dana'               => $pengusulan['nominal_pagu'] ?? null,
-        'template_tembusan' => ['Ketua Jurusan'],
+        ...$this->templateSnapshotForNewSurat(),
     ];
 
     $this->suratTugasService->createWithPersonel($suratData, $personel);
@@ -442,7 +457,7 @@ class PengusulController extends Controller
             'sumber_dana'                => $pengusulan['hasPagu'] ? 'Pagu Desentralisasi' : 'Non Pagu',
             'pagu_desentralisasi'        => $pengusulan['hasPagu'],
             'nominal_dana'               => $pengusulan['nominal_pagu'] ?? null,
-            'template_tembusan' => ['Ketua Jurusan'],
+            ...$this->templateSnapshotForNewSurat(),
         ];
 
         $surat = $this->suratTugasService->createWithPersonel($suratData, $personel);
@@ -550,12 +565,16 @@ class PengusulController extends Controller
         return Inertia::render('Pengusul/PengusulanWizard', [
             'mode'    => 'edit_draft',
             'draftId' => $suratTugas->getKey(),
-
+            'templateSnapshot' => [
+                'nama_kementerian'  => $suratTugas->template_nama_kementerian,
+                'nama_direktur'     => $suratTugas->template_nama_direktur,
+                'nip_direktur'      => $suratTugas->template_nip_direktur,
+                'tembusan_default'  => $suratTugas->template_tembusan ?? [],
+            ],
             'initial' => [
                 'pengusulan' => $initialPengusulan,
                 'personel'   => $personelSelected,
             ],
-
             'personel' => $datatable,
             'filters'  => $filters,
             'tab'      => $tab,

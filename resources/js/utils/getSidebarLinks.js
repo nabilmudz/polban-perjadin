@@ -188,7 +188,7 @@ export default function getSidebarLinks(role) {
         {
           name: "Template Surat",
           route: "admin.template-surat",
-          icon: "user",
+          icon: "file-lines",
           component: "Admin/TemplateSurat"
         },
       ];

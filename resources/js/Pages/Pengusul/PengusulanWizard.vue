@@ -85,9 +85,16 @@ import HeaderPage from '@/Components/HeaderPage.vue'
 import FormPengusulan from './FormPengusulan.vue'
 import FormPersonel from './FormPersonel.vue'
 import LaporanSurat from '@/Components/LaporanSurat.vue'
+import { applyActiveTemplate } from '@/utils/suratTemplate'
 
 const page = usePage()
 const userLogin = computed(() => page.props.auth?.user ?? null)
+const templateForPreview = computed(() => {
+  if (mode.value === 'edit_draft' && page.props.templateSnapshot) {
+    return page.props.templateSnapshot
+  }
+  return page.props.activeTemplateSurat ?? null
+})
 
 const currentStep = ref(1)
 const initial = computed(() => page.props.initial ?? null)
@@ -142,41 +149,44 @@ function handlePersonelNext(payload) {
     form.personel = payload
     goToStep(3)
 }
+
 const previewSurat = computed(() => {
-    const p = form.pengusulan || {}
-    const personel = form.personel || []
-    
-    return {
-        template_nama_kementerian: null,
-        
-        nomor_surat_tugas_resmi: null,
-        perihal_tugas: p.nama_kegiatan || '',
-        nama_penyelenggara: p.nama_penyelenggara || '',
-        
-        tanggal_berangkat: p.tanggal_berangkat || null,
-        tanggal_kembali: p.tanggal_kembali || null,
-        lokasi_kegiatan: p.lokasiList || [],
-        
-        template_tembusan: ['-'],
-        template_nama_direktur: null,
-        template_nip_direktur: null,
-        tanggal_persetujuan_direktur: p.tanggal || null,
-        direktur_signature_data: null,
-        
-        personel: personel.map(pr => ({
-            id: pr.id,
-            type: pr.type,
-            nama: pr.nama,
-            nip: pr.nip ?? null,
-            nim: pr.nim ?? null,
-            pangkat: pr.pangkat ?? null,
-            golongan: pr.golongan ?? null,
-            jabatan: pr.jabatan ?? null,
-            jurusan: pr.jurusan ?? null,
-            prodi: pr.prodi ?? null,
-        })),
-    }
+  const p = form.pengusulan || {}
+  const personel = form.personel || []
+
+  const base = {
+    template_nama_kementerian: null,
+    nomor_surat_tugas_resmi: null,
+    perihal_tugas: p.nama_kegiatan || '',
+    nama_penyelenggara: p.nama_penyelenggara || '',
+    tanggal_berangkat: p.tanggal_berangkat || null,
+    tanggal_kembali: p.tanggal_kembali || null,
+    lokasi_kegiatan: p.lokasiList || [],
+
+    template_tembusan: [],
+    template_nama_direktur: null,
+    template_nip_direktur: null,
+
+    tanggal_persetujuan_direktur: p.tanggal || null,
+    direktur_signature_data: null,
+
+    personel: personel.map(pr => ({
+      id: pr.id,
+      type: pr.type,
+      nama: pr.nama,
+      nip: pr.nip ?? null,
+      nim: pr.nim ?? null,
+      pangkat: pr.pangkat ?? null,
+      golongan: pr.golongan ?? null,
+      jabatan: pr.jabatan ?? null,
+      jurusan: pr.jurusan ?? null,
+      prodi: pr.prodi ?? null,
+    })),
+  }
+
+  return applyActiveTemplate(base, templateForPreview.value)
 })
+
 
 function submitFinal() {
   if (mode.value === 'edit_draft' && draftId.value) {

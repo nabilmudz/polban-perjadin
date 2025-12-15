@@ -27,10 +27,12 @@ class TemplateSuratController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nama_kementerian' => 'required|string',
-            'nama_direktur'    => 'required|string',
-            'nip_direktur'     => 'required|string',
-            'status'           => ['required', Rule::in([0, 1])],
+            'nama_kementerian'   => 'required|string|max:255',
+            'nama_direktur'      => 'required|string|max:255',
+            'nip_direktur'       => 'required|string|max:255',
+            'status'             => ['required', Rule::in([0, 1])],
+            'tembusan_default'   => 'nullable|array',
+            'tembusan_default.*' => 'string|max:255',
         ]);
 
         $this->service->create($data);
@@ -41,15 +43,16 @@ class TemplateSuratController extends Controller
     public function update(Request $request, $id)
     {
         $data = $request->validate([
-            'nama_kementerian' => 'required|string',
-            'nama_direktur'    => 'required|string',
-            'nip_direktur'     => 'required|string',
-            'status'           => ['required', Rule::in([0, 1])],
+            'nama_kementerian'   => 'required|string|max:255',
+            'nama_direktur'      => 'required|string|max:255',
+            'nip_direktur'       => 'required|string|max:255',
+            'status'             => ['required', Rule::in([0, 1])],
+            'tembusan_default'   => 'nullable|array',
+            'tembusan_default.*' => 'string|max:255',
         ]);
 
-        $this->service->update($id, $data);
-
-        return redirect()->back(); 
+        $this->service->update((int)$id, $data);
+        return redirect()->back();
     }
 
     public function toggleStatus($id)

@@ -81,6 +81,7 @@
 import { Head, usePage, router } from '@inertiajs/vue3'
 import { reactive, watch, ref, computed } from 'vue'
 import debounce from 'lodash.debounce'
+import { applyActiveTemplate } from '@/utils/suratTemplate'
 
 import HeaderPage from '@/Components/HeaderPage.vue'
 import StatCard from '@/Components/StatCard.vue'
@@ -93,6 +94,7 @@ import { statusOptions } from '@/utils/statusOptions'
 
 const page = usePage()
 const currentUser = page.props.auth.user
+const activeTemplate = computed(() => page.props.activeTemplateSurat ?? null)
 
 const suratTugas = computed(() => page.props.suratTugas ?? {
   data: [],
@@ -161,7 +163,7 @@ const handleAction = (type, row) => {
 
   switch (type) {
     case 'view':
-      selectedData.value = row
+      selectedData.value = applyActiveTemplate(row, activeTemplate.value)
       showViewModal.value = true
       break
 

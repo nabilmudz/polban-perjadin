@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SuratTugasController;
 use App\Http\Controllers\PelaksanaController;
 use App\Http\Controllers\Wadir\WadirController;
+use App\Http\Controllers\Admin\MahasiswaController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SekdirController;
 use App\Http\Controllers\BKUController;
@@ -39,7 +40,7 @@ Route::middleware(['auth'])->group(function () {
     // Admin
     Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->group(function () {
         Route::resource('pegawai', PegawaiController::class);
-        Route::resource('mahasiswa', \App\Http\Controllers\Admin\MahasiswaController::class);
+        Route::resource('mahasiswa', MahasiswaController::class);
 
         Route::get('/template-surat', [TemplateSuratController::class, 'index'])->name('template-surat');
         Route::post('/template-surat', [TemplateSuratController::class, 'store'])->name('template-surat.store');

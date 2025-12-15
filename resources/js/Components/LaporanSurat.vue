@@ -145,27 +145,23 @@
 
           <table class="w-full mt-24 footer-table">
             <tr>
-              <td colspan="2" class="text-[11pt] text-right">
-                Bandung,
-                {{ formatDateFull(surat.tanggal_persetujuan_direktur || surat.tanggal_berangkat) }}
-              </td>
-            </tr>
-
-            <tr>
               <td class="align-top text-[10pt] w-1/2 tembusan-cell">
                 <template v-if="(surat.template_tembusan || []).length">
                   <p class="mb-1">Tembusan:</p>
                   <ol class="pl-5 m-0 tembusan-list list-decimal">
-                    <li v-for="(t, i) in tembusanList" :key="i">
-                      {{ t }}
-                    </li>
+                    <li v-for="(t, i) in tembusanList" :key="i">{{ t }}</li>
                   </ol>
                 </template>
               </td>
 
               <td class="align-top w-1/2 signature-cell text-[11pt]">
                 <div class="signature-cell-inner">
-                  <p class="mb-1">Direktur,</p>
+                  <p class="m-0 mb-1 leading-tight">
+                    Bandung, {{ formatDateFull(surat.tanggal_persetujuan_direktur || surat.tanggal_berangkat) }}
+                  </p>
+
+                  <p class="m-0 mb-1 leading-tight">Direktur,</p>
+
                   <div class="relative h-[60px] mt-1 signature-block">
                     <img
                       v-if="surat.direktur_signature_data"
@@ -173,6 +169,7 @@
                       class="absolute top-[-10px] right-0 w-[100px] h-[60px]"
                     />
                   </div>
+
                   <p class="font-bold m-0 mt-2">
                     {{ surat.template_nama_direktur || '[Nama Direktur]' }}
                   </p>
@@ -183,7 +180,6 @@
               </td>
             </tr>
           </table>
-
         </div>
 
         <template v-if="isLampiran && personnelList.length">
@@ -245,16 +241,16 @@
               <div class="mt-10">
                 <table class="w-full footer-table">
                   <tr>
-                    <td colspan="2" class="text-[11pt] text-right">
-                      Bandung,
-                      {{ formatDateFull(surat.tanggal_persetujuan_direktur || surat.tanggal_berangkat) }}
-                    </td>
-                  </tr>
-                  <tr>
                     <td class="w-1/2"></td>
+
                     <td class="signature-cell text-[11pt]">
                       <div class="signature-cell-inner">
-                        <p class="mb-1">Direktur,</p>
+                        <p class="m-0 mb-1 leading-tight">
+                          Bandung, {{ formatDateFull(surat.tanggal_persetujuan_direktur || surat.tanggal_berangkat) }}
+                        </p>
+
+                        <p class="m-0 mb-1 leading-tight">Direktur,</p>
+
                         <div class="relative h-[60px] mt-1 signature-block">
                           <img
                             v-if="surat.direktur_signature_data"
@@ -262,6 +258,7 @@
                             class="absolute top-[-10px] right-0 w-[100px] h-[60px]"
                           />
                         </div>
+
                         <p class="m-0 font-bold mt-2">
                           {{ surat.template_nama_direktur || '[Nama Direktur]' }}
                         </p>
@@ -343,13 +340,15 @@
                   <table class="w-full footer-table">
                     <tr>
                       <td class="w-1/2"></td>
+
                       <td class="signature-cell text-[11pt]">
                         <div class="signature-cell-inner">
-                          <p>
-                            Bandung,
-                            {{ formatDateFull(surat.tanggal_persetujuan_direktur || surat.tanggal_berangkat) }}
+                          <p class="m-0 mb-1 leading-tight">
+                            Bandung, {{ formatDateFull(surat.tanggal_persetujuan_direktur || surat.tanggal_berangkat) }}
                           </p>
-                          <p class="mb-1">Direktur,</p>
+
+                          <p class="m-0 mb-1 leading-tight">Direktur,</p>
+
                           <div class="relative h-[60px] mt-1 signature-block">
                             <img
                               v-if="surat.direktur_signature_data"
@@ -357,6 +356,7 @@
                               class="absolute top-[-10px] right-0 w-[100px] h-[60px]"
                             />
                           </div>
+
                           <p class="m-0 font-bold mt-2">
                             {{ surat.template_nama_direktur || '[Nama Direktur]' }}
                           </p>
