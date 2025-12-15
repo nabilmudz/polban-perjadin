@@ -3,43 +3,59 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\TemplateSuratService;
 use Illuminate\Http\Request;
-use App\Models\TemplateSurat;
 use Inertia\Inertia;
+use Illuminate\Validation\Rule;
 
 class TemplateSuratController extends Controller
 {
-    public function edit()
-    {
-        $template = TemplateSurat::first() ?? new TemplateSurat([
-            'nama_kementerian' => '',
-            'nama_direktur' => '',
-            'nip_direktur' => '',
-            'tembusan_default' => [],
-        ]);
+    protected TemplateSuratService $service;
 
+    public function __construct(TemplateSuratService $service)
+    {
+        $this->service = $service;
+    }
+
+    public function index()
+    {
         return Inertia::render('Admin/TemplateSurat', [
-            'template' => TemplateSurat::first()
+            'templates' => $this->service->getAll(),
         ]);
     }
 
-    public function update(Request $request)
+    public function store(Request $request)
     {
         $data = $request->validate([
-            'nama_kementerian' => 'nullable|string',
-            'nama_direktur'    => 'nullable|string',
-            'nip_direktur'     => 'nullable|string',
-            'tembusan_default' => 'nullable|array',
+            'nama_kementerian' => 'required|string',
+            'nama_direktur'    => 'required|string',
+            'nip_direktur'     => 'required|string',
+            'status'           => ['required', Rule::in([0, 1])],
         ]);
 
-        $template = TemplateSurat::first();
+        $this->service->create($data);
 
-        if ($template) {
-            $template->update($data);
-        } else {
-            TemplateSurat::create($data);
-        }
+        return redirect()->back(); 
+    }
 
-        return back()->with('success', 'Template berhasil disimpan!');
+    public function update(Request $request, $id)
+    {
+        $data = $request->validate([
+            'nama_kementerian' => 'required|string',
+            'nama_direktur'    => 'required|string',
+            'nip_direktur'     => 'required|string',
+            'status'           => ['required', Rule::in([0, 1])],
+        ]);
+
+        $this->service->update($id, $data);
+
+        return redirect()->back(); 
+    }
+
+    public function toggleStatus($id)
+    {
+        $this->service->toggleStatus($id);
+
+        return redirect()->back(); 
     }
 }

@@ -89,10 +89,10 @@ return new class extends Migration
         // Template Surat
         Schema::create('template_surat', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_kementerian')->nullable();
-            $table->string('nama_direktur')->nullable();
-            $table->string('nip_direktur')->nullable();
-            $table->json('tembusan_default')->nullable();
+            $table->string('nama_kementerian');
+            $table->string('nama_direktur');
+            $table->string('nip_direktur');
+            $table->tinyInteger('status')->default(1); // 1 = aktif, 0 = nonaktif
             $table->timestamps();
         });
     }

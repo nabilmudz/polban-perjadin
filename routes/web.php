@@ -40,11 +40,11 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->group(function () {
         Route::resource('pegawai', PegawaiController::class);
         Route::resource('mahasiswa', \App\Http\Controllers\Admin\MahasiswaController::class);
-        
-        Route::get('/template-surat', [TemplateSuratController::class, 'edit'])
-            ->name('template');
-        Route::put('/template-surat', [TemplateSuratController::class, 'update'])
-            ->name('template.update');
+
+        Route::get('/template-surat', [TemplateSuratController::class, 'index'])->name('template-surat');
+        Route::post('/template-surat', [TemplateSuratController::class, 'store'])->name('template-surat.store');
+        Route::put('/template-surat/{id}', [TemplateSuratController::class, 'update'])->name('template-surat.update');
+        Route::patch('/template-surat/{id}/toggle-status', [TemplateSuratController::class, 'toggleStatus'])->name('template-surat.toggle-status');
     });
 
     // Pengusul 
@@ -157,7 +157,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('sekdir')->name('sekdir.')->middleware(['auth', 'role:sekdir'])->group(function () {
         Route::get('/dashboard', [SekdirController::class, 'dashboard'])->name('dashboard');
         Route::get('/nomor-surat', [SekdirController::class, 'nomorSurat'])->name('nomorsurat');
-        Route::get('/nomor-surat/{id}/review', [SekdirController::class, 'review'])->name('nomorsurat.review');
+        Route::get('/nomor-surat/{id}/review', [SekdirController::class, 'reviewNomorSurat'])->name('nomorsurat.review');
         Route::post('/nomor-surat/{id}/apply', [SekdirController::class, 'applyNomor'])->name('nomorsurat.apply');
         Route::get('/history', [SekdirController::class, 'history'])->name('history');
     });
