@@ -15,37 +15,27 @@
           :links="history.links"
           :filters="filters"
           route-name="bku.historyperjalanandinas"
-          @update:filters="handleFilterUpdate"
-          @changePage="handlePageChange"
+          @update:filters="Object.assign(filters, $event)"
+          @changePage="(page) => router.get(route('bku.historyperjalanandinas'), { ...filters, page }, { preserveState: true, replace: true })"
         >
-           <template #no="{ index }">
-              {{ (history.meta.from || 1) + index }}
-           </template>
-
-           <template #diusulkan_kepada="{ row }">
-              <span class="text-gray-700">{{ row.diusulkan_kepada }}</span>
-           </template>
-
-           <template #nominal_biaya="{ row }">
-              {{ formatCurrency(row.nominal_biaya) }}
-           </template>
-
-           <template #status_surat="{ row }">
-             <StatusBadges :status="row.status_surat" />
-           </template>
-
+           <template #no="{ index }">{{ (history.meta.from || 1) + index }}</template>
+           <template #created_at="{ row }">{{ formatDate(row.created_at) }}</template>
+           <template #tanggal_pelaksanaan="{ row }">{{ formatDate(row.tanggal_pelaksanaan) }}</template>
+           
+           <template #diusulkan_kepada="{ row }"><span class="text-gray-700">{{ row.diusulkan_kepada }}</span></template>
+           <template #nominal_biaya="{ row }">{{ formatCurrency(row.nominal_biaya) }}</template>
+           <template #status_surat="{ row }"><StatusBadges :status="row.status_surat" /></template>
            <template #aksi="{ row }">
             <div class="flex gap-2 justify-center">
               <button 
                 class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90 bg-blue-500 text-white" 
                 title="Lihat Detail"
-                @click="router.get(route('bku.verifikasi', row.id))"
+                @click="openModal(row)"
               >
                  <font-awesome-icon :icon="['far', 'eye']" class="text-md" />
               </button>
-              
               <button 
-                v-if="['approved', 'completed', 'published', 'awaiting_proof_upload', 'under_bku_review', 'returned_for_correction'].includes(row.status_surat)" 
+                v-if="['approved', 'completed'].includes(row.status_surat)" 
                 class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90 bg-green-500 text-white" 
                 title="Download"
                 @click="router.get(route('surat.download', row.id))"
@@ -57,6 +47,11 @@
         </DataTable>
       </div>
     </div>
+
+    <ModalLaporan :show="showViewModal" @close="showViewModal = false">
+        <LaporanSurat v-if="selectedData" :surat="selectedData" />
+    </ModalLaporan>
+
   </AppLayout>
 </template>
 
@@ -65,8 +60,11 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
+import ModalLaporan from '@/Components/ModalLaporan.vue'
+import LaporanSurat from '@/Components/LaporanSurat.vue'
+
 import { Head, router, usePage } from '@inertiajs/vue3'
-import { reactive, computed, watch } from 'vue'
+import { reactive, computed, watch, ref } from 'vue'
 import debounce from 'lodash.debounce'
 
 const page = usePage()
@@ -89,38 +87,45 @@ const history = computed(() => {
 
 const filters = reactive({
   search: page.props.filters?.search || '',
+  from: page.props.filters?.from || '',
+  to: page.props.filters?.to || '',
+  range: page.props.filters?.range || '',
 })
 
 watch(
-  () => filters.search,
-  debounce((value) => {
-    router.get(route('bku.historyperjalanandinas'), { search: value }, { preserveState: true, replace: true })
-  }, 300)
+  filters,
+  debounce(() => {
+    router.get(route('bku.historyperjalanandinas'), filters, { preserveState: true, replace: true })
+  }, 300),
+  { deep: true }
 )
 
-const handleFilterUpdate = (newFilters) => {
-    Object.assign(filters, newFilters)
-}
-
-const handlePageChange = (pageNumber) => {
-    router.get(route('bku.historyperjalanandinas'), { ...filters, page: pageNumber }, { preserveState: true, replace: true })
+const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    if (dateString.length === 10 && dateString.includes('-')) return dateString;
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString; 
+    return date.toISOString().split('T')[0];
 }
 
 const formatCurrency = (value) => {
   if (!value) return 'Rp 0';
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0
-  }).format(value);
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value);
+}
+
+const showViewModal = ref(false)
+const selectedData = ref(null)
+
+const openModal = (row) => {
+    selectedData.value = row
+    showViewModal.value = true
 }
 
 const columns = [
   { key: 'perihal_tugas', label: 'Nama Kegiatan' },
-  { key: 'created_at', label: 'Tanggal Pengusulan' },
-  { key: 'tanggal_pelaksanaan', label: 'Tanggal Berangkat' },
-  { key: 'nomor_surat_usulan_jurusan', label: 'Nomor Surat Pengantar' }, 
-  { key: 'nomor_surat_resmi', label: 'Nomor Surat Tugas' },
+  { key: 'created_at', label: 'Tanggal Pengusulan', slot: 'created_at' },
+  { key: 'tanggal_pelaksanaan', label: 'Tanggal Berangkat', slot: 'tanggal_pelaksanaan' },
+  { key: 'nomor_surat_usulan_jurusan', label: 'Nomor Surat Usulan' }, 
   { key: 'diusulkan_kepada', label: 'Diusulkan Kepada', slot: 'diusulkan_kepada' },
   { key: 'sumber_dana', label: 'Sumber Dana' }, 
   { key: 'nominal_biaya', label: 'Total Dana', slot: 'nominal_biaya' },
