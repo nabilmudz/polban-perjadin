@@ -1,52 +1,77 @@
 <template>
-    <AppLayout>
-        <Head title="History Surat Tugas - Wadir" />
+  <AppLayout>
+    <Head title="History Surat Tugas - Wadir" />
 
-        <div class="bg-white w-full rounded-md shadow">
-            <HeaderPage />
+    <div class="bg-white w-full rounded-md shadow">
+      <HeaderPage />
 
-            <div class="p-8">
-                <h1 class="text-3xl font-bold mb-4">History Surat Tugas</h1>
+      <div class="p-8">
+        <h1 class="text-3xl font-bold mb-4">History Surat Tugas</h1>
+      </div>
+
+      <div class="p-8">
+        <DataTable
+          :columns="columns"
+          :data="suratTugas.data"
+          :meta="suratTugas.meta"
+          :links="suratTugas.links"
+          :filters="filters"
+          :route-name="routeName"
+          @update:filters="onUpdateFilters"
+          @changePage="onChangePage"
+        >
+          <!-- OPTIONAL: if you add status column later -->
+          <template #status_surat="{ row }">
+            <StatusBadges :status="row.status_surat" />
+          </template>
+
+          <!-- Surat Undangan (same like Persetujuan) -->
+          <template #path_file_surat_usulan="{ row }">
+            <button
+              v-if="row.path_file_surat_usulan"
+              @click="openSuratUndangan(row)"
+              class="px-3 py-1 rounded bg-yellow-400 text-black shadow hover:brightness-95 flex items-center gap-2 justify-center"
+              title="Lihat Surat Undangan"
+            >
+              <font-awesome-icon :icon="['far', 'file-lines']" />
+            </button>
+            <span v-else class="text-gray-400">-</span>
+          </template>
+
+          <!-- Actions (same like Persetujuan) -->
+          <template #action="{ row }">
+            <div class="flex gap-2">
+              <button
+                v-for="action in getRowActions(row, user.role)"
+                :key="action.type"
+                :title="action.type"
+                @click="handleAction(action.type, row)"
+                class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90"
+                :class="{
+                  'bg-blue-500 text-white': action.color === 'blue',
+                  'bg-green-500 text-white': action.color === 'green',
+                  'bg-red-500 text-white': action.color === 'red',
+                  'bg-yellow-400 text-black': action.color === 'yellow',
+                  'bg-purple-500 text-white': action.color === 'purple',
+                }"
+              >
+                <font-awesome-icon :icon="['far', action.icon]" class="text-md" />
+              </button>
             </div>
+          </template>
+        </DataTable>
+      </div>
+    </div>
 
-            <div class="p-8">
-                <DataTable
-                    :columns="columns"
-                    :data="suratTugas.data"
-                    :meta="suratTugas.meta"
-                    :links="suratTugas.links"
-                    :filters="filters"
-                    :route-name="routeName"
-                    @update:filters="updateFilters"
-                >
-                    <template #status_surat="{ row }">
-                        <StatusBadges :status="row.status_surat" />
-                    </template>
-
-                    <template #action="{ row }">
-                        <div class="flex gap-2">
-                            <button
-                                v-for="action in getRowActions(row, user.role)"
-                                :key="action.type"
-                                @click="handleAction(action.type, row)"
-                                :title="action.type"
-                                class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90"
-                                :class="{
-                                    'bg-blue-500 text-white': action.color === 'blue',
-                                    'bg-green-500 text-white': action.color === 'green',
-                                    'bg-red-500 text-white': action.color === 'red',
-                                    'bg-yellow-400 text-black': action.color === 'yellow',
-                                    'bg-purple-500 text-white': action.color === 'purple',
-                                }"
-                            >
-                                <font-awesome-icon :icon="['far', action.icon]" class="text-md" />
-                            </button>
-                        </div>
-                    </template>
-                </DataTable>
-            </div>
-        </div>
-    </AppLayout>
+    <FilePreviewModal
+      :show="preview.state.show"
+      :file="preview.state.file"
+      :loading="preview.state.loading"
+      :error="preview.state.error"
+      title="Surat Undangan"
+      @close="preview.close"
+    />
+  </AppLayout>
 </template>
 
 <script setup>
@@ -54,55 +79,95 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
+import FilePreviewModal from '@/Components/FilePreviewModal.vue'
+
+import { Head, usePage, router } from '@inertiajs/vue3'
+import { reactive, watch, computed } from 'vue'
+import debounce from 'lodash.debounce'
+
 import { getRowActions } from '@/utils/rowAction'
-import { usePage, router } from '@inertiajs/vue3'
-import { ref, computed, watch } from 'vue'
+import { useFilePreview } from '@/utils/useFilePreviews.js'
 
-const { props } = usePage()
-const suratTugas = props.suratTugas
+const page = usePage()
+const user = page.props.auth?.user ?? {}
+const routeName = `${user.role}.history`
 
-const user = usePage().props.auth?.user ?? { role: 'wadir' }
-
-const routeName = computed(() => `${user.role}.history`)
-
-const filters = ref({
-    search: props.filters?.search ?? '',
-    status: props.filters?.status ?? '',
-    from: props.filters?.from ?? '',
-    to: props.filters?.to ?? '',
+const suratTugas = computed(() => page.props.suratTugas ?? {
+  data: [],
+  meta: {},
+  links: {},
 })
 
-const updateFilters = (newFilters) => {
-    filters.value = { ...filters.value, ...newFilters }
-
-    router.get(route(routeName.value), filters.value, {
-        preserveScroll: true,
-        preserveState: true,
-        replace: true,
-    })
-}
+const filters = reactive({
+  search: page.props.filters?.search ?? '',
+  status: page.props.filters?.status ?? '',
+  from: page.props.filters?.from ?? '',
+  to: page.props.filters?.to ?? '',
+  page: page.props.filters?.page ?? 1,
+  range: page.props.filters?.range ?? '',
+})
 
 const columns = [
-    { key: 'perihal_tugas', label: 'Nama Kegiatan' },
-    { key: 'created_at', label: 'Tanggal Pengusulan' },
-    { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
-    { key: 'no_usulan_surat', label: 'Nomor Surat Usulan' },
-    { key: 'nomor_surat_tugas_resmi', label: 'Nomor Surat Tugas' },
-    { key: 'sumber_dana', label: 'Sumber Dana' },
-    { key: 'total_dana', label: 'Total Dana' },
-    { key: 'status_surat', label: 'Status' },
-    { key: 'action', label: 'Aksi', fixedWidth: '180px' }
+  { key: 'nama_pengusul', label: 'Pengusul' },
+  { key: 'perihal_tugas', label: 'Nama Kegiatan' },
+  { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
+  { key: 'sumber_dana', label: 'Pembiayaan' },
+  { key: 'total_dana', label: 'Total Dana' },
+  { key: 'path_file_surat_usulan', label: 'Surat Undangan', sortable: false, fixedWidth: '140px' },
+  { key: 'status_surat', label: 'Status' },
+  { key: 'action', label: 'Aksi', sortable: false, fixedWidth: '180px' },
 ]
 
+watch(
+  filters,
+  debounce(() => {
+    router.get(route(routeName), { ...filters }, {
+      preserveState: true,
+      replace: true,
+    })
+  }, 300),
+  { deep: true }
+)
+
+const onUpdateFilters = (newFilters) => {
+  Object.assign(filters, newFilters)
+}
+
+const onChangePage = (pageNumber) => {
+  filters.page = pageNumber
+}
+
+const preview = useFilePreview()
+
+const openSuratUndangan = (row) => {
+  const path = row?.path_file_surat_usulan
+  if (!path) return
+
+  preview.open({
+    url: path,
+    name: 'Surat Undangan',
+  })
+}
+
+const getSuratTugasId = (row) => row?.surat_tugas_id ?? row?.id
+
 const handleAction = (type, row) => {
-    router.get(route(`${user.role}.persetujuan.show`, row.id))
+  const id = getSuratTugasId(row)
+  if (!id) return console.error('Missing surat_tugas_id', row)
+
+  switch (type) {
+    case 'review':
+    case 'view':
+      router.get(route(`${user.role}.persetujuan.show`, id))
+      break
+
+    case 'approve':
+      router.post(route(`${user.role}.persetujuan.approve`, id), {}, { preserveScroll: true })
+      break
+
+    case 'reject':
+      router.post(route(`${user.role}.persetujuan.reject`, id), {}, { preserveScroll: true })
+      break
+  }
 }
 </script>
-
-<style scoped>
-.flex-center {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-</style>

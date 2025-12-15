@@ -5,9 +5,9 @@
     <HeaderPage />
 
     <div class="p-8">
-      <h1 class="text-3xl font-bold mb-4">Dashboard</h1>
+      <h1 class="text-3xl font-bold mb-4">Dashboard Pengusul</h1>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-5">
         <StatCard
           title="Total Pengusulan"
           icon="file"

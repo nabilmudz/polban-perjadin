@@ -19,21 +19,42 @@ class WadirController extends Controller
             default  => null,
         };
     }
+    private function wadirTargets(): array
+    {
+        $role = auth()->user()->role;
+        $label = match ($role) {
+            'wadir1' => 'Wadir I',
+            'wadir2' => 'Wadir II',
+            'wadir3' => 'Wadir III',
+            'wadir4' => 'Wadir IV',
+            default  => null,
+        };
 
+        return array_values(array_filter(array_unique([$role, $label])));
+    }
     private function mapPagination($paginate)
     {
         return [
             'data' => $paginate->getCollection()->transform(function ($item) {
+                $noUsulan = $item->nomor_surat_usulan_jurusan;
+
                 return [
                     ...$item->toArray(),
 
+                    'kode_pengusul' => $item->user?->kode_pengusul ?? '-',
+                    'nama_pengusul' => $item->user?->name ?? '-',
+
+                    'no_usulan_surat' => $noUsulan ?: null,
+
                     'sumber_dana' => $item->sumber_dana,
-                    'total_dana'  => $item->total_dana,
+                    'total_dana'  => 'Rp ' . number_format((float) ($item->nominal_dana ?? 0), 0, ',', '.'),
 
                     'created_at'        => $item->created_at?->format('Y-m-d'),
                     'tanggal_berangkat' => $item->tanggal_berangkat?->format('Y-m-d'),
                     'tanggal_kembali'   => $item->tanggal_kembali?->format('Y-m-d'),
                     'tanggal_penomoran_sekdir' => $item->tanggal_penomoran_sekdir?->format('Y-m-d'),
+
+                    'personel' => $this->mapPersonel($item),
                 ];
             }),
 
@@ -53,16 +74,18 @@ class WadirController extends Controller
         ];
     }
 
-
     private function querySurat($filters)
     {
-        $wadir = $this->wadirLabel();
+        $targets = $this->wadirTargets();
 
-        return SuratTugas::where('diusulkan_kepada', $wadir)
+        return SuratTugas::query()
+            ->with([
+                'user:id,kode_pengusul,name',
+                'detailPelaksanaTugas.personable',
+            ])
+            ->whereIn('diusulkan_kepada', $targets)
             ->when($filters['search'] ?? null, function ($q, $s) {
-                $q->where(function ($xx) use ($s) {
-                    $xx->where('perihal_tugas', 'like', "%$s%");
-                });
+                $q->where(fn($xx) => $xx->where('perihal_tugas', 'like', "%$s%"));
             })
             ->when($filters['status'] ?? null, function ($q, $s) {
                 $q->where('status_surat', $s);
@@ -74,63 +97,66 @@ class WadirController extends Controller
 
     public function dashboard(Request $request)
     {
-        
         $filters = $request->only(['search', 'status', 'from', 'to', 'page']);
+        $filters['from'] = $filters['from'] ?? null;
+        $filters['to']   = $filters['to'] ?? null;
+
         $filters['status'] = 'submitted_wadir_review';
-        $wadir = $this->wadirLabel();
 
         $paginate = $this->querySurat($filters)
             ->latest()
             ->paginate(5)
             ->withQueryString();
 
+        $statusCounts = SuratTugas::whereIn('diusulkan_kepada', $this->wadirTargets())
+            ->selectRaw('status_surat, COUNT(*) as count')
+            ->groupBy('status_surat')
+            ->pluck('count', 'status_surat')
+            ->toArray();
+
+        $today = now()->toDateString();
+        $onDuty = SuratTugas::whereIn('diusulkan_kepada', $this->wadirTargets())
+            ->where('status_surat', 'published')
+            ->whereDate('tanggal_berangkat', '<=', $today)
+            ->whereDate('tanggal_kembali', '>=', $today)
+            ->count();
+
         return Inertia::render('Wadir/WadirDashboard', [
-            'suratTugas' => $this->mapPagination($paginate),
-            'filters'    => $filters,
-
-            'stats'      => [
-                "total" => SuratTugas::where('diusulkan_kepada', $wadir)->count(),
-
-                "baru" => SuratTugas::where('diusulkan_kepada', $wadir)
-                    ->where('status_surat', 'submitted_wadir_review')
-                    ->count(),
-
-                "proses_direktur" => SuratTugas::where('diusulkan_kepada', $wadir)
-                    ->where('status_surat', 'pending_direktur_signature')
-                    ->count(),
-
-                "bertugas" => SuratTugas::where('diusulkan_kepada', $wadir)
-                    ->whereIn('status_surat', ['published', 'awaiting_proof_upload'])
-                    ->count(),
-
-                "rejected" => SuratTugas::where('diusulkan_kepada', $wadir)
-                    ->where('status_surat', 'rejected')
-                    ->count(),
-            ],
+            'suratTugas'   => $this->mapPagination($paginate),
+            'filters'      => $filters,
+            'statusCounts' => array_merge($statusCounts, ['on_duty' => $onDuty]),
         ]);
     }
 
     public function history(Request $request)
     {
-        $filters = $request->only(['search', 'status', 'from', 'to', 'page']);
-
-        $allowedStatuses = [
+        $filters = $request->only(['search', 'status', 'from', 'to', 'page', 'range']);
+        $validStatuses = [
             'draft',
+            'submitted_wadir_review',
             'revision_requested',
             'rejected',
             'approved_wadir',
-            'submitted_wadir_review'
+            'pending_sekdir_numbering',
+            'pending_direktur_signature',
+            'published',
+            'awaiting_proof_upload',
+            'under_bku_review',
+            'returned_for_correction',
+            'completed',
         ];
 
-        if (!empty($filters['status']) && !in_array($filters['status'], $allowedStatuses, true)) {
+        if (!empty($filters['status']) && !in_array($filters['status'], $validStatuses, true)) {
             unset($filters['status']);
         }
 
-        $paginate = $this->querySurat($filters)
-            ->whereNotIn('status_surat', $allowedStatuses)
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+        $q = $this->querySurat($filters);
+
+        if (empty($filters['status'])) {
+            $q->whereNotIn('status_surat', ['draft', 'submitted_wadir_review']);
+        }
+
+        $paginate = $q->latest()->paginate(10)->withQueryString();
 
         return Inertia::render('Wadir/HistoryWadir', [
             'suratTugas' => $this->mapPagination($paginate),
@@ -138,6 +164,28 @@ class WadirController extends Controller
         ]);
     }
 
+    private function mapPersonel(SuratTugas $item)
+    {
+        $item->loadMissing('detailPelaksanaTugas.personable');
+
+        return $item->detailPelaksanaTugas->map(function ($d) {
+            $p     = $d->personable;
+            $isMhs = str_contains($d->personable_type, 'Mahasiswa');
+
+            return [
+                'id'       => $p->id,
+                'type'     => $isMhs ? 'mahasiswa' : 'pegawai',
+                'nama'     => $p->nama,
+                'nip'      => $isMhs ? null : ($p->nip ?? null),
+                'nim'      => $isMhs ? ($p->nim ?? null) : null,
+                'pangkat'  => $p->pangkat ?? null,
+                'golongan' => $p->golongan ?? null,
+                'jabatan'  => $p->jabatan ?? null,
+                'jurusan'  => $p->jurusan ?? null,
+                'prodi'    => $p->prodi ?? null,
+            ];
+        })->values();
+    }
 
     public function persetujuan(Request $request)
     {
@@ -157,11 +205,17 @@ class WadirController extends Controller
 
     public function show($id)
     {
-        $data = SuratTugas::with('user')->findOrFail($id);
-        $data->created_at_formatted = $data->created_at->format('Y-m-d');
+        $data = SuratTugas::with([
+            'user:id,kode_pengusul,name',
+            'detailPelaksanaTugas.personable',
+        ])->findOrFail($id);
+
+        $data->created_at_formatted = $data->created_at?->format('Y-m-d');
+        $data->setAttribute('personel', $this->mapPersonel($data));
 
         return Inertia::render('Wadir/ReviewWadir', [
             'data' => $data,
         ]);
     }
+
 }
