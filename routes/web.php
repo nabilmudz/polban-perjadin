@@ -49,16 +49,28 @@ Route::middleware(['auth'])->group(function () {
 
     // Pengusul 
     Route::prefix('pengusul')
-        // Check and ask for direktur and bku
         ->middleware(['auth', 'role:pengusul|wadir1|wadir2|wadir3|wadir4|sekdir|direktur|bku'])
         ->group(function () {
+
             Route::get('/dashboard', [PengusulController::class, 'dashboardPengusulan'])->name('pengusul.dashboard');
             Route::get('/pengusulan', [PengusulController::class, 'daftarPengusulan'])->name('pengusul.pengajuan');
             Route::get('/tambah-pengusulan', [PengusulController::class, 'formPengusulan'])->name('pengusul.form');
             Route::get('/draft', [PengusulController::class, 'draftPengusulan'])->name('pengusul.draft');
+            Route::post('/draft', [PengusulController::class, 'saveDraft'])->name('pengusul.draft.store');
+            Route::get('/draft/{suratTugas}/edit', [PengusulController::class, 'editDraft'])
+                ->name('pengusul.draft.edit');
+            Route::put('/draft/{suratTugas}', [PengusulController::class, 'updateDraft'])
+                ->name('pengusul.draft.update');
+            Route::post('/draft/{suratTugas}/submit', [PengusulController::class, 'submitDraftToWadir'])
+                ->name('pengusul.draft.submit');
+            Route::post('/submit', [PengusulController::class, 'submitToWadir'])->name('pengusul.submit');
             Route::get('/personel', [PengusulController::class, 'personel'])->name('pengusul.personel');
-            Route::post('/submit', [PengusulController::class, 'submitPengusulan'])->name('pengusul.submit');
-    });
+            Route::get('/nomor-terpakai', [PengusulController::class, 'nomorTerpakai'])
+                ->name('pengusul.nomor-terpakai');
+            Route::delete('/draft/{suratTugas}', [PengusulController::class, 'destroyDraft'])
+                ->name('pengusul.draft.destroy');
+        });
+
 
     // Pelaksana
     Route::prefix('pelaksana')->name('pelaksana.')->middleware(['auth', 'role:pelaksana'])->group(function () {

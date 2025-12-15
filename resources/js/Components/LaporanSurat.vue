@@ -155,8 +155,8 @@
               <td class="align-top text-[10pt] w-1/2 tembusan-cell">
                 <template v-if="(surat.template_tembusan || []).length">
                   <p class="mb-1">Tembusan:</p>
-                  <ol class="pl-5 m-0 tembusan-list">
-                    <li v-for="(t, i) in surat.template_tembusan" :key="i">
+                  <ol class="pl-5 m-0 tembusan-list list-decimal">
+                    <li v-for="(t, i) in tembusanList" :key="i">
                       {{ t }}
                     </li>
                   </ol>
@@ -477,6 +477,12 @@ function isPegawai(p) {
 const lokasiList = computed(
   () => props.surat.lokasi_kegiatan || props.surat.lokasiList || []
 )
+const tembusanList = computed(() => {
+  const t = props.surat?.template_tembusan
+  if (Array.isArray(t) && t.length) return t
+  return ['Ketua Jurusan']
+})
+
 const isLampiran = computed(() => {
   const p = personnelList.value.length
   const l = lokasiList.value.length

@@ -200,5 +200,32 @@ class SuratTugasService
             return $surat->fresh();
         });
     }
+    
+    private function appendTembusan(SuratTugas $surat, string $label): void
+    {
+        $list = $surat->template_tembusan ?? [];
+
+        if (is_string($list)) {
+            $decoded = json_decode($list, true);
+            $list = json_last_error() === JSON_ERROR_NONE ? $decoded : [];
+        }
+
+        if (!in_array($label, $list, true)) {
+            $list[] = $label;
+        }
+
+        $surat->update(['template_tembusan' => array_values($list)]);
+    }
+    
+    /*
+    Wadir approves
+    $this->appendTembusan($suratTugas, 'Wakil Direktur');
+
+    Sekdir approves
+    $this->appendTembusan($suratTugas, 'Sekretaris Direktur');
+
+    Direktur approves
+    $this->appendTembusan($suratTugas, 'Direktur');
+    */
 }
 

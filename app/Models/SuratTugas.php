@@ -19,6 +19,7 @@ class SuratTugas extends Model
         'user_id',
         'diusulkan_kepada',
         'nama_penyelenggara',
+        'penyelenggara',
         'lokasi_kegiatan',
         'nomor_surat_usulan_jurusan',
         'nomor_surat_tugas_resmi',

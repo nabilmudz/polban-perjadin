@@ -125,6 +125,9 @@ watch(filters, fetchData, { deep: true })
 const columns = [
   { key: 'perihal_tugas', label: 'Nama Kegiatan' },
   { key: 'created_at', label: 'Tanggal Pengusulan' },
+  { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
+  { key: 'no_usulan_surat', label: 'Nomor Surat Usulan' },
+  { key: 'sumber_dana', label: 'Sumber Dana' },
   { key: 'status_surat', label: 'Status' },
   { key: 'action', label: 'Aksi', fixedWidth: '180px' },
 ]
@@ -151,26 +154,38 @@ const onChangePage = (pageNumber) => {
     { preserveState: true, replace: true },
   )
 }
+const getSuratTugasId = (row) => row?.surat_tugas_id ?? row?.id
 
 const handleAction = (type, row) => {
+  const suratTugasId = getSuratTugasId(row)
+
   switch (type) {
     case 'view':
       selectedData.value = row
       showViewModal.value = true
       break
+
     case 'edit':
-      router.get(route('pengusul.edit', row.id))
+      if (!suratTugasId) return console.error('Missing suratTugasId', row)
+      router.get(route('pengusul.draft.edit', { suratTugas: suratTugasId }))
       break
+
     case 'delete':
+      if (!suratTugasId) return console.error('Missing suratTugasId', row)
       if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-        router.delete(route('pengusul.destroy', row.id))
+        router.delete(route('pengusul.draft.destroy', { suratTugas: suratTugasId }), {
+          preserveScroll: true,
+          replace: true,
+        })
       }
       break
+
     case 'download':
-      router.get(route('pengusul.download', row.id))
+      router.get(route('pengusul.download', { suratTugas: suratTugasId }))
       break
   }
 }
+
 </script>
 
 <script>
