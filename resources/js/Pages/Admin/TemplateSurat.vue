@@ -1,139 +1,170 @@
 <template>
-  <Head title="Template Surat Tugas" />
-
+  <Head title="Template Surat" />
   <div class="bg-white w-full h-full rounded-md">
     <HeaderPage />
 
     <div class="p-8">
-      <h1 class="text-3xl font-bold mb-6">Template Surat Tugas</h1>
-
-      <div class="w-full">
-        <div class="bg-white w-full rounded-md shadow p-6">
-
-          <div class="space-y-5">
-
-            <div>
-              <label class="block font-semibold mb-1">Nama Kementerian</label>
-              <input
-                v-model="form.nama_kementerian"
-                :disabled="!editing"
-                class="w-full px-3 py-2 rounded bg-gray-100 border-0 focus:ring-0"
-              />
-            </div>
-
-            <div>
-              <label class="block font-semibold mb-1">Nama Direktur</label>
-              <input
-                v-model="form.nama_direktur"
-                :disabled="!editing"
-                class="w-full px-3 py-2 rounded bg-gray-100 border-0 focus:ring-0"
-              />
-            </div>
-
-            <div>
-              <label class="block font-semibold mb-1">NIP Direktur</label>
-              <input
-                v-model="form.nip_direktur"
-                :disabled="!editing"
-                class="w-full px-3 py-2 rounded bg-gray-100 border-0 focus:ring-0"
-              />
-            </div>
-
-            <div>
-              <label class="block font-semibold mb-1">Tembusan Default</label>
-              <textarea
-                v-model="form.tembusan_default"
-                :disabled="!editing"
-                class="w-full px-3 py-2 rounded bg-gray-100 border-0 focus:ring-0 resize-none h-[42px]"
-              ></textarea>
-            </div>
-
-          </div>
-
-          <div class="flex gap-3 mt-6">
-            <button
-              v-if="!editing"
-              @click="startEdit"
-              class="px-4 py-2 bg-primary-default text-white rounded"
-            >
-              Edit
-            </button>
-
-            <button
-              v-if="editing"
-              @click="save"
-              class="px-4 py-2 bg-green-600 text-white rounded"
-            >
-              Simpan
-            </button>
-
-            <button
-              v-if="editing"
-              @click="cancel"
-              class="px-4 py-2 bg-gray-500 text-white rounded"
-            >
-              Batal
-            </button>
-          </div>
-
-        </div>
-      </div>
+      <h1 class="text-3xl font-bold">Template Surat Tugas</h1>
     </div>
+
+    <DataTable
+      :columns="columns"
+      :data="templates.data"
+      :meta="templates.meta"
+      :links="templates.links"
+      :filters="filters"
+      route-name="admin.template-surat"
+      :enable-search="false"
+      :enable-status="false"
+      :enable-date="false"
+      @update:filters="Object.assign(filters, $event)"
+    >
+      <!-- STATUS -->
+      <template #status="{ row }">
+        <label class="relative inline-flex cursor-pointer">
+          <input
+            type="checkbox"
+            class="sr-only peer"
+            :checked="row.status == 1"
+            @change="toggleStatus(row)"
+          />
+          <div
+            class="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-green-500
+              after:content-[''] after:absolute after:top-0.5 after:left-[2px]
+              after:bg-white after:rounded-full after:h-5 after:w-5
+              after:transition-all peer-checked:after:translate-x-full"
+          />
+        </label>
+      </template>
+
+      <!-- AKSI -->
+      <template #actions="{ row }">
+        <button
+          class="bg-yellow-400 text-black px-2 py-1 rounded"
+          @click="editTemplate(row)"
+        >
+          <font-awesome-icon :icon="['far', 'pen-to-square']" />
+        </button>
+      </template>
+
+      <!-- BUTTON ATAS -->
+      <template #filters-extra>
+        <button
+          class="bg-primary-default text-white px-3 py-2 rounded"
+          @click="openCreate"
+        >
+          <font-awesome-icon :icon="['far', 'file-lines']" />
+          Tambah Template
+        </button>
+      </template>
+    </DataTable>
+
+    <!-- MODAL -->
+    <FormTemplateSurat
+      v-if="showModal"
+      :form="form"
+      @close="closeModal"
+      @save="submitTemplate"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { Head, router, usePage } from "@inertiajs/vue3";
-import HeaderPage from "@/Components/HeaderPage.vue";
+import { ref, reactive, computed } from 'vue'
+import { Head, router, usePage } from '@inertiajs/vue3'
 
-const page = usePage();
-const data = page.props.template ?? {};
+import HeaderPage from '@/Components/HeaderPage.vue'
+import DataTable from '@/Components/Table/DataTable.vue'
+import FormTemplateSurat from './Partials/FormTemplateSurat.vue'
 
-const editing = ref(false);
+const page = usePage()
+const templates = computed(() => page.props.templates)
 
-const form = ref({
-  nama_kementerian: "",
-  nama_direktur: "",
-  nip_direktur: "",
-  tembusan_default: ""
-});
+const showModal = ref(false)
 
-function startEdit() {
-  editing.value = true;
+const form = reactive({
+  id: null,
+  nama_kementerian: '',
+  nama_direktur: '',
+  nip_direktur: '',
+  status: 1,
+})
+
+const filters = reactive({
+  page: page.props.filters?.page || 1,
+})
+
+const columns = [
+  { key: 'nama_kementerian', label: 'Nama Kementerian' },
+  { key: 'nama_direktur', label: 'Nama Direktur' },
+  { key: 'nip_direktur', label: 'NIP Direktur' },
+  { key: 'status', label: 'Status' },
+  { key: 'actions', label: 'Aksi' },
+]
+
+/* ===== ACTIONS ===== */
+
+const openCreate = () => {
+  resetForm()
+  showModal.value = true
 }
 
-function save() {
-  router.put(route("admin.template.update"), {
-    ...form.value,
-    tembusan_default: form.value.tembusan_default
-      .split("\n")
-      .filter(Boolean),
-  });
-
-  resetForm();
-  editing.value = false;
+const editTemplate = (row) => {
+  Object.assign(form, row)
+  showModal.value = true
 }
 
-// BATAL
-function cancel() {
-  resetForm();
-  editing.value = false;
+const submitTemplate = async () => {
+  const url = form.id
+    ? route('admin.template-surat.update', form.id)
+    : route('admin.template-surat.store')
+
+  await router.post(
+    url,
+    {
+      ...form,
+      _method: form.id ? 'PUT' : 'POST',
+    },
+    {
+      preserveScroll: true,
+      onSuccess: () => {
+        closeModal()
+        reloadPage()
+      },
+    }
+  )
 }
 
-function resetForm() {
-  form.value = {
-    nama_kementerian: "",
-    nama_direktur: "",
-    nip_direktur: "",
-    tembusan_default: ""
-  };
+const toggleStatus = async (row) => {
+  await router.patch(
+    route('admin.template-surat.toggle-status', row.id),
+    {},
+    { preserveState: true }
+  )
 }
+
+const closeModal = () => {
+  showModal.value = false
+  resetForm()
+}
+
+const resetForm = () => {
+  Object.assign(form, {
+    id: null,
+    nama_kementerian: '',
+    nama_direktur: '',
+    nip_direktur: '',
+    status: 1,
+  })
+}
+
+const reloadPage = () =>
+  router.reload({ only: ['templates'] })
 </script>
 
 <script>
-import AppLayout from "@/Layouts/AppLayout.vue";
+import AppLayout from '@/Layouts/AppLayout.vue'
 export default {
   layout: (h, page) => h(AppLayout, null, { default: () => page }),
-};
+}
 </script>

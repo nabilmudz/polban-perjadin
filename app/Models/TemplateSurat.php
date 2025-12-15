@@ -12,10 +12,10 @@ class TemplateSurat extends Model
         'nama_kementerian',
         'nama_direktur',
         'nip_direktur',
-        'tembusan_default',
+        'status',
     ];
 
     protected $casts = [
-        'tembusan_default' => 'array',
+    'status' => 'boolean',
     ];
 }
