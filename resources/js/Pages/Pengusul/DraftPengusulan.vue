@@ -48,7 +48,6 @@
     </DataTable>
   </div>
 
-  <!-- Modal preview Laporan -->
   <ModalLaporan :show="showViewModal" @close="showViewModal = false">
     <LaporanSurat v-if="selectedData" :surat="selectedData" />
   </ModalLaporan>
@@ -79,11 +78,9 @@ const filters = reactive({
   page: page.props.filters?.page || 1,
 })
 
-// modal state
 const showViewModal = ref(false)
 const selectedData = ref(null)
 
-// auto-fetch untuk perubahan filter (search/status/tanggal/page)
 watch(
   filters,
   debounce(() => {
@@ -120,7 +117,7 @@ const handleAction = (type, row) => {
       showViewModal.value = true
       break
     case 'edit':
-      router.get(route('pengusul.edit', row.id))
+      router.get(route('pengusul.draft.edit', row.surat_tugas_id))
       break
     case 'delete':
       if (confirm('Are you sure?')) {

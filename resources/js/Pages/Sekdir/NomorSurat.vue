@@ -22,10 +22,22 @@
             <StatusBadges :status="row.status_surat" />
           </template>
 
+          <template #path_file_surat_usulan="{ row }">
+            <button
+              v-if="row.path_file_surat_usulan"
+              @click="openSuratUndangan(row)"
+              class="px-3 py-1 rounded bg-yellow-400 text-black shadow hover:brightness-95 flex items-center gap-2 justify-center"
+              title="Lihat Surat Undangan"
+            >
+              <font-awesome-icon :icon="['far', 'file-lines']" />
+            </button>
+            <span v-else class="text-gray-400">-</span>
+          </template>
+
           <template #aksi="{ row }">
             <button
               class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm"
-              @click="gotoReview(row.surat_tugas_id)"
+              @click="gotoReview(row.surat_tugas_id ?? row.id)"
             >
               Review & Nomor
             </button>
@@ -33,35 +45,44 @@
         </DataTable>
       </div>
     </div>
+
+    <FilePreviewModal
+      :show="preview.state.show"
+      :file="preview.state.file"
+      :loading="preview.state.loading"
+      :error="preview.state.error"
+      title="Surat Undangan"
+      @close="preview.close"
+    />
   </AppLayout>
 </template>
 
 <script setup>
 import { Head, usePage, router } from '@inertiajs/vue3'
 import { reactive, watch, computed } from 'vue'
+import debounce from 'lodash.debounce'
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
-import debounce from 'lodash.debounce'
+import FilePreviewModal from '@/Components/FilePreviewModal.vue'
+import { useFilePreview } from '@/utils/useFilePreviews.js'
 
 const page = usePage()
 
-const surat = computed(() => page.props.surat ?? {
-  data: [],
-  meta: {},
-  links: {},
-})
+const surat = computed(() => page.props.surat ?? { data: [], meta: {}, links: {} })
 
 const filters = reactive({
   search: page.props.filters?.search ?? '',
   from: page.props.filters?.from ?? '',
   to: page.props.filters?.to ?? '',
   range: page.props.filters?.range ?? '',
+  page: page.props.filters?.page ?? 1,
 })
 
 const fetchData = debounce(() => {
-  router.get(route('sekdir.nomorsurat'), filters, {
+  router.get(route('sekdir.nomorsurat'), { ...filters }, {
     preserveState: true,
     replace: true,
   })
@@ -69,30 +90,39 @@ const fetchData = debounce(() => {
 
 watch(filters, fetchData, { deep: true })
 
-const onUpdateFilters = (newFilters) => {
-  Object.assign(filters, newFilters)
-}
+const onUpdateFilters = (newFilters) => Object.assign(filters, newFilters)
 
 const onChangePage = (pageNumber) => {
-  router.get(
-    route('sekdir.nomorsurat'),
-    { ...filters, page: pageNumber },
-    { preserveState: true, replace: true },
-  )
+  filters.page = pageNumber
 }
 
 const gotoReview = (id) => {
   router.get(route('sekdir.nomorsurat.review', id))
 }
 
+const preview = useFilePreview()
+
+const toStorageUrl = (path) => {
+  if (!path) return null
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  if (path.startsWith('/storage/')) return path
+  if (path.startsWith('/')) return path
+  return `/storage/${path}`
+}
+
+const openSuratUndangan = (row) => {
+  const url = toStorageUrl(row?.path_file_surat_usulan)
+  if (!url) return
+  preview.open({ url, name: 'Surat Undangan' })
+}
+
 const columns = [
   { key: 'perihal_tugas', label: 'Nama Kegiatan' },
   { key: 'created_at', label: 'Tanggal Pengusulan' },
-  { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
   { key: 'no_usulan_surat', label: 'Nomor Surat Usulan' },
   { key: 'sumber_dana', label: 'Sumber Dana' },
-  { key: 'nominal_dana', label: 'Total Dana' },
-  { key: 'status_surat', label: 'Status' },
-  { key: 'aksi', label: 'Aksi' },
+  { key: 'total_dana', label: 'Total Dana' },
+  { key: 'path_file_surat_usulan', label: 'Surat Undangan', sortable: false, fixedWidth: '130px' },
+  { key: 'aksi', label: 'Aksi', sortable: false, fixedWidth: '140px' },
 ]
 </script>

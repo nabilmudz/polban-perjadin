@@ -46,7 +46,6 @@
       :meta="suratTugas.meta"
       :links="suratTugas.links"
       :filters="filters"
-      :status-options="statusOptions"
       route-name="sekdir.dashboard"
       @update:filters="onUpdateFilters"
       @changePage="onChangePage"
@@ -55,11 +54,22 @@
         <StatusBadges :status="row.status_surat" />
       </template>
 
+      <template #path_file_surat_usulan="{ row }">
+        <button
+          v-if="row.path_file_surat_usulan"
+          @click="openSuratUndangan(row)"
+          class="px-3 py-1 rounded bg-yellow-400 text-black shadow hover:brightness-95 flex items-center gap-2 justify-center"
+          title="Lihat Surat Undangan"
+        >
+          <font-awesome-icon :icon="['far', 'file-lines']" />
+        </button>
+        <span v-else class="text-gray-400">-</span>
+      </template>
+
       <template #action="{ row }">
         <div class="flex gap-2">
           <button
-            class="px-2 py-1 rounded shadow flex items-center justify-center
-                   bg-blue-500 text-white hover:brightness-90"
+            class="px-2 py-1 rounded shadow flex items-center justify-center bg-blue-500 text-white hover:brightness-90"
             title="Lihat"
             @click="handleView(row)"
           >
@@ -68,26 +78,42 @@
         </div>
       </template>
     </DataTable>
+
   </div>
 
   <ModalLaporan :show="showViewModal" @close="showViewModal = false">
     <LaporanSurat v-if="selectedData" :surat="selectedData" />
   </ModalLaporan>
+    <FilePreviewModal
+      :show="preview.state.show"
+      :file="preview.state.file"
+      :loading="preview.state.loading"
+      :error="preview.state.error"
+      title="Surat Undangan"
+      @close="preview.close"
+    />
 </template>
+
 
 <script setup>
 import { Head, usePage, router } from '@inertiajs/vue3'
 import { reactive, watch, computed, ref } from 'vue'
 import debounce from 'lodash.debounce'
+
 import HeaderPage from '@/Components/HeaderPage.vue'
 import StatCard from '@/Components/StatCard.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
 import ModalLaporan from '@/Components/ModalLaporan.vue'
 import LaporanSurat from '@/Components/LaporanSurat.vue'
-import { statusOptions } from '@/utils/statusOptions'
+import FilePreviewModal from '@/Components/FilePreviewModal.vue'
+
+import { useFilePreview } from '@/utils/useFilePreviews.js'
 
 const page = usePage()
+const user = page.props.auth.user
+
+const statusCounts = computed(() => page.props.statusCounts || {})
 
 const suratTugas = computed(() => page.props.suratTugas ?? {
   data: [],
@@ -95,21 +121,43 @@ const suratTugas = computed(() => page.props.suratTugas ?? {
   links: {},
 })
 
-const statusCounts = computed(() => page.props.statusCounts || {})
-
 const filters = reactive({
   search: page.props.filters?.search ?? '',
-  status: page.props.filters?.status ?? '',
   from: page.props.filters?.from ?? '',
   to: page.props.filters?.to ?? '',
-  range: page.props.filters?.range ?? '', 
+  page: page.props.filters?.page ?? 1,
+  range: page.props.filters?.range ?? '',
 })
 
 const showViewModal = ref(false)
 const selectedData = ref(null)
 
+const preview = useFilePreview()
+const toStorageUrl = (path) => {
+  if (!path) return null
+
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+
+  if (path.startsWith('/storage/')) return path
+
+  if (path.startsWith('/')) return path
+
+  return `/storage/${path}`
+}
+
+const openSuratUndangan = (row) => {
+  const raw = row?.path_file_surat_usulan
+  const url = toStorageUrl(raw)
+  if (!url) return
+
+  preview.open({
+    url,
+    name: 'Surat Undangan',
+  })
+}
+
 const fetchData = debounce(() => {
-  router.get(route('sekdir.dashboard'), filters, {
+  router.get(route('sekdir.dashboard'), { ...filters }, {
     preserveState: true,
     replace: true,
   })
@@ -117,16 +165,13 @@ const fetchData = debounce(() => {
 
 watch(filters, fetchData, { deep: true })
 
-const onUpdateFilters = (newFilters) => {
-  Object.assign(filters, newFilters)
-}
+const onUpdateFilters = (newFilters) => Object.assign(filters, newFilters)
 
 const onChangePage = (pageNumber) => {
-  router.get(
-    route('sekdir.dashboard'),
-    { ...filters, page: pageNumber },
-    { preserveState: true, replace: true },
-  )
+  router.get(route('sekdir.dashboard'), { ...filters, page: pageNumber }, {
+    preserveState: true,
+    replace: true,
+  })
 }
 
 const handleView = (row) => {
@@ -137,12 +182,11 @@ const handleView = (row) => {
 const columns = [
   { key: 'perihal_tugas', label: 'Nama Kegiatan' },
   { key: 'created_at', label: 'Tanggal Pengusulan' },
-  { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
   { key: 'no_usulan_surat', label: 'Nomor Surat Usulan' },
   { key: 'sumber_dana', label: 'Sumber Dana' },
-  { key: 'nominal_dana', label: 'Total Dana' },
-  { key: 'status_surat', label: 'Status' },
-  { key: 'action', label: 'Aksi', fixedWidth: '120px' },
+  { key: 'total_dana', label: 'Total Dana' },
+  { key: 'path_file_surat_usulan', label: 'Surat Undangan', sortable: false, fixedWidth: '130px' },
+  { key: 'action', label: 'Aksi', sortable: false, fixedWidth: '120px' },
 ]
 </script>
 

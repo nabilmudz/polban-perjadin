@@ -9,7 +9,6 @@ import { computed } from 'vue'
 
 const props = defineProps({ status: String })
 
-// Penamaan status
 const label = computed(() => {
   switch (props.status) {
     case 'draft':
@@ -17,11 +16,11 @@ const label = computed(() => {
     case 'submitted_wadir_review':
       return 'Menunggu Review Wadir'
     case 'revision_requested':
-      return 'Revisi Diminta'
+      return 'Revisi Wadir Diminta'
     case 'rejected':
       return 'Ditolak'
-    case 'approved_wadir':
-      return 'Disetujui Wadir'
+    case 'sekdir_revision_requested':
+      return 'Revisi Sekdir Diminta'
     case 'pending_sekdir_numbering':
       return 'Menunggu Penomoran Sekdir'
     case 'pending_direktur_signature':
@@ -41,7 +40,6 @@ const label = computed(() => {
   }
 })
 
-// Background Color
 const colorClass = computed(() => {
   switch (props.status) {
     case 'draft':
@@ -52,8 +50,8 @@ const colorClass = computed(() => {
       return 'bg-yellow-100 text-yellow-700'
     case 'rejected':
       return 'bg-red-100 text-red-700'
-    case 'approved_wadir':
-      return 'bg-emerald-100 text-emerald-700'
+    case 'sekdir_revision_requested':
+      return 'bg-amber-100 text-amber-700'
     case 'pending_sekdir_numbering':
       return 'bg-indigo-100 text-indigo-700'
     case 'pending_direktur_signature':

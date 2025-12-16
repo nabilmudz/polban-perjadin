@@ -100,23 +100,23 @@ watch(
 )
 
 const columns = [
+  { key: 'perihal_tugas', label: 'Nama Kegiatan' },
   { key: 'created_at', label: 'Tanggal Pengusulan' },
   { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' },
   { key: 'no_usulan_surat', label: 'Nomor Surat Usulan' },
   { key: 'sumber_dana', label: 'Sumber Dana' },
   { key: 'status_surat', label: 'Status' },
-  { key: 'action', label: 'Aksi', fixedWidth: '180px' }
+  { key: 'action', label: 'Aksi', fixedWidth: '180px' },
 ]
 
 const handleAction = (type, row) => {
   switch(type) {
     case 'view':
-      // buka modal + kirim data ke LaporanSurat
       selectedData.value = row
       showViewModal.value = true
       break
     case 'edit':
-      router.get(route('pengusul.edit', row.id))
+      router.get(route('pengusul.draft.edit', row.surat_tugas_id))
       break
     case 'delete':
       if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {

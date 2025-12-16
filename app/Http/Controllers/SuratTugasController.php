@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SuratTugas;
 use Illuminate\Http\Request;
 use App\Services\SuratTugasService;
+use Illuminate\Validation\ValidationException;
 
 class SuratTugasController extends Controller
 {
@@ -65,33 +66,27 @@ class SuratTugasController extends Controller
             'status_surat'   => 'required|string',
             'catatan_revisi' => 'nullable|string',
         ]);
-
+        
         try {
-            $updated = $this->service->updateStatus(
+            $this->service->updateStatus(
                 $surat_tugas,
                 $validated['status_surat'],
                 $validated['catatan_revisi'] ?? null,
                 $request->user()->role
             );
-
-            return response()->json([
-                'message' => 'Status surat berhasil diperbarui.',
-                'data'    => $updated,
-            ]);
-
+            $role = $request->user()->role;
+            return redirect()
+                ->route("{$role}.dashboard")
+                ->with('success', 'Status surat berhasil diperbarui.');
         } catch (\DomainException $e) {
-
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], 422);
-
+            throw ValidationException::withMessages([
+                'catatan_revisi' => $e->getMessage(),
+            ]);
         } catch (\Throwable $e) {
-
             report($e);
-
-            return response()->json([
-                'message' => 'Terjadi kesalahan saat memperbarui status.',
-            ], 500);
+            throw ValidationException::withMessages([
+                'status_surat' => 'Terjadi kesalahan saat memperbarui status.',
+            ]);
         }
     }
 }

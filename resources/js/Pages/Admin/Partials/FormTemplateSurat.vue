@@ -61,15 +61,44 @@
             <label class="block font-medium mb-1">
               Status <span class="text-red-500">*</span>
             </label>
-            <select
-              v-model="form.status"
-              class="w-full border rounded px-3 py-2"
-              required
-            >
-              <option :value="1">Aktif</option>
-              <option :value="0">Nonaktif</option>
-            </select>
+
+            <div class="flex items-center gap-3">
+              <label class="relative inline-flex cursor-pointer items-center">
+                <input
+                  type="checkbox"
+                  class="sr-only peer"
+                  :checked="Number(form.status) === 1"
+                  @change="onToggleStatus"
+                />
+                <div
+                  class="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-green-500
+                    after:content-[''] after:absolute after:top-0.5 after:left-[2px]
+                    after:bg-white after:rounded-full after:h-5 after:w-5
+                    after:transition-all peer-checked:after:translate-x-full"
+                />
+              </label>
+
+              <span
+                class="text-sm font-medium"
+                :class="Number(form.status) === 1 ? 'text-green-600' : 'text-gray-600'"
+              >
+                {{ Number(form.status) === 1 ? 'Aktif' : 'Nonaktif' }}
+              </span>
+            </div>
           </div>
+        </div>
+
+        <div class="col-span-2">
+          <label class="block font-medium mb-1">Tembusan Default (1 baris = 1 item)</label>
+
+          <textarea
+            v-model="tembusanText"
+            rows="4"
+            class="w-full border rounded px-3 py-2"
+            placeholder="Contoh:
+Ketua Jurusan
+BKU"
+          />
         </div>
 
         <!-- BUTTON -->
@@ -95,10 +124,24 @@
 </template>
 
 <script setup>
-defineProps({
-  form: {
-    type: Object,
-    required: true,
+import { computed } from 'vue'
+
+const props = defineProps({
+  form: { type: Object, required: true },
+})
+
+const tembusanText = computed({
+  get() {
+    return (props.form.tembusan_default || []).join('\n')
+  },
+  set(val) {
+    props.form.tembusan_default = String(val)
+      .split('\n')
+      .map(s => s.trim())
+      .filter(Boolean)
   },
 })
+const onToggleStatus = (e) => {
+  props.form.status = e.target.checked ? 1 : 0
+}
 </script>

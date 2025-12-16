@@ -34,7 +34,8 @@
         :enable-search="false"
         :enable-status="false"
         :enable-date="false"
-        route-name="pengusul.form"
+        :route-name="mode === 'edit_draft' ? 'pengusul.draft.edit' : 'pengusul.form'"
+        :route-params="mode === 'edit_draft' ? { suratTugas: draftId } : {}"
         @update:filters="Object.assign(filters, $event)"
       >
         <template #nama="{ row }">
@@ -168,15 +169,21 @@
 
 <script setup>
 import DataTable from '@/Components/Table/DataTable.vue'
-import { reactive, ref, watch, computed } from 'vue'
+import { reactive, ref, watch, computed, onMounted  } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import debounce from 'lodash.debounce'
 
 const props = defineProps({
-  value: {
-    type: Array,
-    default: () => []
+  value: { type: Array, default: () => [] },
+  mode: { type: String, default: 'create' },
+  draftId: { type: [String, Number], default: null },
+})
+
+const listRoute = computed(() => {
+  if (props.mode === 'edit_draft' && props.draftId) {
+    return route('pengusul.draft.edit', props.draftId)
   }
+  return route('pengusul.form')
 })
 
 const emit = defineEmits(['next', 'prev'])
@@ -233,6 +240,7 @@ const filters = reactive({
   status: serverFilters.status || '',
   from: serverFilters.from || '',
   to: serverFilters.to || '',
+  page: serverFilters.page || 1,
   tab: initialTab,
 })
 
@@ -307,22 +315,16 @@ const changeTab = (val) => {
 
 const fetchPersons = debounce(() => {
   router.get(
-    route('pengusul.form'),
+    listRoute.value,
     { ...filters },
     {
       preserveState: true,
       replace: true,
       only: ['personel', 'filters', 'tab'],
+      preserveScroll: true,
     }
   )
 }, 300)
 
-watch(
-  filters,
-  () => {
-    fetchPersons()
-  },
-  { deep: true }
-)
-
+watch(filters, () => fetchPersons(), { deep: true, immediate: true })
 </script>

@@ -25,7 +25,7 @@
           <input
             type="checkbox"
             class="sr-only peer"
-            :checked="row.status == 1"
+            :checked="!!row.status"
             @change="toggleStatus(row)"
           />
           <div
@@ -37,6 +37,12 @@
         </label>
       </template>
 
+      <template #tembusan_default="{ row }">
+        <div class="text-sm whitespace-pre-line">
+          {{ (row.tembusan_default || []).join('\n') }}
+        </div>
+      </template>
+
       <!-- AKSI -->
       <template #actions="{ row }">
         <button
@@ -46,6 +52,7 @@
           <font-awesome-icon :icon="['far', 'pen-to-square']" />
         </button>
       </template>
+
 
       <!-- BUTTON ATAS -->
       <template #filters-extra>
@@ -98,6 +105,7 @@ const columns = [
   { key: 'nama_kementerian', label: 'Nama Kementerian' },
   { key: 'nama_direktur', label: 'Nama Direktur' },
   { key: 'nip_direktur', label: 'NIP Direktur' },
+  { key: 'tembusan_default', label: 'Tembusan Default' },
   { key: 'status', label: 'Status' },
   { key: 'actions', label: 'Aksi' },
 ]
