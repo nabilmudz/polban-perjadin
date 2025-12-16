@@ -1,121 +1,180 @@
 <template>
   <Head title="Riwayat Surat Tugas" />
 
-  <AppLayout>
-    <div class="bg-white w-full rounded-md shadow overflow-hidden">
-      <HeaderPage title="History Perjalanan Dinas" />
+  <div class="bg-white w-full h-full rounded-md shadow overflow-hidden">
+    <HeaderPage title="History Perjalanan Dinas" />
 
-      <div class="p-8">
-        <h1 class="text-3xl font-bold mb-6 text-gray-800">Riwayat Surat Tugas</h1>
-
-        <DataTable
-          :columns="columns"
-          :data="history.data"
-          :meta="history.meta"
-          :links="history.links"
-          :filters="filters"
-          :status-options="historyStatusOptions" 
-          route-name="direktur.history"
-          @update:filters="handleFilterUpdate"
-          @changePage="handlePageChange"
-        >
-           <template #no="{ index }">{{ (history.meta.from || 1) + index }}</template>
-           <template #nominal_biaya="{ row }">{{ formatCurrency(row.nominal_biaya) }}</template>
-           <template #status_surat="{ row }"><StatusBadges :status="row.status_surat" /></template>
-           <template #aksi="{ row }">
-            <div class="flex gap-2 justify-center">
-              <button 
-                class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90 bg-blue-500 text-white" 
-                title="Lihat Detail"
-                @click="openModal(row)"
-              >
-                 <font-awesome-icon :icon="['far', 'eye']" class="text-md" />
-              </button>
-              <button v-if="['approved', 'completed'].includes(row.status_surat)" class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90 bg-green-500 text-white" title="Download" @click="router.get(route('surat.download', row.id))">
-                 <font-awesome-icon :icon="['far', 'circle-down']" class="text-md" />
-              </button>
-            </div>
-          </template>
-        </DataTable>
-      </div>
+    <div class="p-8">
+      <h1 class="text-3xl font-bold mb-6 text-gray-800">Riwayat Surat Tugas</h1>
     </div>
 
-    <ModalLaporan :show="showViewModal" @close="showViewModal = false">
-        <LaporanSurat v-if="selectedData" :surat="selectedData" />
-    </ModalLaporan>
+    <DataTable
+      :columns="columns"
+      :data="suratTugas.data"
+      :meta="suratTugas.meta"
+      :links="suratTugas.links"
+      :filters="filters"
+      :status-options="historyStatusOptions"
+      route-name="direktur.history"
+      @update:filters="onUpdateFilters"
+      @changePage="onChangePage"
+    >
+      <template #status_surat="{ row }">
+        <StatusBadges :status="row.status_surat" />
+      </template>
 
-  </AppLayout>
+      <template #path_file_surat_usulan="{ row }">
+        <button
+          v-if="row.path_file_surat_usulan"
+          @click="openSuratUndangan(row)"
+          class="px-3 py-1 rounded bg-yellow-400 text-black shadow hover:brightness-95 flex items-center gap-2 justify-center"
+          title="Lihat Surat Undangan"
+        >
+          <font-awesome-icon :icon="['far', 'file-lines']" />
+        </button>
+        <span v-else class="text-gray-400">-</span>
+      </template>
+
+      <template #action="{ row }">
+        <div class="flex gap-2">
+          <button
+            class="px-2 py-1 rounded shadow flex items-center justify-center bg-blue-500 text-white hover:brightness-90"
+            title="Lihat"
+            @click="handleView(row)"
+          >
+            <font-awesome-icon :icon="['far', 'eye']" class="text-md" />
+          </button>
+
+          <button
+            v-if="['published', 'completed'].includes(row.status_surat)"
+            class="px-2 py-1 rounded shadow flex items-center justify-center bg-green-500 text-white hover:brightness-90"
+            title="Download"
+            @click="router.get(route('surat.download', row.id))"
+          >
+            <font-awesome-icon :icon="['far', 'circle-down']" class="text-md" />
+          </button>
+        </div>
+      </template>
+    </DataTable>
+  </div>
+
+  <ModalLaporan :show="showViewModal" @close="showViewModal = false">
+    <LaporanSurat v-if="selectedData" :surat="selectedData" />
+  </ModalLaporan>
+
+  <FilePreviewModal
+    :show="preview.state.show"
+    :file="preview.state.file"
+    :loading="preview.state.loading"
+    :error="preview.state.error"
+    title="Surat Undangan"
+    @close="preview.close"
+  />
 </template>
 
 <script setup>
-import AppLayout from '@/Layouts/AppLayout.vue'
+import { Head, usePage, router } from '@inertiajs/vue3'
+import { reactive, watch, computed, ref } from 'vue'
+import debounce from 'lodash.debounce'
+
 import HeaderPage from '@/Components/HeaderPage.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
 import ModalLaporan from '@/Components/ModalLaporan.vue'
 import LaporanSurat from '@/Components/LaporanSurat.vue'
 
-import { Head, router, usePage } from '@inertiajs/vue3'
-import { reactive, computed, watch, ref } from 'vue'
-import debounce from 'lodash.debounce'
+import FilePreviewModal from '@/Components/FilePreviewModal.vue'
+import { useFilePreview } from '@/utils/useFilePreviews.js'
+
 import { statusOptions } from '@/utils/statusOptions'
 
 const page = usePage()
 
-const history = computed(() => {
-    const raw = page.props.history || {};
-    return { data: raw.data || [], meta: raw.meta || {}, links: raw.links || [] }
+const suratTugas = computed(() => page.props.suratTugas ?? {
+  data: [],
+  meta: {},
+  links: {},
 })
 
 const filters = reactive({
-  search: page.props.filters?.search || '',
-  status: page.props.filters?.status || '',
-  from: page.props.filters?.from || '',
-  to: page.props.filters?.to || '',
-  range: page.props.filters?.range || '',
+  search: page.props.filters?.search ?? '',
+  status: page.props.filters?.status ?? '',
+  from: page.props.filters?.from ?? '',
+  to: page.props.filters?.to ?? '',
+  page: page.props.filters?.page ?? 1,
+  range: page.props.filters?.range ?? '',
 })
 
 const historyStatusOptions = computed(() => {
-    const allowed = [
-        'published', 
-        'awaiting_proof_upload', 
-        'under_bku_review', 
-        'returned_for_correction', 
-        'completed', 
-        'rejected'
-    ];
-    return statusOptions.filter(opt => allowed.includes(opt.value));
-});
+  const allowed = [
+    'published',
+    'awaiting_proof_upload',
+    'under_bku_review',
+    'returned_for_correction',
+    'completed',
+  ]
+  return statusOptions.filter(opt => allowed.includes(opt.value))
+})
 
-watch(filters, debounce(() => {
-    router.get(route('direktur.history'), filters, { preserveState: true, replace: true })
-  }, 300), { deep: true }
-)
+const fetchData = debounce(() => {
+  router.get(route('direktur.history'), { ...filters }, {
+    preserveState: true,
+    replace: true,
+  })
+}, 300)
 
-const handleFilterUpdate = (newFilters) => { Object.assign(filters, newFilters) }
-const handlePageChange = (pageNumber) => { router.get(route('direktur.history'), { ...filters, page: pageNumber }, { preserveState: true, replace: true }) }
+watch(filters, fetchData, { deep: true })
 
-const formatCurrency = (value) => {
-  if (!value) return 'Rp 0';
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value);
+const onUpdateFilters = (newFilters) => Object.assign(filters, newFilters)
+
+const onChangePage = (pageNumber) => {
+  router.get(route('direktur.history'), { ...filters, page: pageNumber }, {
+    preserveState: true,
+    replace: true,
+  })
 }
 
 const showViewModal = ref(false)
 const selectedData = ref(null)
+const handleView = (row) => {
+  selectedData.value = row
+  showViewModal.value = true
+}
 
-const openModal = (row) => {
-    selectedData.value = row
-    showViewModal.value = true
+const preview = useFilePreview()
+
+const toStorageUrl = (path) => {
+  if (!path) return null
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  if (path.startsWith('/storage/')) return path
+  if (path.startsWith('/')) return path
+  return `/storage/${path}`
+}
+
+const openSuratUndangan = (row) => {
+  const raw = row?.path_file_surat_usulan
+  const url = toStorageUrl(raw)
+  if (!url) return
+
+  preview.open({ url, name: 'Surat Undangan' })
 }
 
 const columns = [
-  { key: 'nama_kegiatan', label: 'Nama Kegiatan' },
+  { key: 'perihal_tugas', label: 'Nama Kegiatan' },
+  { key: 'nama_pengusul', label: 'Nama Pengusul' },
   { key: 'created_at', label: 'Tanggal Pengusulan' },
-  { key: 'tanggal_pelaksanaan', label: 'Tanggal Pelaksanaan' },
-  { key: 'no_usulan_surat', label: 'Nomor Surat Usulan' },
+  { key: 'nomor_surat_tugas_resmi', label: 'Nomor Surat Resmi' },
   { key: 'sumber_dana', label: 'Sumber Dana' },
-  { key: 'nominal_biaya', label: 'Total Dana', slot: 'nominal_biaya' },
-  { key: 'status_surat', label: 'Status', slot: 'status_surat' },
-  { key: 'aksi', label: 'Aksi', slot: 'aksi' },
+  { key: 'total_dana', label: 'Total Dana' },
+  { key: 'status_surat', label: 'Status', sortable: false, fixedWidth: '200px', slot: 'status_surat' },
+  { key: 'path_file_surat_usulan', label: 'Surat Undangan', sortable: false, fixedWidth: '130px' },
+  { key: 'action', label: 'Aksi', sortable: false, fixedWidth: '140px' },
 ]
+</script>
+
+<script>
+import AppLayout from '@/Layouts/AppLayout.vue'
+export default {
+  layout: (h, page) => h(AppLayout, null, { default: () => page }),
+}
 </script>

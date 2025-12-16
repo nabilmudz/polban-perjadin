@@ -14,6 +14,7 @@ use App\Http\Controllers\SekdirController;
 use App\Http\Controllers\BKUController;
 use App\Http\Controllers\DirekturController;
 use App\Http\Controllers\Admin\TemplateSuratController;
+use App\Http\Controllers\VerifikasiController;
 
 // Entry
 Route::get('/', function () {
@@ -123,23 +124,22 @@ Route::middleware(['auth'])->group(function () {
         }
     });
 
-
     // Direktur routes
-    Route::prefix('direktur')->name('direktur.')->middleware(['auth', 'role:direktur'])->group(function () {
+    Route::prefix('direktur')
+        ->name('direktur.')
+        ->middleware(['auth', 'role:direktur'])
+        ->group(function () {
 
-        // Dashboard Direktur
-        Route::get('/dashboard', [DirekturController::class, 'direktur'])
-            ->name('dashboard');
+        Route::get('/dashboard', [DirekturController::class, 'dashboard'])->name('dashboard');
 
-        // Daftar Persetujuan Page
-        Route::get('/daftarpersetujuan', [DirekturController::class, 'persetujuan'])
+        Route::get('/daftarpersetujuan', [DirekturController::class, 'daftarPersetujuan'])
             ->name('daftarpersetujuan');
-        
-        Route::get('/persetujuan/{id}', [DirekturController::class, 'show'])
+
+        Route::get('/persetujuan/{id}', [DirekturController::class, 'review'])
             ->name('persetujuan.show');
 
         Route::post('/persetujuan/{id}/approve', [DirekturController::class, 'approve'])
-        ->name('persetujuan.approve');
+            ->name('persetujuan.approve');
 
         Route::post('/persetujuan/{id}/reject', [DirekturController::class, 'reject'])
             ->name('persetujuan.reject');
@@ -147,10 +147,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/persetujuan/{id}/revise', [DirekturController::class, 'revise'])
             ->name('persetujuan.revise');
 
-        // History Direktur Page
-        Route::get('/history', [DirekturController::class, 'history'])
-            ->name('history');
+        Route::get('/history', [DirekturController::class, 'history'])->name('history');
+        
     });
+
 
     // BKU routes
     Route::prefix('bku')->name('bku.')->middleware(['auth', 'role:bku'])->group(function () {
@@ -193,8 +193,6 @@ Route::prefix('surat-tugas')->group(function () {
         ->name('surat-tugas.update-status');
 });
 
-
-
-
+Route::get('/verifikasi/surat-tugas/{token}', [VerifikasiController::class, 'suratTugas'])->name('verifikasi.surat-tugas');
 
 require __DIR__.'/auth.php';

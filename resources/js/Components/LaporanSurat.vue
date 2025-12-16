@@ -162,12 +162,23 @@
 
                   <p class="m-0 mb-1 leading-tight">Direktur,</p>
 
-                  <div class="relative h-[60px] mt-1 signature-block">
+                  <div class="relative mt-2 signature-block flex items-center justify-center">
+                    <img
+                      v-if="surat.barcode_url"
+                      :src="surat.barcode_url"
+                      class="h-[85px] w-[85px] object-contain"
+                      alt="Barcode TTE"
+                    />
+
+                    <!-- (Opsional) jika nanti ada signature, Anda bisa tampilkan juga -->
+                    <!--
                     <img
                       v-if="surat.direktur_signature_data"
                       :src="surat.direktur_signature_data"
-                      class="absolute top-[-10px] right-0 w-[100px] h-[60px]"
+                      class="absolute right-0 top-[-6px] w-[110px] h-[70px] object-contain"
+                      alt="TTE Signature"
                     />
+                    -->
                   </div>
 
                   <p class="font-bold m-0 mt-2">
@@ -588,7 +599,7 @@ function formatAlamat(alamat) {
 }
 .signature-block {
   position: relative;
-  height: 60px;
+  height: 90px;
 }.signature-cell {
   text-align: right;
   padding-right: 0;

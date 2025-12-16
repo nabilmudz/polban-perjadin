@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class SuratTugas extends Model
 {
@@ -50,6 +51,10 @@ class SuratTugas extends Model
         'wadir_approver_id',
         'direktur_approver_id',
         'sekdir_processor_id',
+        'barcode_payload',
+        'barcode_path',
+        'tanggal_tte_direktur',
+        'barcode_token',
     ];
 
     protected $casts = [
@@ -66,6 +71,12 @@ class SuratTugas extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+    protected $appends = ['barcode_url'];
+    
+    public function getBarcodeUrlAttribute(): ?string
+    {
+        return $this->barcode_path ? Storage::disk('public')->url($this->barcode_path) : null;
+    }
 
     public function user()
     {

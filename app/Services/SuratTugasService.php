@@ -134,6 +134,7 @@ class SuratTugasService
                 'revision_requested' => ['submitted_wadir_review'],
                 'returned_for_correction' => ['submitted_wadir_review'],
                 'sekdir_revision_requested' => ['pending_sekdir_numbering'],
+                'direktur_revision_requested' => ['pending_direktur_signature'],
             ],
 
             //WADIR
@@ -179,7 +180,7 @@ class SuratTugasService
         if (!in_array($status, $allowedTransitions[$role][$current], true)) {
             throw new \DomainException("Transisi dari '{$current}' ke '{$status}' tidak diizinkan untuk role '{$role}'.");
         }
-        
+
         $requiresCatatan = ['revision_requested', 'returned_for_correction', 'rejected', 'sekdir_revision_requested'];
 
         if (in_array($status, $requiresCatatan, true) && (empty($catatan))) {
