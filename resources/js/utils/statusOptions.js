@@ -6,6 +6,7 @@ export const statusOptions = [
   { value: 'pending_sekdir_numbering', label: 'Menunggu Penomoran Sekdir' },
   { value: 'sekdir_revision_requested', label: 'Dikembalikan oleh Sekdir' },
   { value: 'pending_direktur_signature', label: 'Menunggu Tanda Tangan Direktur' },
+  { value: 'direktur_revision_requested', label: 'Dikembalikan oleh Direktur' },
   { value: 'published', label: 'Dipublikasikan' },
   { value: 'awaiting_proof_upload', label: 'Menunggu Upload Bukti' },
   { value: 'under_bku_review', label: 'Sedang Direview BKU' },

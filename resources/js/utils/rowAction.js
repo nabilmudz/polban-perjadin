@@ -36,7 +36,7 @@ export function getRowActions(row, userRole = '') {
         actions.push({ type: 'delete', icon: 'trash-can', color: 'red' });
     }
     if (userRole === 'pengusul' &&
-        (row.status_surat === 'revision_requested' || row.status_surat === 'sekdir_revision_requested')
+        (row.status_surat === 'revision_requested' || row.status_surat === 'sekdir_revision_requested' || row.status_surat === 'direktur_revision_requested')
     ) {
         actions.push({ type: 'edit', icon: 'pen-to-square', color: 'yellow' });
     }
