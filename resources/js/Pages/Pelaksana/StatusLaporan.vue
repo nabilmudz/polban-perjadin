@@ -30,7 +30,7 @@
           <template #tanggal_berangkat="{ row }">
             {{ formatDate(row.tanggal_berangkat) }}
           </template>
-          
+
           <template #action="{ row }">
             <div class="flex gap-2">
               <button
@@ -111,7 +111,7 @@ const getSuratId = (row) => row?.surat_tugas_id ?? row?.id
 
 const canUpload = (row) => {
   const st = row?.status_surat
-  return st === 'awaiting_proof_upload' || st === 'published'
+  return ['awaiting_proof_upload', 'published', 'returned_for_correction'].includes(st)
 }
 
 const goToLampiran = (row) => {

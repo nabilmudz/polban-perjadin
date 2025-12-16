@@ -15,6 +15,7 @@ use App\Http\Controllers\BKUController;
 use App\Http\Controllers\DirekturController;
 use App\Http\Controllers\Admin\TemplateSuratController;
 use App\Http\Controllers\VerifikasiController;
+use App\Http\Controllers\SuratDownloadController;
 
 // Entry
 Route::get('/', function () {
@@ -175,13 +176,33 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [BKUController::class, 'dashboard'])
             ->name('dashboard');
 
-        // Daftar Laporan & Perjalanan
         Route::get('/daftarlaporanperjalanan', [BKUController::class, 'daftarLaporan'])
             ->name('daftarlaporanperjalanan');
 
-        // History Perjalanan Dinas
+        Route::get('/historyperjalanandinas/export', [BKUController::class, 'exportHistoryExcel'])
+            ->name('historyperjalanandinas.export');
+
+        Route::get('/daftarlaporanperjalanan/export', [BKUController::class, 'exportLaporanBuktiExcel'])
+            ->name('laporanbukti.export');
+
         Route::get('/historyperjalanandinas', [BKUController::class, 'history'])
             ->name('historyperjalanandinas');
+            
+        Route::get('/laporan/{suratTugas}/lampiran', [BKUController::class, 'lampiranIndex'])
+            ->name('lampiran.index');
+
+        Route::get('/lampiran/{lampiran}', [BKUController::class, 'lampiranShow'])
+            ->name('lampiran.show');
+
+        Route::get('/lampiran/{lampiran}/file', [BKUController::class, 'lampiranFile'])
+            ->name('lampiran.file');
+
+        Route::post('/laporan/{suratTugas}/approve', [BKUController::class, 'approveLampiran'])
+            ->name('lampiran.approve');
+
+        Route::post('/laporan/{suratTugas}/return', [BKUController::class, 'returnLampiran'])
+            ->name('lampiran.return');
+
     });
 
     // SEKDIR
@@ -213,4 +234,12 @@ Route::prefix('surat-tugas')->group(function () {
 
 Route::get('/verifikasi/surat-tugas/{token}', [VerifikasiController::class, 'suratTugas'])->name('verifikasi.surat-tugas');
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/surat/{suratTugas}/download', [SuratDownloadController::class, 'download'])
+        ->name('surat.download');
+        Route::middleware(['auth'])->group(function () {
+    Route::get('/surat/{suratTugas}/preview', [SuratDownloadController::class, 'preview'])
+        ->name('surat.preview');
+});
+});
 require __DIR__.'/auth.php';
