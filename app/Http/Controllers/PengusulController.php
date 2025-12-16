@@ -505,7 +505,12 @@ class PengusulController extends Controller
         if ((int) $suratTugas->user_id !== (int) $user->id) {
             abort(403);
         }
-        if (!in_array($suratTugas->status_surat, ['draft', 'revision_requested', 'sekdir_revision_requested'], true)) {
+        if (!in_array($suratTugas->status_surat, [
+            'draft',
+            'revision_requested',
+            'sekdir_revision_requested',
+            'direktur_revision_requested',
+            ], true)) {
             abort(403, 'Only draft or revision-requested can be edited.');
         }
 
@@ -586,10 +591,15 @@ class PengusulController extends Controller
         $user = $request->user();
 
         if ((int) $suratTugas->user_id !== (int) $user->id) abort(403);
-        if (!in_array($suratTugas->status_surat, ['draft', 'revision_requested', 'sekdir_revision_requested'], true)) {
-            abort(403, 'Only draft or revision-requested can be updated.');
+       
+        if (!in_array($suratTugas->status_surat, [
+            'draft',
+            'revision_requested',
+            'sekdir_revision_requested',
+            'direktur_revision_requested',
+            ], true)) {
+            abort(403, 'Only draft or revision-requested can be edited.');
         }
-
 
         $validated = $this->validatePengusulan($request);
         $pengusulan = $validated['pengusulan'];
@@ -609,6 +619,8 @@ class PengusulController extends Controller
                 ]);
             }
 
+            $prevStatus = $suratTugas->status_surat;
+
             $suratTugas->update([
                 'diusulkan_kepada'           => $pengusulan['diajukan_kepada'],
                 'nama_penyelenggara'         => $pengusulan['nama_penyelenggara'],
@@ -625,8 +637,17 @@ class PengusulController extends Controller
                 'sumber_dana'                => $pengusulan['hasPagu'] ? 'Pagu Desentralisasi' : 'Non Pagu',
                 'pagu_desentralisasi'        => $pengusulan['hasPagu'],
                 'nominal_dana'               => $pengusulan['nominal_pagu'] ?? null,
-                'status_surat'               => 'draft',
-                'catatan_revisi'             => $suratTugas->status_surat === 'revision_requested' ? null : $suratTugas->catatan_revisi,
+                'status_surat' => in_array($prevStatus, [
+                    'revision_requested',
+                    'sekdir_revision_requested',
+                    'direktur_revision_requested',
+                ], true) ? $prevStatus : 'draft',
+                'catatan_revisi' => in_array($prevStatus, [
+                    'revision_requested',
+                    'sekdir_revision_requested',
+                    'direktur_revision_requested',
+                ], true) ? null : $suratTugas->catatan_revisi,
+
             ]);
 
             $suratTugas->detailPelaksanaTugas()->delete();
@@ -653,7 +674,12 @@ class PengusulController extends Controller
 
         if ((int) $suratTugas->user_id !== (int) $user->id) abort(403);
 
-        if (!in_array($suratTugas->status_surat, ['draft', 'revision_requested', 'sekdir_revision_requested'], true)) {
+        if (!in_array($suratTugas->status_surat, [
+            'draft',
+            'revision_requested',
+            'sekdir_revision_requested',
+            'direktur_revision_requested',
+        ], true)) {
             abort(403, 'Only draft or revision-requested can be submitted.');
         }
 
@@ -663,9 +689,11 @@ class PengusulController extends Controller
         $pengusulan = $validated['pengusulan'];
         $personel = $validated['personel'];
 
-        $nextStatus = $fromStatus === 'sekdir_revision_requested'
-            ? 'pending_sekdir_numbering'
-            : 'submitted_wadir_review';
+        $nextStatus = match ($fromStatus) {
+            'sekdir_revision_requested'   => 'pending_sekdir_numbering',
+            'direktur_revision_requested' => 'pending_direktur_signature',
+            default                       => 'submitted_wadir_review',
+        };
 
         DB::transaction(function () use ($request, $user, $suratTugas, $pengusulan, $personel, $nextStatus) {
 
@@ -719,9 +747,11 @@ class PengusulController extends Controller
             );
         });
 
-        $msg = $nextStatus === 'pending_sekdir_numbering'
-            ? 'Revisi Sekdir sudah dikirim kembali ke Sekdir untuk penomoran.'
-            : 'Draft berhasil dikirim ke Wadir.';
+        $msg = match ($nextStatus) {
+            'pending_sekdir_numbering'   => 'Revisi Sekdir sudah dikirim kembali ke Sekdir untuk penomoran.',
+            'pending_direktur_signature' => 'Revisi Direktur sudah dikirim kembali ke Direktur untuk ditinjau.',
+            default                      => 'Draft berhasil dikirim ke Wadir.',
+        };
 
         return redirect()->route('pengusul.dashboard')->with('success', $msg);
     }

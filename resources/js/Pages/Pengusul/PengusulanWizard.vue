@@ -69,7 +69,7 @@
             class="px-4 py-2 bg-primary-default text-white rounded"
             :disabled="form.processing"
           >
-            Submit ke Wadir
+            Submit
           </button>
         </div>
       </div>

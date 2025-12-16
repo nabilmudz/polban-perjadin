@@ -25,6 +25,8 @@ const label = computed(() => {
       return 'Menunggu Penomoran Sekdir'
     case 'pending_direktur_signature':
       return 'Menunggu Tanda Tangan Direktur'
+    case 'direktur_revision_requested':
+      return 'Revisi Direktur Diminta'
     case 'published':
       return 'Dipublikasikan'
     case 'awaiting_proof_upload':
@@ -56,6 +58,8 @@ const colorClass = computed(() => {
       return 'bg-indigo-100 text-indigo-700'
     case 'pending_direktur_signature':
       return 'bg-purple-100 text-purple-700'
+    case 'direktur_revision_requested':
+      return 'bg-amber-100 text-amber-700'
     case 'published':
       return 'bg-green-100 text-green-700'
     case 'awaiting_proof_upload':
