@@ -3,68 +3,71 @@
     <div class="bg-white w-full max-w-7xl mx-auto rounded-md shadow">
       <HeaderPage />
 
-      <!-- TITLE -->
       <div class="p-8 border-b">
-        <h1 class="text-3xl font-bold mb-4">Status Laporan</h1>
+        <h1 class="text-3xl font-bold mb-2">Daftar Laporan</h1>
         <p class="text-gray-600">
-          Status pertanggungjawaban perjalanan dinas setelah kegiatan selesai.
+          Monitoring proses Surat Tugas sampai terbit. Upload bukti dilakukan di menu Status Laporan.
         </p>
-      </div>
 
-      <div class="p-8">
-        <div class="overflow-x-auto">
-          <DataTable
-            :columns="columns"
-            :data="suratTugas.data"
-            :meta="suratTugas.meta"
-            :links="suratTugas.links"
-            :filters="filters"
-            route-name="pelaksana.status-laporan"
-            @update:filters="Object.assign(filters, $event)"
-            @changePage="(page) =>
-              router.get(route('pelaksana.status-laporan'), { ...filters }, {
-                preserveState: true,
-                replace: true
-              })
-            "
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button
+            class="px-3 py-1 rounded border"
+            :class="filters.scope === 'all' ? 'bg-primary-default text-white' : 'bg-white'"
+            @click="setScope('all')"
           >
-            <!-- STATUS LAPORAN -->
-            <template #status_laporan="{ row }">
-              <StatusBadges :status="row.status_laporan" type="laporan" />
-            </template>
+            Semua ({{ scopeCounts.all ?? 0 }})
+          </button>
 
-            <!-- TANGGAL TERFORMAT -->
-            <template #tanggal_berangkat="{ row }">
-              {{ formatDate(row.tanggal_berangkat) }}
-            </template>
+          <button
+            class="px-3 py-1 rounded border"
+            :class="filters.scope === 'processing' ? 'bg-primary-default text-white' : 'bg-white'"
+            @click="setScope('processing')"
+          >
+            Diproses ({{ scopeCounts.processing ?? 0 }})
+          </button>
 
-            <!-- ACTIONS -->
-            <template #action="{ row }">
-              <div class="flex gap-2">
-                <button
-                  v-for="action in getRowActions(row, currentUser.role, 'laporan')"
-                  :key="action.type"
-                  @click="handleAction(action.type, row)"
-                  class="px-2 py-1 rounded shadow transition hover:brightness-90 flex items-center justify-center"
-                  :class="{
-                    'bg-blue-500 text-white': action.color === 'blue',
-                    'bg-green-500 text-white': action.color === 'green',
-                    'bg-red-500 text-white': action.color === 'red',
-                    'bg-yellow-400 text-black': action.color === 'yellow',
-                    'bg-purple-500 text-white': action.color === 'purple',
-                  }"
-                >
-                  <font-awesome-icon :icon="['far', action.icon]" />
-                </button>
-              </div>
-            </template>
-          </DataTable>
+          <button
+            class="px-3 py-1 rounded border"
+            :class="filters.scope === 'published' ? 'bg-primary-default text-white' : 'bg-white'"
+            @click="setScope('published')"
+          >
+            Published ({{ scopeCounts.published ?? 0 }})
+          </button>
         </div>
       </div>
 
-      <!-- UPLOAD MODAL -->
-      <Modal :show="isUploadModalOpen" @close="isUploadModalOpen = false" />
+      <div class="p-8">
+        <DataTable
+          :columns="columns"
+          :data="suratTugas.data"
+          :meta="suratTugas.meta"
+          :links="suratTugas.links"
+          :filters="filters"
+          route-name="pelaksana.daftarlaporan"
+          @update:filters="Object.assign(filters, $event)"
+          @changePage="(page) => (filters.page = page)"
+        >
+          <template #status_surat="{ row }">
+            <StatusBadges :status="row.status_surat" type="surat" />
+          </template>
+          <template #action="{ row }">
+            <div class="flex gap-2">
+              <button
+                class="px-2 py-1 rounded shadow flex items-center justify-center bg-blue-500 text-white hover:brightness-90"
+                title="Lihat"
+                @click="handleView(row)"
+              >
+                <font-awesome-icon :icon="['far', 'eye']" class="text-md" />
+              </button>
+            </div>
+          </template>
+
+        </DataTable>
+      </div>
     </div>
+    <ModalLaporan :show="showViewModal" @close="showViewModal = false">
+      <LaporanSurat v-if="selectedData" :surat="selectedData" />
+    </ModalLaporan>
   </AppLayout>
 </template>
 
@@ -73,65 +76,81 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import HeaderPage from '@/Components/HeaderPage.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
-import Modal from './Partials/Modal.vue'
 import { usePage, router } from '@inertiajs/vue3'
-import { ref } from 'vue'
-import { getRowActions } from '@/utils/rowAction'
-import { parseISO, format } from 'date-fns'
+import { computed, reactive, watch, ref } from 'vue'
+import debounce from 'lodash.debounce'
+import ModalLaporan from '@/Components/ModalLaporan.vue'
+import LaporanSurat from '@/Components/LaporanSurat.vue'
 
-/* =========================
-   MODAL UPLOAD
-========================= */
-const isUploadModalOpen = ref(false)
-const openUploadModal = (row) => {
-  console.log('Upload modal for:', row)
-  isUploadModalOpen.value = true
+const page = usePage()
+const propsSafe = computed(() => page.props?.value ?? page.props ?? {})
+const showViewModal = ref(false)
+const selectedData = ref(null)
+
+const handleView = (row) => {
+  selectedData.value = row
+  showViewModal.value = true
 }
 
-/* =========================
-   PAGE PROPS
-========================= */
-const { props } = usePage()
-const currentUser = props.auth.user
-const suratTugas = props.suratTugas
-const filters = ref(props.filters || {})
+const suratTugas = computed(() => propsSafe.value.suratTugas ?? { data: [], meta: {}, links: {} })
+const scopeCounts = computed(() => propsSafe.value.scopeCounts ?? {})
 
-/* =========================
-   TABLE COLUMNS
-========================= */
+const filters = reactive({
+  search: propsSafe.value.filters?.search ?? '',
+  from: propsSafe.value.filters?.from ?? '',
+  to: propsSafe.value.filters?.to ?? '',
+  page: propsSafe.value.filters?.page ?? 1,
+  range: propsSafe.value.filters?.range ?? '',
+  scope: propsSafe.value.filters?.scope ?? 'processing',
+})
+
+const fetchData = debounce(() => {
+  router.get(route('pelaksana.daftarlaporan'), { ...filters }, {
+    preserveState: true,
+    replace: true,
+    preserveScroll: true,
+  })
+}, 300)
+
+watch(filters, fetchData, { deep: true })
+
+const setScope = (s) => {
+  filters.scope = s
+  filters.page = 1
+}
+
 const columns = [
   { key: 'nomor_surat_tugas_resmi', label: 'No Surat Resmi' },
   { key: 'perihal_tugas', label: 'Nama Kegiatan' },
-  { key: 'tanggal_berangkat', label: 'Tanggal Pelaksanaan' },
-  { key: 'status_laporan', label: 'Status Laporan' },
-  { key: 'action', label: 'Aksi' },
+  { key: 'created_at', label: 'Tanggal Pengusulan' },
+  { key: 'no_usulan_surat', label: 'Nomor Surat Usulan' },
+  { key: 'status_surat', label: 'Status' },
+  { key: 'action', label: 'Aksi', sortable: false, fixedWidth: '180px' },
 ]
 
-/* =========================
-   DATE FORMAT FUNCTION
-========================= */
-const formatDate = (isoString) => {
-  if (!isoString) return ''
-  return format(parseISO(isoString), 'dd MMM yyyy')
+const toStorageUrl = (path) => {
+  if (!path) return null
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  if (path.startsWith('/storage/')) return path
+  if (path.startsWith('/')) return path
+  return `/storage/${path}`
 }
 
-/* =========================
-   ACTION HANDLER
-========================= */
-const handleAction = (type, row) => {
-  switch (type) {
-    case 'upload':
-      openUploadModal(row)
-      break
-    case 'view':
-      router.get(route('pelaksana.laporan.view', row.id))
-      break
-    case 'download':
-      router.get(route('pelaksana.laporan.download', row.id))
-      break
-    case 'fix':
-      router.get(route('pelaksana.laporan.revision', row.id))
-      break
-  }
+const openFile = (path) => {
+  const url = toStorageUrl(path)
+  if (!url) return
+  window.open(url, '_blank')
+}
+
+const getSuratId = (row) => row?.surat_tugas_id ?? row?.id
+
+const canManageUpload = (row) => {
+  return ['published', 'awaiting_proof_upload', 'returned_for_correction'].includes(row?.status_surat)
+}
+
+const goToLampiran = (row) => {
+  const id = getSuratId(row)
+  if (!id) return
+  router.get(route('pelaksana.lampiran.index', { suratTugas: id }))
 }
 </script>
