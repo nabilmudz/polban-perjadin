@@ -73,13 +73,31 @@ Route::middleware(['auth'])->group(function () {
                 ->name('pengusul.draft.destroy');
         });
 
-
     // Pelaksana
-    Route::prefix('pelaksana')->name('pelaksana.')->middleware(['auth', 'role:pelaksana'])->group(function () {
-        Route::get('/dashboard', [PelaksanaController::class, 'dashboard'])->name('dashboard');
-        Route::get('/daftarlaporan', [PelaksanaController::class, 'daftarLaporan'])->name('daftarlaporan');
-        Route::get('/historypelaksana', [PelaksanaController::class, 'historypelaksana'])->name('historypelaksana');
-        Route::get('/status-laporan', [PelaksanaController::class, 'statusLaporan'])->name('status-laporan');
+    Route::prefix('pelaksana')
+        ->name('pelaksana.')
+        ->middleware(['auth', 'role:pelaksana'])
+        ->group(function () {
+
+            Route::get('/dashboard', [PelaksanaController::class, 'dashboard'])->name('dashboard');
+            Route::get('/daftarlaporan', [PelaksanaController::class, 'daftarLaporan'])->name('daftarlaporan');
+            Route::get('/historypelaksana', [PelaksanaController::class, 'historypelaksana'])->name('historypelaksana');
+            Route::get('/status-laporan', [PelaksanaController::class, 'statusLaporan'])->name('status-laporan');
+
+            Route::post('/laporan/{suratTugas}/upload', [PelaksanaController::class, 'uploadLampiranLaporan'])
+                ->name('laporan.upload');
+
+            Route::get('/laporan/{suratTugas}/lampiran', [PelaksanaController::class, 'lampiranIndex'])
+                ->name('lampiran.index');
+            Route::post('/laporan/{suratTugas}/lampiran', [PelaksanaController::class, 'uploadLampiranLaporan'])
+                ->name('lampiran.store');
+
+            Route::get('/lampiran/{lampiran}', [PelaksanaController::class, 'lampiranShow'])
+                ->name('lampiran.show');
+            Route::get('/lampiran/{lampiran}/file', [PelaksanaController::class, 'lampiranFile'])
+                ->name('lampiran.file');
+            Route::post('/laporan/{suratTugas}/lampiran/submit', [PelaksanaController::class, 'submitLampiran'])
+                ->name('lampiran.submit');
 
     });
 
