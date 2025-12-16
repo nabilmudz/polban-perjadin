@@ -505,7 +505,7 @@ class PengusulController extends Controller
         if ((int) $suratTugas->user_id !== (int) $user->id) {
             abort(403);
         }
-        if (!in_array($suratTugas->status_surat, ['draft', 'revision_requested'], true)) {
+        if (!in_array($suratTugas->status_surat, ['draft', 'revision_requested', 'sekdir_revision_requested'], true)) {
             abort(403, 'Only draft or revision-requested can be edited.');
         }
 
@@ -586,7 +586,7 @@ class PengusulController extends Controller
         $user = $request->user();
 
         if ((int) $suratTugas->user_id !== (int) $user->id) abort(403);
-        if (!in_array($suratTugas->status_surat, ['draft', 'revision_requested'], true)) {
+        if (!in_array($suratTugas->status_surat, ['draft', 'revision_requested', 'sekdir_revision_requested'], true)) {
             abort(403, 'Only draft or revision-requested can be updated.');
         }
 
@@ -652,16 +652,22 @@ class PengusulController extends Controller
         $user = $request->user();
 
         if ((int) $suratTugas->user_id !== (int) $user->id) abort(403);
-        if (!in_array($suratTugas->status_surat, ['draft', 'revision_requested'], true)) {
-            abort(403, 'Only draft or revision-requested can be updated.');
+
+        if (!in_array($suratTugas->status_surat, ['draft', 'revision_requested', 'sekdir_revision_requested'], true)) {
+            abort(403, 'Only draft or revision-requested can be submitted.');
         }
 
+        $fromStatus = $suratTugas->status_surat;
 
         $validated = $this->validatePengusulan($request);
         $pengusulan = $validated['pengusulan'];
         $personel = $validated['personel'];
 
-        DB::transaction(function () use ($request, $user, $suratTugas, $pengusulan, $personel) {
+        $nextStatus = $fromStatus === 'sekdir_revision_requested'
+            ? 'pending_sekdir_numbering'
+            : 'submitted_wadir_review';
+
+        DB::transaction(function () use ($request, $user, $suratTugas, $pengusulan, $personel, $nextStatus) {
 
             $pathSuratUndangan = $this->storeSuratUndangan($request);
             $nomorUsulan = $this->buildNomorUsulan($user, $pengusulan);
@@ -669,6 +675,7 @@ class PengusulController extends Controller
             $exists = SuratTugas::where('nomor_surat_usulan_jurusan', $nomorUsulan)
                 ->where($suratTugas->getKeyName(), '!=', $suratTugas->getKey())
                 ->exists();
+
             if ($exists) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'pengusulan.nomor_urutan_surat' => 'Nomor Surat Usulan sudah dipakai.',
@@ -691,27 +698,33 @@ class PengusulController extends Controller
                 'sumber_dana'                => $pengusulan['hasPagu'] ? 'Pagu Desentralisasi' : 'Non Pagu',
                 'pagu_desentralisasi'        => $pengusulan['hasPagu'],
                 'nominal_dana'               => $pengusulan['nominal_pagu'] ?? null,
-                'status_surat'               => 'submitted_wadir_review',
                 'catatan_revisi'             => null,
             ]);
 
             $suratTugas->detailPelaksanaTugas()->delete();
-            foreach ($personel as $p) {
-            $suratTugas->detailPelaksanaTugas()->create([
-                'personable_id'   => $p['id'],
-                'personable_type' => $p['type'] === 'mahasiswa'
-                ? Mahasiswa::class
-                : Pegawai::class,
 
-                'status_sebagai'  => $p['status_sebagai'] ?? 'Peserta', // ✅
-            ]);
+            foreach ($personel as $p) {
+                $suratTugas->detailPelaksanaTugas()->create([
+                    'personable_id'   => $p['id'],
+                    'personable_type' => $p['type'] === 'mahasiswa' ? Mahasiswa::class : Pegawai::class,
+                    'status_sebagai'  => $p['status_sebagai'] ?? 'Peserta',
+                ]);
             }
 
+            $this->suratTugasService->updateStatus(
+                $suratTugas->fresh(),
+                $nextStatus,
+                null,
+                'pengusul'
+            );
         });
 
-        return redirect()->route('pengusul.dashboard')->with('success', 'Draft berhasil dikirim ke Wadir.');
-    }
+        $msg = $nextStatus === 'pending_sekdir_numbering'
+            ? 'Revisi Sekdir sudah dikirim kembali ke Sekdir untuk penomoran.'
+            : 'Draft berhasil dikirim ke Wadir.';
 
+        return redirect()->route('pengusul.dashboard')->with('success', $msg);
+    }
 
     private function storeSuratUndangan(Request $request): ?string
     {
@@ -738,8 +751,8 @@ class PengusulController extends Controller
             abort(403);
         }
 
-        if (!in_array($suratTugas->status_surat, ['draft', 'revision_requested'], true)) {
-            abort(403, 'Only draft or revision-requested can be deleted.');
+        if (!in_array($suratTugas->status_surat, ['draft'], true)) {
+            abort(403, 'Only draft can be deleted.');
         }
 
         DB::transaction(function () use ($suratTugas) {

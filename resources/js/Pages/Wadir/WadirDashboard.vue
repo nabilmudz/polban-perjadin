@@ -112,7 +112,6 @@ const totalPengusulan = computed(() =>
 const suratTugas = computed(
   () => page.props.suratTugas ?? { data: [], meta: {}, links: {} },
 )
-const stats = computed(() => page.props.stats ?? {})
 
 const filters = reactive({
   search: page.props.filters?.search ?? '',
@@ -132,7 +131,6 @@ const columns = [
   { key: 'path_file_surat_usulan', label: 'Surat Undangan', sortable: false, fixedWidth: '130px' },
   { key: 'action', label: 'Aksi', sortable: false, fixedWidth: '120px' },
 ]
-
 
 const preview = useFilePreview()
 
@@ -176,25 +174,6 @@ const handleView = (row) => {
   router.get(route(`${user.role}.persetujuan.show`, id))
 }
 
-const handleAction = (type, row) => {
-  switch (type) {
-    case 'view':
-      router.get(route(`${user.role}.persetujuan.show`, row.surat_tugas_id))
-      break
-    case 'edit':
-      router.get(route('pengusul.edit', row.id))
-      break
-    case 'delete':
-      if (confirm('Are you sure?')) {
-        router.delete(route('pengusul.destroy', row.id))
-      }
-      break
-    case 'download':
-      router.get(route('pengusul.download', row.id))
-      break
-  }
-}
-
 const updateFilters = () => {
     router.get(route(dashboardRoute), filters.value, {
         preserveState: true,
@@ -207,8 +186,4 @@ const debouncedUpdateFilters = debounce(() => {
     updateFilters()
 }, 400)
 
-const onFiltersUpdate = (newFilters) => {
-    Object.assign(filters.value, newFilters)
-    debouncedUpdateFilters()
-}
 </script>

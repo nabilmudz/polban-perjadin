@@ -138,6 +138,7 @@ class WadirController extends Controller
             'rejected',
             'approved_wadir',
             'pending_sekdir_numbering',
+            'sekdir_revision_requested',
             'pending_direktur_signature',
             'published',
             'awaiting_proof_upload',
