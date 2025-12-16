@@ -3,14 +3,16 @@
 namespace App\Services;
 
 use App\Models\TemplateSurat;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class TemplateSuratService
 {
     public function getAll()
     {
         $query = TemplateSurat::query()
-            ->orderByDesc('status')   // aktif di atas
-            ->latest()                // terbaru dulu
+            ->orderByDesc('status')
+            ->orderByDesc('id')
             ->paginate(10);
 
         return [
@@ -32,26 +34,56 @@ class TemplateSuratService
 
     public function create(array $data): TemplateSurat
     {
-        return TemplateSurat::create($data);
+        return DB::transaction(function () use ($data) {
+            $status = (int)($data['status'] ?? 0);
+
+            if ($status === 1) {
+                TemplateSurat::where('status', 1)->update(['status' => 0]);
+            }
+
+            return TemplateSurat::create($data);
+        });
     }
 
     public function update(int $id, array $data): TemplateSurat
     {
-        $template = TemplateSurat::findOrFail($id);
+        return DB::transaction(function () use ($id, $data) {
+            $template = TemplateSurat::findOrFail($id);
 
-        $template->update($data);
+            $status = array_key_exists('status', $data)
+                ? (int)$data['status']
+                : (int)$template->status;
 
-        return $template;
+            if ($status === 1) {
+                TemplateSurat::where('status', 1)
+                    ->where('id', '!=', $id)
+                    ->update(['status' => 0]);
+            }
+
+            $template->update($data);
+
+            return $template->refresh();
+        });
     }
 
     public function toggleStatus(int $id): TemplateSurat
     {
-        $template = TemplateSurat::findOrFail($id);
+        return DB::transaction(function () use ($id) {
+            $template = TemplateSurat::findOrFail($id);
 
-        $template->update([
-            'status' => !$template->status,
-        ]);
+            if (!$template->status) {
+                TemplateSurat::where('status', 1)
+                    ->where('id', '!=', $id)
+                    ->update(['status' => 0]);
 
-        return $template;
+                $template->update(['status' => 1]);
+            } else {
+                $template->update(['status' => 0]);
+            }
+
+            return $template->refresh();
+        });
     }
 }
+
+Cache::forget('active_template_surat');

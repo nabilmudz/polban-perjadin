@@ -12,6 +12,12 @@ export default function getSidebarLinks(role) {
           component: "Wadir/WadirDashboard"
         },
         {
+          name: "Tambah Pengusulan",
+          route: "pengusul.form",
+          icon: "file-lines",
+          component: "Pengusul/FormPengusulan"
+        },
+        {
           name: "Persetujuan",
           route: `${role}.persetujuan`,
           icon: "square-check",
@@ -22,12 +28,6 @@ export default function getSidebarLinks(role) {
           route: `${role}.history`,
           icon: "clock",
           component: "Wadir/HistoryWadir"
-        },
-        {
-          name: "Tambah Pengusulan",
-          route: "pengusul.form",
-          icon: "file-lines",
-          component: "Pengusul/FormPengusulan"
         },
       ];
 
@@ -112,7 +112,7 @@ export default function getSidebarLinks(role) {
           route: "direktur.history",
           icon: "clock",
           component: "Direktur/DirekturHistory"
-        }
+        },
       ];
 
     case 'bku':
@@ -140,7 +140,7 @@ export default function getSidebarLinks(role) {
           route: "bku.historyperjalanandinas",
           icon: "clock",
           component: "BKU/HistoryPerjalananDinas"
-        }
+        },
       ];
 
     case 'sekdir':
@@ -150,6 +150,12 @@ export default function getSidebarLinks(role) {
           route: "sekdir.dashboard",
           icon: "house",
           component: "Sekdir/SekdirDashboard",
+        },
+        {
+          name: "Tambah Pengusulan",
+          route: "pengusul.form",
+          icon: "file-lines",
+          component: "Pengusul/FormPengusulan"
         },
         {
           name: "Nomor Surat",
@@ -162,12 +168,6 @@ export default function getSidebarLinks(role) {
           route: "sekdir.history",
           icon: "clock",
           component: "Sekdir/HistoryPersetujuan",
-        },
-        {
-          name: "Tambah Pengusulan",
-          route: "pengusul.form",
-          icon: "file-lines",
-          component: "Pengusul/FormPengusulan"
         },
       ];
 
@@ -187,16 +187,10 @@ export default function getSidebarLinks(role) {
         },
         {
           name: "Template Surat",
-          route: "admin.template-surat",  
+          route: "admin.template-surat",
           icon: "file-lines",
           component: "Admin/TemplateSurat"
-        }
-        // {
-        //   name: "Laporan & Bukti Perjalanan Dinas",
-        //   route: "bku.daftarlaporan&perjalanan",
-        //   icon: "file-lines",
-        //   component: "BKU/DaftarLaporan&Perjalanan"
-        // }
+        },
       ];
 
     default:

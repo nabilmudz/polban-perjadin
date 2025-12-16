@@ -133,26 +133,26 @@ class SuratTugasService
                 'draft' => ['submitted_wadir_review'],
                 'revision_requested' => ['submitted_wadir_review'],
                 'returned_for_correction' => ['submitted_wadir_review'],
+                'sekdir_revision_requested' => ['pending_sekdir_numbering'],
             ],
 
             //WADIR
             'wadir1' => [
-                'submitted_wadir_review' => ['approved_wadir', 'revision_requested', 'rejected'],
+                'submitted_wadir_review' => ['pending_sekdir_numbering', 'revision_requested', 'rejected'],
             ],
             'wadir2' => [
-                'submitted_wadir_review' => ['approved_wadir', 'revision_requested', 'rejected'],
+                'submitted_wadir_review' => ['pending_sekdir_numbering', 'revision_requested', 'rejected'],
             ],
             'wadir3' => [
-                'submitted_wadir_review' => ['approved_wadir', 'revision_requested', 'rejected'],
+                'submitted_wadir_review' => ['pending_sekdir_numbering', 'revision_requested', 'rejected'],
             ],
             'wadir4' => [
-                'submitted_wadir_review' => ['approved_wadir', 'revision_requested', 'rejected'],
+                'submitted_wadir_review' => ['pending_sekdir_numbering', 'revision_requested', 'rejected'],
             ],
 
             // SEKDIR
             'sekdir' => [
-                'approved_wadir' => ['pending_sekdir_numbering'],
-                'pending_sekdir_numbering' => ['pending_direktur_signature', 'returned_for_correction'],
+                'pending_sekdir_numbering' => [ 'pending_direktur_signature', 'sekdir_revision_requested', ],
             ],
 
             // DIREKTUR
@@ -179,8 +179,8 @@ class SuratTugasService
         if (!in_array($status, $allowedTransitions[$role][$current], true)) {
             throw new \DomainException("Transisi dari '{$current}' ke '{$status}' tidak diizinkan untuk role '{$role}'.");
         }
-
-        $requiresCatatan = ['revision_requested', 'returned_for_correction', 'rejected'];
+        
+        $requiresCatatan = ['revision_requested', 'returned_for_correction', 'rejected', 'sekdir_revision_requested'];
 
         if (in_array($status, $requiresCatatan, true) && (empty($catatan))) {
             throw new \DomainException("Status '{$status}' membutuhkan catatan revisi.");
@@ -200,5 +200,32 @@ class SuratTugasService
             return $surat->fresh();
         });
     }
+    
+    private function appendTembusan(SuratTugas $surat, string $label): void
+    {
+        $list = $surat->template_tembusan ?? [];
+
+        if (is_string($list)) {
+            $decoded = json_decode($list, true);
+            $list = json_last_error() === JSON_ERROR_NONE ? $decoded : [];
+        }
+
+        if (!in_array($label, $list, true)) {
+            $list[] = $label;
+        }
+
+        $surat->update(['template_tembusan' => array_values($list)]);
+    }
+    
+    /*
+    Wadir approves
+    $this->appendTembusan($suratTugas, 'Wakil Direktur');
+
+    Sekdir approves
+    $this->appendTembusan($suratTugas, 'Sekretaris Direktur');
+
+    Direktur approves
+    $this->appendTembusan($suratTugas, 'Direktur');
+    */
 }
 

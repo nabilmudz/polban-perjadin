@@ -42,7 +42,6 @@ export const roleActions = {
   },
 };
 
-// Mapping aksi 
 export const actionToStatus = {
   submit_wadir: 'submitted_wadir_review',
   resubmit_wadir: 'submitted_wadir_review',

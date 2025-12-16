@@ -8,14 +8,15 @@
       <div class="p-8">
         <h1 class="text-3xl font-bold mb-6 text-gray-800">Dashboard BKU</h1>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-          <StatCard title="Total Pengusulan" icon="file" :count="stats?.total_pengusulan || 0" color="blue" />
-          <StatCard title="Verifikasi Baru" icon="envelope" :count="stats?.surat_tugas_baru || 0" color="green" />
-          <StatCard title="Bertugas" icon="users" :count="stats?.bertugas || 0" color="yellow" />
-          <StatCard title="Laporan Pending" icon="circle-exclamation" :count="stats?.laporan_belum_selesai || 0" color="red" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-5">
+            <StatCard title="Total Pengusulan" icon="file" :count="totalPengusulan || 0" />
+            <StatCard title="Laporan Selesai" icon="square-check" :count="statusCounts?.completed || 0" color="green" />
+            <StatCard title="Belum Selesai" icon="folder-closed" :count="statusCounts?.published || 0" color="purple" />
+            <StatCard title="Bertugas" icon="user" :count="statusCounts?.on_duty || 0" color="yellow" />
+            <StatCard title="Dikembalikan" icon="circle-left" :count="statusCounts?.revision_requested || 0" color="red" />
         </div>
 
-        <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+        <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm mt-6">
           <div class="flex justify-between items-end mb-4">
              <div>
                  <h3 class="text-lg font-bold text-gray-800">Daftar Penugasan</h3>
@@ -29,26 +30,15 @@
             :meta="suratData.meta"
             :links="suratData.links"
             :filters="filters"
+            :status-options="statusOptions"
             route-name="bku.dashboard"
-            @update:filters="handleFilterUpdate"
-            @changePage="handlePageChange"
+            @update:filters="Object.assign(filters, $event)"
+            @changePage="(page) => router.get(route('bku.dashboard'), { ...filters, page }, { preserveState: true, replace: true })"
           >
-            <template #no="{ index }">
-                {{ (suratData.meta.from || 1) + index }}
-            </template>
-
-            <template #no_usulan_surat="{ row }">
-                <span class="font-medium text-gray-700">{{ row.no_usulan_surat }}</span>
-            </template>
-
-            <template #nominal_biaya="{ row }">
-               {{ formatCurrency(row.nominal_biaya) }}
-            </template>
-
-            <template #status_surat="{ row }">
-               <StatusBadges :status="row.status_surat" />
-            </template>
-
+            <template #no="{ index }">{{ (suratData.meta.from || 1) + index }}</template>
+            <template #no_usulan_surat="{ row }"><span class="font-medium text-gray-700">{{ row.no_usulan_surat }}</span></template>
+            <template #nominal_biaya="{ row }">{{ formatCurrency(row.nominal_biaya) }}</template>
+            <template #status_surat="{ row }"><StatusBadges :status="row.status_surat" /></template>
             <template #actions="{ row }">
             <div class="flex gap-2">
               <button
@@ -57,10 +47,7 @@
                 @click="handleAction(action.type, row)"
                 :title="action.type"
                 class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90"
-                :class="{
-                  'bg-blue-500 text-white': action.color === 'blue',
-                  'bg-green-500 text-white': action.color === 'green',
-                }"
+                :class="{'bg-blue-500 text-white': action.color === 'blue', 'bg-green-500 text-white': action.color === 'green'}"
               >
                 <font-awesome-icon :icon="['far', action.icon]" class="text-md" />
               </button>
@@ -70,6 +57,11 @@
         </div>
       </div>
     </div>
+
+    <ModalLaporan :show="showViewModal" @close="showViewModal = false">
+        <LaporanSurat v-if="selectedData" :surat="selectedData" />
+    </ModalLaporan>
+
   </AppLayout>
 </template>
 
@@ -79,11 +71,17 @@ import HeaderPage from '@/Components/HeaderPage.vue'
 import StatCard from '@/Components/StatCard.vue' 
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
-import { reactive, computed, watch } from 'vue'
+import ModalLaporan from '@/Components/ModalLaporan.vue'
+import LaporanSurat from '@/Components/LaporanSurat.vue'
+
+import { reactive, computed, watch, ref } from 'vue' 
 import { Head, router, usePage } from '@inertiajs/vue3'
+import { statusOptions } from '@/utils/statusOptions'
+import debounce from 'lodash.debounce'
 
 const props = defineProps({
-  stats: Object,
+  statusCounts: Object,
+  totalPengusulan: Number,
   latestSurat: Object, 
   filters: Object
 })
@@ -107,55 +105,45 @@ const suratData = computed(() => {
 })
 
 const filters = reactive({
-  search: props.filters?.search || ''
+  search: props.filters?.search || '',
+  status: props.filters?.status || '',
+  from: props.filters?.from || '',
+  to: props.filters?.to || '',
+  range: props.filters?.range || '',
 })
 
-let searchTimeout;
-
 watch(
-  () => filters.search,
-  (value) => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        router.get(route('bku.dashboard'), { search: value }, { preserveState: true, replace: true })
-    }, 300);
-  }
+  filters,
+  debounce(() => {
+    router.get(route('bku.dashboard'), filters, { preserveState: true, replace: true })
+  }, 300),
+  { deep: true }
 )
-
-const handleFilterUpdate = (newFilters) => {
-    Object.assign(filters, newFilters)
-}
-
-const handlePageChange = (page) => {
-    router.get(route('bku.dashboard'), { ...filters, page }, { preserveState: true, replace: true })
-}
 
 const formatCurrency = (value) => {
   if (!value) return 'Rp 0';
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0
-  }).format(value);
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value);
 }
 
+const showViewModal = ref(false)
+const selectedData = ref(null)
+
 const getRowActions = (row) => {
-    return [
-        { type: 'view', icon: 'eye', color: 'blue' }
-    ];
+    return [{ type: 'view', icon: 'eye', color: 'blue' }];
 }
 
 const handleAction = (type, row) => {
     if (type === 'view') {
-        router.get(route('bku.verifikasi', row.id)); 
+        selectedData.value = row
+        showViewModal.value = true
     }
 }
 
 const columns = [
   { key: 'perihal_tugas', label: 'Nama Kegiatan' },
-  { key: 'tanggal_pengusulan', label: 'Tanggal Usulan' },
+  { key: 'tanggal_pengusulan', label: 'Tanggal Pengusulan' },
   { key: 'tanggal_berangkat', label: 'Tanggal Berangkat' }, 
-  { key: 'no_usulan_surat', label: 'No. Usulan Surat', slot: 'no_usulan_surat' }, 
+  { key: 'no_usulan_surat', label: 'Nomor Surat Usulan', slot: 'no_usulan_surat' }, 
   { key: 'sumber_dana', label: 'Sumber Dana' },
   { key: 'nominal_biaya', label: 'Total Dana', slot: 'nominal_biaya' },
   { key: 'status_surat', label: 'Status', slot: 'status_surat' },

@@ -8,19 +8,12 @@
       <div class="p-8">
         <h1 class="text-3xl font-bold mb-4">Dashboard Direktur</h1>
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard 
-            title="Total Ulasan" 
-            icon="file" 
-            :count="stats?.total_ulasan || 0" 
-            color="blue"
-          />
-          <StatCard 
-            title="Bertugas" 
-            icon="user" 
-            :count="stats?.bertugas || 0" 
-            color="yellow"
-          />
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-5">
+            <StatCard title="Total Pengusulan" icon="file" :count="totalPengusulan || 0" />
+            <StatCard title="Laporan Selesai" icon="square-check" :count="statusCounts?.completed || 0" color="green" />
+            <StatCard title="Belum Selesai" icon="folder-closed" :count="statusCounts?.published || 0" color="purple" />
+            <StatCard title="Bertugas" icon="user" :count="statusCounts?.on_duty || 0" color="yellow" />
+            <StatCard title="Dikembalikan" icon="circle-left" :count="statusCounts?.revision_requested || 0" color="red" />
         </div>
       </div>
 
@@ -31,31 +24,15 @@
           :meta="suratTugas.meta"
           :links="suratTugas.links"
           :filters="filters"
+          :status-options="statusOptions" 
           route-name="direktur.dashboard"
           @update:filters="Object.assign(filters, $event)"
-          @changePage="(page) =>
-            router.get(route('direktur.dashboard'), { ...filters, page }, {
-              preserveState: true,
-              replace: true,
-            })
-          "
+          @changePage="(page) => router.get(route('direktur.dashboard'), { ...filters, page }, { preserveState: true, replace: true })"
         >
-          <template #tanggal_berangkat="{ row }">
-              {{ formatDate(row.tanggal_berangkat) }}
-          </template>
-
-          <template #nominal_biaya="{ row }">
-             {{ formatCurrency(row.nominal_biaya) }}
-          </template>
-
-          <template #no_usulan_surat="{ row }">
-                <span class="font-medium text-gray-700">{{ row.no_usulan_surat }}</span>
-          </template>
-
-          <template #status_surat="{ row }">
-            <StatusBadges :status="row.status_surat" />
-          </template>
-          
+          <template #tanggal_berangkat="{ row }">{{ formatDate(row.tanggal_berangkat) }}</template>
+          <template #nominal_biaya="{ row }">{{ formatCurrency(row.nominal_biaya) }}</template>
+          <template #no_usulan_surat="{ row }"><span class="font-medium text-gray-700">{{ row.no_usulan_surat }}</span></template>
+          <template #status_surat="{ row }"><StatusBadges :status="row.status_surat" /></template>
           <template #actions="{ row }">
             <div class="flex gap-2">
               <button
@@ -64,22 +41,20 @@
                 @click="handleAction(action.type, row)"
                 :title="action.type"
                 class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90"
-                :class="{
-                  'bg-blue-500 text-white': action.color === 'blue',
-                  'bg-green-500 text-white': action.color === 'green',
-                  'bg-red-500 text-white': action.color === 'red',
-                  'bg-yellow-400 text-black': action.color === 'yellow',
-                  'bg-purple-500 text-white': action.color === 'purple',
-                }"
+                :class="{'bg-blue-500 text-white': action.color === 'blue', 'bg-green-500 text-white': action.color === 'green', 'bg-red-500 text-white': action.color === 'red', 'bg-yellow-400 text-black': action.color === 'yellow', 'bg-purple-500 text-white': action.color === 'purple'}"
               >
                 <font-awesome-icon :icon="['far', action.icon]" class="text-md" />
               </button>
             </div>
           </template>
-
         </DataTable>
       </div>
     </div>
+
+    <ModalLaporan :show="showViewModal" @close="showViewModal = false">
+        <LaporanSurat v-if="selectedData" :surat="selectedData" />
+    </ModalLaporan>
+
   </AppLayout>
 </template>
 
@@ -89,16 +64,20 @@ import HeaderPage from '@/Components/HeaderPage.vue'
 import StatCard from '@/Components/StatCard.vue'
 import DataTable from '@/Components/Table/DataTable.vue'
 import StatusBadges from '@/Components/Table/StatusBadges.vue'
+import ModalLaporan from '@/Components/ModalLaporan.vue'
+import LaporanSurat from '@/Components/LaporanSurat.vue'
+
 import { Head, usePage, router } from '@inertiajs/vue3' 
-import { reactive, computed, watch } from 'vue'
+import { reactive, computed, watch, ref } from 'vue' 
 import debounce from 'lodash.debounce'
 import { getRowActions } from '@/utils/rowAction'
-
+import { statusOptions } from '@/utils/statusOptions'
 
 const props = defineProps({
   suratTugas: Object,
   filters: Object,
-  stats: Object 
+  statusCounts: Object,
+  totalPengusulan: Number  
 })
 
 const page = usePage()
@@ -111,63 +90,54 @@ const filters = reactive({
   status: props.filters?.status || '',
   from: props.filters?.from || '',
   to: props.filters?.to || '',
+  range: props.filters?.range || '', 
 })
 
-watch(
-  filters,
-  debounce(() => {
-    router.get(route('direktur.dashboard'), filters, {
-      preserveState: true,
-      replace: true,
-    })
-  }, 300),
-  { deep: true }
+watch(filters, debounce(() => {
+    router.get(route('direktur.dashboard'), filters, { preserveState: true, replace: true })
+  }, 300), { deep: true }
 )
 
 const formatDate = (dateString) => {
     if (!dateString) return '-';
     if (dateString.length === 10 && dateString.includes('-')) return dateString;
-
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString; 
-    
     return date.toISOString().split('T')[0];
 }
 
 const formatCurrency = (value) => {
   if (!value) return 'Rp 0';
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0
-  }).format(value);
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value);
 }
 
 const columns = [
   { key: 'nama_kegiatan', label: 'Nama Kegiatan' },
   { key: 'created_at', label: 'Tanggal Pengusulan' },
   { key: 'tanggal_berangkat', label: 'Tanggal Berangkat', slot: 'tanggal_berangkat' },
-  { key: 'no_usulan_surat', label: 'No. Usulan Surat', slot: 'no_usulan_surat' }, 
+  { key: 'no_usulan_surat', label: 'Nomor Surat Usulan', slot: 'no_usulan_surat' }, 
   { key: 'sumber_dana', label: 'Sumber Dana' },
   { key: 'nominal_biaya', label: 'Total Dana', slot: 'nominal_biaya' },
   { key: 'status_surat', label: 'Status', slot: 'status_surat' },
   { key: 'actions', label: 'Aksi', slot: 'actions' },
 ]
 
+const showViewModal = ref(false)
+const selectedData = ref(null)
 
 const handleAction = (type, row) => {
   switch(type) {
-    case 'view':
-      router.get(route('direktur.persetujuan.show', row.id)) 
-      break
-    case 'approve':
-      router.post(route('direktur.persetujuan.approve', row.id))
-      break
-    case 'reject':
-      router.post(route('direktur.persetujuan.reject', row.id))
-      break
-    default:
-      console.warn(`Unhandled action type: ${type}`)
+    case 'view': 
+        selectedData.value = row
+        showViewModal.value = true
+        break
+    case 'approve': 
+        router.post(route('direktur.persetujuan.approve', row.id))
+        break
+    case 'reject': 
+        router.post(route('direktur.persetujuan.reject', row.id))
+        break
+    default: console.warn(`Unhandled action type: ${type}`)
   }
 }
 </script>

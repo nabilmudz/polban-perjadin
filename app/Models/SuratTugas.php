@@ -19,6 +19,7 @@ class SuratTugas extends Model
         'user_id',
         'diusulkan_kepada',
         'nama_penyelenggara',
+        'penyelenggara',
         'lokasi_kegiatan',
         'nomor_surat_usulan_jurusan',
         'nomor_surat_tugas_resmi',
@@ -68,7 +69,7 @@ class SuratTugas extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function pengusul()
