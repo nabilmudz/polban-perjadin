@@ -65,16 +65,28 @@ class SuratDownloadController extends Controller
         $vm = $this->buildPrintVm($surat);
         return view('print.surat-tugas', $vm);
     }
+    private function safeFilename(string $name): string
+    {
+        $name = str_replace(['/', '\\'], '-', $name);
+        $name = preg_replace('/[^A-Za-z0-9._-]+/', '-', $name);
+        $name = trim($name, '-');
+
+        return $name ?: 'surat';
+    }
 
     public function download(Request $request, SuratTugas $suratTugas)
     {
         $surat = $this->baseQueryByRole($request)->whereKey($suratTugas->getKey())->firstOrFail();
         $vm = $this->buildPrintVm($surat);
 
-        $pdf = Pdf::loadView('print.surat-tugas', $vm)->setPaper('a4');
+        $pdf = Pdf::loadView('print.surat-tugas', $vm)
+            ->setPaper('a4')
+            ->setOption('isRemoteEnabled', true);
 
-        $no = $surat->nomor_surat_tugas_resmi ?? $surat->getKey();
-        return $pdf->download("Surat-Tugas-{$no}.pdf");
+        $noRaw = (string) ($surat->nomor_surat_tugas_resmi ?? $surat->getKey());
+        $noSafe = $this->safeFilename($noRaw);
+
+        return $pdf->download("Surat-Tugas-{$noSafe}.pdf");
     }
 
     private function buildPrintVm($surat): array

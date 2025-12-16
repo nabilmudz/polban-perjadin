@@ -237,9 +237,8 @@ Route::get('/verifikasi/surat-tugas/{token}', [VerifikasiController::class, 'sur
 Route::middleware(['auth'])->group(function () {
     Route::get('/surat/{suratTugas}/download', [SuratDownloadController::class, 'download'])
         ->name('surat.download');
-        Route::middleware(['auth'])->group(function () {
+
     Route::get('/surat/{suratTugas}/preview', [SuratDownloadController::class, 'preview'])
         ->name('surat.preview');
-});
 });
 require __DIR__.'/auth.php';

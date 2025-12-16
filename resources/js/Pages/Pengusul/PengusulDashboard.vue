@@ -182,9 +182,11 @@ const handleAction = (type, row) => {
       }
       break
 
-    case 'download':
-      router.get(route('pengusul.download', { suratTugas: suratTugasId }))
+    case 'download': {
+      if (!suratTugasId) return
+      window.location.href = route('surat.download', { suratTugas: suratTugasId })
       break
+    }
   }
 }
 
