@@ -18,33 +18,36 @@
           @update:filters="Object.assign(filters, $event)"
           @changePage="(page) => router.get(route('bku.historyperjalanandinas'), { ...filters, page }, { preserveState: true, replace: true })"
         >
-           <template #no="{ index }">{{ (history.meta.from || 1) + index }}</template>
-           <template #created_at="{ row }">{{ formatDate(row.created_at) }}</template>
-           <template #tanggal_pelaksanaan="{ row }">{{ formatDate(row.tanggal_pelaksanaan) }}</template>
-           
-           <template #diusulkan_kepada="{ row }"><span class="text-gray-700">{{ row.diusulkan_kepada }}</span></template>
-           <template #nominal_biaya="{ row }">{{ formatCurrency(row.nominal_biaya) }}</template>
-           <template #status_surat="{ row }"><StatusBadges :status="row.status_surat" /></template>
-           <template #aksi="{ row }">
+          <template #created_at="{ row }">{{ formatDate(row.created_at) }}</template>
+          <template #tanggal_pelaksanaan="{ row }">{{ formatDate(row.tanggal_pelaksanaan) }}</template>
+          <template #diusulkan_kepada="{ row }"><span class="text-gray-700">{{ row.diusulkan_kepada }}</span></template>
+          <template #nominal_biaya="{ row }">{{ formatCurrency(row.nominal_biaya) }}</template>
+          <template #status_surat="{ row }"><StatusBadges :status="row.status_surat" /></template>
+
+          <template #filters-extra>
+            <button
+              class="px-3 py-2 rounded shadow bg-green-600 text-white hover:brightness-90 flex items-center gap-2"
+              title="Export Excel sesuai filter"
+              @click="downloadExcel"
+            >
+              <font-awesome-icon :icon="['far', 'file-excel']" />
+              Export Excel
+            </button>
+          </template>
+
+          <template #aksi="{ row }">
             <div class="flex gap-2 justify-center">
-              <button 
-                class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90 bg-blue-500 text-white" 
+              <button
+                class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90 bg-blue-500 text-white"
                 title="Lihat Detail"
                 @click="openModal(row)"
               >
-                 <font-awesome-icon :icon="['far', 'eye']" class="text-md" />
-              </button>
-              <button 
-                v-if="['approved', 'completed'].includes(row.status_surat)" 
-                class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90 bg-green-500 text-white" 
-                title="Download"
-                @click="router.get(route('surat.download', row.id))"
-              >
-                 <font-awesome-icon :icon="['far', 'circle-down']" class="text-md" />
+                <font-awesome-icon :icon="['far', 'eye']" class="text-md" />
               </button>
             </div>
           </template>
         </DataTable>
+
       </div>
     </div>
 
@@ -100,6 +103,17 @@ watch(
   { deep: true }
 )
 
+const downloadExcel = () => {
+  const url = route('bku.historyperjalanandinas.export', {
+    search: filters.search || '',
+    from: filters.from || '',
+    to: filters.to || '',
+    range: filters.range || '',
+  })
+
+  window.open(url, '_blank')
+}
+
 const formatDate = (dateString) => {
     if (!dateString) return '-';
     if (dateString.length === 10 && dateString.includes('-')) return dateString;
@@ -120,6 +134,11 @@ const openModal = (row) => {
     selectedData.value = row
     showViewModal.value = true
 }
+const downloadSurat = (row) => {
+  const id = row?.surat_tugas_id ?? row?.id
+  if (!id) return
+  window.open(route('surat.download', { suratTugas: id }), '_blank')
+}
 
 const columns = [
   { key: 'perihal_tugas', label: 'Nama Kegiatan' },
@@ -128,7 +147,7 @@ const columns = [
   { key: 'nomor_surat_usulan_jurusan', label: 'Nomor Surat Usulan' }, 
   { key: 'diusulkan_kepada', label: 'Diusulkan Kepada', slot: 'diusulkan_kepada' },
   { key: 'sumber_dana', label: 'Sumber Dana' }, 
-  { key: 'nominal_biaya', label: 'Total Dana', slot: 'nominal_biaya' },
+  { key: 'nominal_dana', label: 'Total Dana', slot: 'nominal_biaya' },
   { key: 'status_surat', label: 'Status', slot: 'status_surat' },
   { key: 'aksi', label: 'Aksi', slot: 'aksi' },
 ]

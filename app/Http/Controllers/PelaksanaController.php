@@ -121,6 +121,7 @@ class PelaksanaController extends Controller
         $allowed = [
             'awaiting_proof_upload',
             'published',
+            'returned_for_correction',
         ];
 
         $q = $this->baseQueryForPelaksana()->whereIn('status_surat', $allowed);

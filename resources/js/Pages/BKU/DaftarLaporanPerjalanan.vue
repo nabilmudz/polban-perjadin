@@ -29,19 +29,25 @@
              <span v-if="row.laporan" class="px-2 py-1 rounded bg-green-100 text-green-800 text-xs font-bold">Sudah Upload</span>
              <span v-else class="px-2 py-1 rounded bg-yellow-100 text-yellow-800 text-xs font-bold">Belum Upload</span>
           </template>
+          <template #filters-extra>
+            <button
+              class="px-3 py-2 rounded shadow bg-green-600 text-white hover:brightness-90 flex items-center gap-2"
+              title="Export Excel sesuai filter"
+              @click="downloadExcel"
+            >
+              <font-awesome-icon :icon="['far', 'file-excel']" />
+              Export Excel
+            </button>
+          </template>
           
           <template #actions="{ row }">
              <div class="flex gap-2 justify-center">
-                 <button 
-                    class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90 bg-blue-500 text-white" 
-                    title="Lihat Detail"
-                    @click="openModal(row)"
-                 >
-                    <font-awesome-icon :icon="['far', 'eye']" class="text-md" />
-                 </button>
-                 <button v-if="['approved', 'completed'].includes(row.status_surat)" class="px-2 py-1 rounded shadow flex items-center justify-center transition hover:brightness-90 bg-green-500 text-white" title="Download" @click="router.get(route('surat.download', row.id))">
-                 <font-awesome-icon :icon="['far', 'circle-down']" class="text-md" />
-                </button>
+                 <button
+                    class="px-2 py-1 rounded shadow bg-blue-500 text-white hover:brightness-90"
+                    title="Verifikasi Lampiran"
+                    @click="goToLampiranBku(row)"
+                  >Verifikasi
+                  </button>
              </div>
           </template>
         </DataTable>
@@ -70,6 +76,16 @@ import debounce from 'lodash.debounce'
 
 const page = usePage()
 
+const downloadExcel = () => {
+  const url = route('bku.laporanbukti.export', {
+    search: filters.search || '',
+    from: filters.from || '',
+    to: filters.to || '',
+    range: filters.range || '',
+  })
+
+  window.open(url, '_blank')
+}
 const laporanData = computed(() => {
   const raw = page.props.laporanBukti || {};
   return {
@@ -109,6 +125,11 @@ const formatDate = (dateString) => {
     if (isNaN(date.getTime())) return dateString; 
     return date.toISOString().split('T')[0];
 }
+const goToLampiranBku = (row) => {
+  const id = row?.surat_tugas_id ?? row?.id
+  if (!id) return
+  router.get(route('bku.lampiran.index', { suratTugas: id }))
+}
 
 const formatCurrency = (value) => {
   if (!value) return 'Rp 0';
@@ -129,7 +150,7 @@ const columns = [
   { key: 'tanggal_berangkat', label: 'Tanggal Berangkat', slot: 'tanggal_berangkat' },
   { key: 'no_usulan_surat', label: 'Nomor Surat Usulan' }, 
   { key: 'sumber_dana', label: 'Sumber Dana' },
-  { key: 'nominal_biaya', label: 'Total Dana', slot: 'nominal_biaya' },
+  { key: 'nominal_dana', label: 'Total Dana', slot: 'nominal_biaya' },
   { key: 'status_surat', label: 'Status Surat', slot: 'status_surat' },
   { key: 'actions', label: 'Aksi', slot: 'actions' }
 ]
