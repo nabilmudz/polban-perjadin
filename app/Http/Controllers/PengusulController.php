@@ -14,6 +14,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Models\TemplateSurat;
+use Illuminate\Validation\ValidationException;
 
 class PengusulController extends Controller
 {
@@ -672,7 +673,9 @@ class PengusulController extends Controller
     {
         $user = $request->user();
 
-        if ((int) $suratTugas->user_id !== (int) $user->id) abort(403);
+        if ((int) $suratTugas->user_id !== (int) $user->id) {
+            abort(403);
+        }
 
         if (!in_array($suratTugas->status_surat, [
             'draft',
@@ -680,31 +683,31 @@ class PengusulController extends Controller
             'sekdir_revision_requested',
             'direktur_revision_requested',
         ], true)) {
-            abort(403, 'Only draft or revision-requested can be submitted.');
+            abort(409, 'Draft tidak dapat dikirim karena status tidak valid.');
         }
 
         $fromStatus = $suratTugas->status_surat;
 
-        $validated = $this->validatePengusulan($request);
+        $validated  = $this->validatePengusulan($request);
         $pengusulan = $validated['pengusulan'];
-        $personel = $validated['personel'];
+        $personel   = $validated['personel'];
 
         $nextStatus = match ($fromStatus) {
-            'sekdir_revision_requested'   => 'pending_sekdir_numbering',
+            'sekdir_revision_requested'    => 'pending_sekdir_numbering',
             'direktur_revision_requested' => 'pending_direktur_signature',
-            default                       => 'submitted_wadir_review',
+            default                        => 'submitted_wadir_review',
         };
 
         DB::transaction(function () use ($request, $user, $suratTugas, $pengusulan, $personel, $nextStatus) {
 
             $pathSuratUndangan = $this->storeSuratUndangan($request);
-            $nomorUsulan = $this->buildNomorUsulan($user, $pengusulan);
+            $nomorUsulan       = $this->buildNomorUsulan($user, $pengusulan);
 
-            $exists = SuratTugas::where('nomor_surat_usulan_jurusan', $nomorUsulan)
-                ->where($suratTugas->getKeyName(), '!=', $suratTugas->getKey())
-                ->exists();
-
-            if ($exists) {
+            if (
+                SuratTugas::where('nomor_surat_usulan_jurusan', $nomorUsulan)
+                    ->where($suratTugas->getKeyName(), '!=', $suratTugas->getKey())
+                    ->exists()
+            ) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'pengusulan.nomor_urutan_surat' => 'Nomor Surat Usulan sudah dipakai.',
                 ]);
@@ -748,9 +751,9 @@ class PengusulController extends Controller
         });
 
         $msg = match ($nextStatus) {
-            'pending_sekdir_numbering'   => 'Revisi Sekdir sudah dikirim kembali ke Sekdir untuk penomoran.',
+            'pending_sekdir_numbering'    => 'Revisi Sekdir sudah dikirim kembali ke Sekdir untuk penomoran.',
             'pending_direktur_signature' => 'Revisi Direktur sudah dikirim kembali ke Direktur untuk ditinjau.',
-            default                      => 'Draft berhasil dikirim ke Wadir.',
+            default                       => 'Draft berhasil dikirim ke Wadir.',
         };
 
         return redirect()->route('pengusul.dashboard')->with('success', $msg);
@@ -773,6 +776,7 @@ class PengusulController extends Controller
 
         return sprintf('%03d/%s/%s/%d', $nomor, $kodePengusul, $kodePerihal, $tahun);
     }
+    
     public function destroyDraft(Request $request, SuratTugas $suratTugas)
     {
         $user = $request->user();
