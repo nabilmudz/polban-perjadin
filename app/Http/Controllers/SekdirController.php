@@ -6,6 +6,7 @@ use App\Models\SuratTugas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class SekdirController extends Controller
 {
@@ -280,7 +281,10 @@ class SekdirController extends Controller
                 ->exists();
 
             if ($exists) {
-                abort(422, 'Nomor surat sudah digunakan untuk kombinasi tahun/unit/perihal tersebut.');
+                throw ValidationException::withMessages([
+                    'nomor_urutan_surat' =>
+                        'Nomor surat sudah digunakan untuk kombinasi tahun/unit/perihal tersebut.'
+                ]);
             }
 
             $nomorResmi = sprintf(
@@ -290,15 +294,15 @@ class SekdirController extends Controller
                 $data['kode_perihal'],
                 $data['tahun']
             );
-            
+
             $surat->update([
-                'nomor_urutan_surat'        => $data['nomor_urutan_surat'],
-                'kode_unit_kerja'           => $data['kode_unit'],
-                'kode_perihal'              => $data['kode_perihal'],
-                'tahun_nomor_surat'         => $data['tahun'],
-                'tanggal_penomoran_sekdir'  => now(),
-                'status_surat'              => 'pending_direktur_signature',
-                'nomor_surat_tugas_resmi' => $nomorResmi,
+                'nomor_urutan_surat'       => $data['nomor_urutan_surat'],
+                'kode_unit_kerja'          => $data['kode_unit'],
+                'kode_perihal'             => $data['kode_perihal'],
+                'tahun_nomor_surat'        => $data['tahun'],
+                'tanggal_penomoran_sekdir' => now(),
+                'status_surat'             => 'pending_direktur_signature',
+                'nomor_surat_tugas_resmi'  => $nomorResmi,
             ]);
         });
 

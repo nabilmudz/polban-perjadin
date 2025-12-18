@@ -66,7 +66,7 @@ class SuratTugasController extends Controller
             'status_surat'   => 'required|string',
             'catatan_revisi' => 'nullable|string',
         ]);
-        
+
         try {
             $this->service->updateStatus(
                 $surat_tugas,
@@ -74,19 +74,21 @@ class SuratTugasController extends Controller
                 $validated['catatan_revisi'] ?? null,
                 $request->user()->role
             );
+
             $role = $request->user()->role;
+
             return redirect()
                 ->route("{$role}.dashboard")
                 ->with('success', 'Status surat berhasil diperbarui.');
+
         } catch (\DomainException $e) {
-            throw ValidationException::withMessages([
-                'catatan_revisi' => $e->getMessage(),
-            ]);
+
+            abort(422, $e->getMessage());
+
         } catch (\Throwable $e) {
             report($e);
-            throw ValidationException::withMessages([
-                'status_surat' => 'Terjadi kesalahan saat memperbarui status.',
-            ]);
+
+            abort(500, 'Terjadi kesalahan saat memperbarui status.');
         }
     }
 }
