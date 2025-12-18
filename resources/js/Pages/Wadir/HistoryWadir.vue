@@ -88,6 +88,9 @@ import debounce from 'lodash.debounce'
 import { getRowActions } from '@/utils/rowAction'
 import { useFilePreview } from '@/utils/useFilePreviews.js'
 
+import { useSuratDownload } from '@/utils/useSuratDownload'
+const { downloadPdf } = useSuratDownload()
+
 const page = usePage()
 const user = page.props.auth?.user ?? {}
 const routeName = `${user.role}.history`
@@ -167,6 +170,10 @@ const handleAction = (type, row) => {
 
     case 'reject':
       router.post(route(`${user.role}.persetujuan.reject`, id), {}, { preserveScroll: true })
+      break
+      
+    case 'download':
+      downloadPdf(row)
       break
   }
 }

@@ -1,7 +1,7 @@
 <template>
   <Head title="Riwayat Surat Tugas" />
 
-  <div class="bg-white w-full h-full rounded-md shadow overflow-hidden">
+  <div class="bg-white w-full h-full rounded-md">
     <HeaderPage title="History Perjalanan Dinas" />
 
     <div class="p-8">
@@ -43,15 +43,6 @@
             @click="handleView(row)"
           >
             <font-awesome-icon :icon="['far', 'eye']" class="text-md" />
-          </button>
-
-          <button
-            v-if="['published', 'completed'].includes(row.status_surat)"
-            class="px-2 py-1 rounded shadow flex items-center justify-center bg-green-500 text-white hover:brightness-90"
-            title="Download"
-            @click="router.get(route('surat.download', row.id))"
-          >
-            <font-awesome-icon :icon="['far', 'circle-down']" class="text-md" />
           </button>
         </div>
       </template>

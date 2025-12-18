@@ -8,9 +8,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Spatie\Browsershot\Browsershot;
+use Illuminate\Support\Facades\Storage;
 
 class SuratDownloadController extends Controller
 {
+    public function print(Request $request, SuratTugas $suratTugas)
+    {
+        $surat = $this->baseQueryByRole($request)->whereKey($suratTugas->getKey())->firstOrFail();
+        $vm = $this->buildPrintVm($surat);
+        return view('print.surat-tugas', $vm);
+    }
+
     private function baseQueryByRole(Request $request)
     {
         $user = $request->user();
@@ -58,6 +67,23 @@ class SuratDownloadController extends Controller
 
         return $q;
     }
+    public function pdf(Request $request, SuratTugas $suratTugas)
+    {
+        $surat = $this->baseQueryByRole($request)
+            ->whereKey($suratTugas->getKey())
+            ->firstOrFail();
+
+        $vm = $this->buildPrintVm($surat);
+
+        $pdf = Pdf::loadView('print.surat-tugas', $vm)
+            ->setPaper('a4')
+            ->setOption('isRemoteEnabled', true);
+
+        $noRaw = (string) ($surat->nomor_surat_tugas_resmi ?? $surat->getKey());
+        $noSafe = $this->safeFilename($noRaw);
+
+        return $pdf->stream("Surat-Tugas-{$noSafe}.pdf");
+    }
 
     public function preview(Request $request, SuratTugas $suratTugas)
     {
@@ -77,18 +103,54 @@ class SuratDownloadController extends Controller
     public function download(Request $request, SuratTugas $suratTugas)
     {
         $surat = $this->baseQueryByRole($request)->whereKey($suratTugas->getKey())->firstOrFail();
-        $vm = $this->buildPrintVm($surat);
 
-        $pdf = Pdf::loadView('print.surat-tugas', $vm)
-            ->setPaper('a4')
-            ->setOption('isRemoteEnabled', true);
+        $force = $request->boolean('force');
 
-        $noRaw = (string) ($surat->nomor_surat_tugas_resmi ?? $surat->getKey());
-        $noSafe = $this->safeFilename($noRaw);
+        if ($force && $surat->path_file_surat_tugas_final) {
+            Storage::disk('public')->delete($surat->path_file_surat_tugas_final);
+            $surat->update(['path_file_surat_tugas_final' => null]);
+        }
 
-        return $pdf->download("Surat-Tugas-{$noSafe}.pdf");
+        if (!$force && $surat->path_file_surat_tugas_final) {
+            $full = storage_path('app/public/' . ltrim($surat->path_file_surat_tugas_final, '/'));
+            if (is_file($full)) {
+                $noSafe = $this->safeFilename((string)($surat->nomor_surat_tugas_resmi ?? $surat->getKey()));
+                return response()->download($full, "Surat-Tugas-{$noSafe}.pdf");
+            }
+        }
+
+        if ($surat->path_file_surat_tugas_final) {
+            $full = storage_path('app/public/' . ltrim($surat->path_file_surat_tugas_final, '/'));
+            if (is_file($full)) {
+                $noSafe = $this->safeFilename((string)($surat->nomor_surat_tugas_resmi ?? $surat->getKey()));
+                return response()->download($full, "Surat-Tugas-{$noSafe}.pdf");
+            }
+        }
+
+        set_time_limit(180);
+        ini_set('max_execution_time', '180');
+
+        $vm   = $this->buildPrintVm($surat);
+        $html = view('print.surat-tugas', $vm)->render();
+
+        $pdfBinary = Browsershot::html($html)
+            ->timeout(180)
+            ->setOption('waitUntil', 'load')
+            ->setDelay(300)
+            ->showBackground()
+            ->format('A4')
+            ->margins(25, 25, 25, 25)
+            ->pdf();
+
+
+        $noSafe = $this->safeFilename((string)($surat->nomor_surat_tugas_resmi ?? $surat->getKey()));
+        $path   = "uploads/surat-final/Surat-Tugas-{$noSafe}.pdf";
+
+        \Storage::disk('public')->put($path, $pdfBinary);
+        $surat->update(['path_file_surat_tugas_final' => $path]);
+
+        return response()->download(storage_path('app/public/' . $path), "Surat-Tugas-{$noSafe}.pdf");
     }
-
     private function buildPrintVm($surat): array
     {
         $personel = collect($surat->personel ?? [])
@@ -114,6 +176,16 @@ class SuratDownloadController extends Controller
 
         $pegawaiList   = $personel->where('type','pegawai')->values();
         $mahasiswaList = $personel->where('type','mahasiswa')->values();
+                
+        $barcodeData = null;
+        if (!empty($surat->barcode_path)) {
+            $rel = ltrim($surat->barcode_path, '/');
+            if (Storage::disk('public')->exists($rel)) {
+                $raw = Storage::disk('public')->get($rel);
+                $barcodeData = 'data:image/svg+xml;base64,' . base64_encode($raw);
+            }
+        }
+
 
         $lokasiList = collect($surat->lokasi_kegiatan ?? []);
 
@@ -127,6 +199,8 @@ class SuratDownloadController extends Controller
         $logoData = is_file($logoPath) ? ('data:image/png;base64,'.base64_encode(file_get_contents($logoPath))) : null;
 
         return [
+            'logoData' => $logoData,
+            'barcodeData' => $barcodeData,
             'surat' => $surat,
             'personel' => $personel,
             'pegawaiList' => $pegawaiList,
@@ -136,7 +210,6 @@ class SuratDownloadController extends Controller
             'isLampiran' => $isLampiran,
             'needChunking' => $needChunking,
             'personnelChunks' => $personnelChunks,
-            'logoData' => $logoData,
         ];
     }
 

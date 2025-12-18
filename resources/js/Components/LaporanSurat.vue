@@ -1,6 +1,6 @@
 <template>
   <div class="flex justify-center overflow-auto">
-  + <div class="flex justify-center items-start py-4">
+    <div class="flex justify-center items-start py-4">
       <div class="space-y-6 transform scale-90 origin-top">
         <div class="bg-white w-[21cm] min-h-[29.7cm] p-[2.5cm] border border-gray-300 shadow page">
           <table class="w-full border-collapse surat-tugas-header">

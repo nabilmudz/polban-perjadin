@@ -234,11 +234,14 @@ Route::prefix('surat-tugas')->group(function () {
 
 Route::get('/verifikasi/surat-tugas/{token}', [VerifikasiController::class, 'suratTugas'])->name('verifikasi.surat-tugas');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth'])->group(callback: function () {
     Route::get('/surat/{suratTugas}/download', [SuratDownloadController::class, 'download'])
         ->name('surat.download');
 
-    Route::get('/surat/{suratTugas}/preview', [SuratDownloadController::class, 'preview'])
-        ->name('surat.preview');
+    Route::get('/surat/{suratTugas}/pdf', [SuratDownloadController::class, 'pdf'])
+        ->name('surat.pdf');
+    Route::get('/surat/{suratTugas}/print', [SuratDownloadController::class, 'print'])
+        ->name('surat.print');
 });
+
 require __DIR__.'/auth.php';

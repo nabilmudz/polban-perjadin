@@ -295,6 +295,7 @@ class DirekturController extends Controller
                 'barcode_token'                => $token,
                 'barcode_payload'              => $verifyUrl,
                 'barcode_path'                 => $barcodePath,
+                'path_file_surat_tugas_final' => null,
             ]);
         });
 

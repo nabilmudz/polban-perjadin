@@ -85,6 +85,9 @@ import debounce from 'lodash.debounce'
 import { getRowActions } from '@/utils/rowAction'
 import { useFilePreview } from '@/utils/useFilePreviews.js'
 
+import { useSuratDownload } from '@/utils/useSuratDownload'
+const { downloadPdf } = useSuratDownload()
+
 const page = usePage()
 const user = page.props.auth?.user ?? {}
 const dashboardRoute = `${user.role}.persetujuan`
@@ -155,6 +158,10 @@ const handleAction = (type, row) => {
     case 'review':
     case 'view':
       router.get(route(`${user.role}.persetujuan.show`, id))
+      break
+    
+    case 'download':
+      downloadPdf(row)
       break
 
     case 'approve':

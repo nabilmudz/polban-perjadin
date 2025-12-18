@@ -65,7 +65,9 @@ import { reactive, watch, computed, ref } from 'vue'
 import debounce from 'lodash.debounce'
 import { getRowActions } from '@/utils/rowAction'
 import { statusOptions } from '@/utils/statusOptions'
+import { useSuratDownload } from '@/utils/useSuratDownload'
 
+const { downloadPdf } = useSuratDownload()
 const page = usePage()
 const currentUser = page.props.auth.user
 const suratTugas = computed(() => page.props.suratTugas)
@@ -125,7 +127,7 @@ const handleAction = (type, row) => {
       }
       break
     case 'download':
-      router.get(route('pengusul.download', row.id))
+      downloadPdf(row)
       break
   }
 }
