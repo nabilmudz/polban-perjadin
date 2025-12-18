@@ -81,7 +81,7 @@
 
           <button
             :disabled="form.processing"
-            @click="submit('approved_wadir')"
+            @click="submit('pending_sekdir_numbering')"
             class="flex items-center gap-2 bg-green-600 text-white px-5 py-2 rounded-md hover:brightness-95 shadow disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Setujui

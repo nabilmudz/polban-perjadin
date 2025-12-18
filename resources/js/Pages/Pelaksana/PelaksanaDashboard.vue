@@ -41,7 +41,6 @@
         </button>
         <span v-else class="text-gray-400">-</span>
       </template>
-
       <template #action="{ row }">
         <div class="flex gap-2">
           <button
@@ -51,8 +50,18 @@
           >
             <font-awesome-icon :icon="['far', 'eye']" class="text-md" />
           </button>
+
+          <button
+            v-if="canDownloadPdf(row)"
+            class="px-2 py-1 rounded shadow flex items-center justify-center bg-green-500 text-white hover:brightness-90"
+            title="Download PDF"
+            @click="downloadPdf(row)"
+          >
+            <font-awesome-icon :icon="['far', 'circle-down']" class="text-md" />
+          </button>
         </div>
       </template>
+
     </DataTable>
   </div>
 
@@ -76,6 +85,25 @@ import FilePreviewModal from '@/Components/FilePreviewModal.vue'
 import { useFilePreview } from '@/utils/useFilePreviews.js'
 
 const page = usePage()
+const resolveSuratId = (row) => row?.surat_tugas_id ?? row?.id
+
+const canDownloadPdf = (row) => {
+  return ['published', 'awaiting_proof_upload', 'under_bku_review', 'returned_for_correction', 'completed']
+    .includes(row?.status_surat)
+}
+
+const downloadPdf = (row) => {
+  const id = resolveSuratId(row)
+  if (!id) return
+
+  window.location.href = route('surat.download', id)
+}
+
+const downloadFinalFile = (row) => {
+  const url = toStorageUrl(row?.path_file_surat_tugas_final)
+  if (!url) return
+  window.location.href = url
+}
 
 const propsSafe = computed(() => page.props?.value ?? page.props ?? {})
 
@@ -148,8 +176,9 @@ const columns = [
   { key: 'no_usulan_surat', label: 'Nomor Surat Usulan' },
   { key: 'sumber_dana', label: 'Sumber Dana' },
   { key: 'total_dana', label: 'Total Dana' },
-  { key: 'status_surat', label: 'Status' },
-  { key: 'action', label: 'Aksi', sortable: false, fixedWidth: '140px' },
+  { key: 'status_surat', label: 'Status', slot: 'status_surat' },
+  { key: 'path_file_surat_usulan', label: 'Surat Undangan', sortable: false, fixedWidth: '130px' },
+  { key: 'action', label: 'Aksi', sortable: false, fixedWidth: '180px' },
 ]
 </script>
 
